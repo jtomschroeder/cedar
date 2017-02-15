@@ -1,0 +1,9 @@
+[package]
+name = "cedar"
+version = "0.1.0"
+authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
+
+[dependencies]
+cocoa = "0.7"
+objc = "0.2"
+crossbeam = "0.2.10"
