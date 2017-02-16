@@ -40,8 +40,6 @@ fn view(queue: Arc<MsQueue<Message>>) -> cedar::cacao::Window {
     };
 
     let label = cedar::cacao::Label::new()
-        // .text("HEY".to_string())
-        // .text("HEY")
         .text(|model: Model| model.to_string())
         .position(100., 100.);
 
