@@ -1,10 +1,10 @@
 
 use std::sync::Arc;
 
-use cocoa::{foundation, appkit};
-use cocoa::base::{id, class, selector, nil, NO};
+use cocoa::appkit;
+use cocoa::base::{id, selector, nil};
 
-use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSProcessInfo, NSString};
+use cocoa::foundation::{NSProcessInfo, NSString};
 
 pub struct Application {
     pool: Arc<id>,

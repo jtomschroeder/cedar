@@ -7,4 +7,5 @@ extern crate crossbeam;
 
 pub mod cacao;
 
+mod property;
 mod atomic_box;
