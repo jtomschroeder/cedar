@@ -3,9 +3,10 @@ use cocoa::base::{id, nil, class};
 use cocoa::foundation::NSString;
 
 use cacao::view::View;
+use property::Property;
 
 enum Attribute {
-    Text(Box<FnMut(i32) -> String>),
+    Text(Box<Property<String>>),
 }
 
 pub struct Label {
@@ -26,15 +27,6 @@ impl Label {
         }
     }
 
-    fn set_text(&mut self, text: &str) {
-        unsafe {
-            let string = NSString::alloc(nil).init_str(text);
-            msg_send![self.id, setStringValue: string];
-
-            msg_send![self.id, sizeToFit];
-        }
-    }
-
     pub fn position(self, x: f64, y: f64) -> Self {
         use cocoa::foundation::NSRect;
 
@@ -46,7 +38,16 @@ impl Label {
         self
     }
 
-    pub fn text<F: FnMut(i32) -> String + 'static>(mut self, attribute: F) -> Self {
+    fn set_text(&mut self, text: &str) {
+        unsafe {
+            let string = NSString::alloc(nil).init_str(text);
+            msg_send![self.id, setStringValue: string];
+
+            msg_send![self.id, sizeToFit];
+        }
+    }
+
+    pub fn text<P: Property<String> + 'static>(mut self, attribute: P) -> Self {
         self.attributes.push(Attribute::Text(Box::new(attribute)));
         self
     }
@@ -65,7 +66,7 @@ impl View for Label {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut generator) => Attr::Text(generator(model)),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
             })
             .collect();
 

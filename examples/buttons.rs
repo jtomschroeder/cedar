@@ -40,7 +40,7 @@ fn view(queue: Arc<MsQueue<Message>>) -> cedar::cacao::Window {
     };
 
     let label = cedar::cacao::Label::new()
-        .text(|model| model.to_string())
+        .text(|model: Model| model.to_string())
         .position(100., 100.);
 
     window.add(inc);

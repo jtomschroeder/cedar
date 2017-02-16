@@ -2,16 +2,14 @@
 use objc;
 
 use cocoa::base::{nil, NO};
-
 use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
 use cocoa::appkit::{NSWindow, NSTitledWindowMask, NSBackingStoreBuffered};
-
-use cacao::view::View;
 
 use std::sync::atomic::AtomicPtr;
 use std::sync::Arc;
 
-use super::super::atomic_box::AtomicBox;
+use cacao::view::View;
+use atomic_box::AtomicBox;
 
 pub struct Window {
     id: AtomicPtr<objc::runtime::Object>,
