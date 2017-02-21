@@ -9,3 +9,6 @@ pub mod cacao;
 
 mod property;
 mod atomic_box;
+mod stream;
+
+pub use stream::Stream;

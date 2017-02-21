@@ -3,7 +3,7 @@ extern crate cedar;
 extern crate crossbeam;
 
 use std::sync::{Arc, Mutex};
-use crossbeam::sync::MsQueue;
+use cedar::Stream;
 
 type Model = i32;
 
@@ -50,7 +50,7 @@ impl View {
     }
 }
 
-fn view(queue: Arc<MsQueue<Message>>) -> View {
+fn view(queue: Stream<Message>) -> View {
     View::new()
         .button(|button| {
             let queue = queue.clone();
@@ -73,7 +73,7 @@ fn view(queue: Arc<MsQueue<Message>>) -> View {
 }
 
 fn main() {
-    let queue = Arc::new(MsQueue::<Message>::new());
+    let queue = Stream::<Message>::new();
 
     let app = cedar::cacao::Application::new();
 
