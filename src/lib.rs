@@ -10,5 +10,7 @@ pub mod cacao;
 mod property;
 mod atomic_box;
 mod stream;
+mod view;
 
 pub use stream::Stream;
+pub use view::View;

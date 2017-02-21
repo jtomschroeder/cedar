@@ -54,7 +54,7 @@ impl Label {
 }
 
 impl View for Label {
-    fn view(&self) -> id {
+    fn id(&self) -> id {
         self.id
     }
 

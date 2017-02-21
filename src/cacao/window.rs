@@ -43,7 +43,7 @@ impl Window {
 
     pub fn add<V: View + 'static>(&mut self, view: V) {
         use cocoa::appkit::NSView;
-        unsafe { self.id.get_mut().contentView().addSubview_(view.view()) };
+        unsafe { self.id.get_mut().contentView().addSubview_(view.id()) };
 
         if let Some(views) = Arc::get_mut(&mut self.views) {
             views.push(AtomicBox::new(Box::new(Box::new(view))));

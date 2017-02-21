@@ -3,7 +3,8 @@ extern crate cedar;
 extern crate crossbeam;
 
 use std::sync::{Arc, Mutex};
-use cedar::Stream;
+
+use cedar::{Stream, View};
 
 type Model = i32;
 
@@ -17,36 +18,6 @@ fn update(model: Model, message: Message) -> Model {
     match message {
         Message::Increment => model + 1,
         Message::Decrement => model - 1,
-    }
-}
-
-struct View {
-    window: cedar::cacao::Window,
-}
-
-impl View {
-    fn new() -> Self {
-        View { window: cedar::cacao::Window::new("buttons") }
-    }
-
-    fn update(&mut self, model: Model) {
-        self.window.update(model)
-    }
-
-    fn button<F>(mut self, f: F) -> Self
-        where F: FnOnce(cedar::cacao::Button) -> cedar::cacao::Button
-    {
-        let button = f(cedar::cacao::Button::new());
-        self.window.add(button);
-        self
-    }
-
-    fn label<F>(mut self, f: F) -> Self
-        where F: FnOnce(cedar::cacao::Label) -> cedar::cacao::Label
-    {
-        let label = f(cedar::cacao::Label::new());
-        self.window.add(label);
-        self
     }
 }
 
