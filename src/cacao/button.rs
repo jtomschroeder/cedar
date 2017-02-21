@@ -5,6 +5,7 @@ use cacao::view::View;
 use cacao::action;
 
 use property::Property;
+use stream::Stream;
 
 enum Attribute {
     Text(Box<Property<String>>),
@@ -15,13 +16,14 @@ enum NSBezelStyle {
     NSRoundedBezelStyle = 1,
 }
 
-pub struct Button {
+pub struct Button<M> {
     id: id,
     attributes: Vec<Attribute>,
+    stream: Stream<M>,
 }
 
-impl Button {
-    pub fn new() -> Self {
+impl<M: 'static> Button<M> {
+    pub fn new(stream: Stream<M>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
@@ -31,6 +33,7 @@ impl Button {
             Button {
                 id: button,
                 attributes: vec![],
+                stream: stream,
             }
         }
     }
@@ -61,8 +64,10 @@ impl Button {
         self
     }
 
-    pub fn click<F: FnMut() + 'static>(self, action: F) -> Self {
-        let target = action::create(action);
+    pub fn click<F: FnMut() -> M + 'static>(self, mut action: F) -> Self {
+        let stream = self.stream.clone();
+        let target = action::create(move || stream.push(action()));
+
         unsafe {
             msg_send![self.id, setAction: sel!(act)];
             msg_send![self.id, setTarget: target];
@@ -72,7 +77,7 @@ impl Button {
     }
 }
 
-impl View for Button {
+impl<M: 'static> View for Button<M> {
     fn id(&self) -> id {
         self.id
     }

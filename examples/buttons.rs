@@ -4,7 +4,7 @@ extern crate crossbeam;
 
 use std::sync::{Arc, Mutex};
 
-use cedar::{Stream, View};
+use cedar::View;
 
 type Model = i32;
 
@@ -21,21 +21,17 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(queue: Stream<Message>) -> View {
+fn view() -> View<Message> {
     View::new()
         .button(|button| {
-            let queue = queue.clone();
             button.text("+")
                 .position(50., 100.)
-                .click(move || queue.push(Message::Increment))
-            // .click(|| Message::Increment)
+                .click(|| Message::Increment)
         })
         .button(|button| {
-            let queue = queue.clone();
             button.text("-")
                 .position(150., 100.)
-                .click(move || queue.push(Message::Decrement))
-            // .click(|| Message::Decrement)
+                .click(|| Message::Decrement)
         })
         .label(|label| {
             label.text(|model: Model| model.to_string())
@@ -44,11 +40,9 @@ fn view(queue: Stream<Message>) -> View {
 }
 
 fn main() {
-    let queue = Stream::<Message>::new();
-
     let app = cedar::cacao::Application::new();
 
-    let mut view = view(queue.clone());
+    let mut view = view();
 
     let mut model = 0;
     view.update(model);
@@ -56,10 +50,9 @@ fn main() {
     let view = Arc::new(Mutex::new(view));
 
     std::thread::spawn(move || loop {
-        let message = queue.pop();
-        model = update(model, message);
-
         if let Ok(mut view) = view.lock() {
+            let message = view.stream().pop();
+            model = update(model, message);
             view.update(model);
         }
     });
