@@ -1,6 +1,4 @@
 
-use std;
-use std::sync::{Arc, Mutex};
 use std::marker::PhantomData;
 
 use super::cacao;
@@ -51,53 +49,22 @@ impl<S, M, U, V> Application<S, M, U, V> {
 impl<S, M, U, V> Application<S, M, U, V>
     where S: 'static,
           M: Clone + 'static,
-          U: Update<M, S> + Send + 'static,
+          U: Update<M, S> + 'static,
           V: Viewable<M, S>
 {
     pub fn run(mut self) {
-        let app = cacao::Application::new();
+        let app = cacao::Application::new(); // TODO: enforce `app` created first
 
         let mut view = self.view.view();
 
         let mut model = self.model;
         view.update(model.clone());
 
-        let view = Arc::new(Mutex::new(view));
-
-        use crossbeam;
-        use std::sync::{Arc, Barrier};
-
-        let barrier = Arc::new(Barrier::new(2));
-
         let mut update = self.update;
-        // crossbeam::scope(|scope| {
-        //
-        //     scope.spawn(|| {
-        //         // barrier.wait();
-        //         app.run()
-        //     });
-        //
-        //     // let c = barrier.clone();
-        //     scope.spawn(move || {
-        //         // c.wait();
-        //         loop {
-        //             if let Ok(mut view) = view.lock() {
-        //                 let message = view.stream().pop();
-        //                 model = update.update(model.clone(), message);
-        //                 view.update(model.clone());
-        //             }
-        //         }
-        //     });
-        // });
-
-        // std::thread::spawn();
-
         app.run(move || loop {
-            if let Ok(mut view) = view.lock() {
-                let message = view.stream().pop();
-                model = update.update(model.clone(), message);
-                view.update(model.clone());
-            }
+            let message = view.stream().pop();
+            model = update.update(model.clone(), message);
+            view.update(model.clone());
         })
     }
 }

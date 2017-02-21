@@ -48,30 +48,21 @@ impl Application {
         }
     }
 
-    pub fn run<F: FnMut() + 'static>(mut self, mut f: F) {
-        use cocoa::appkit::{NSApplication, NSRunningApplication};
+    pub fn run<F: FnMut() + 'static>(mut self, mut action: F) {
+        use cocoa::appkit::NSRunningApplication;
+
+        use cacao::action;
+        action::spawn(move || action());
 
         unsafe {
             // Set `app` to 'running' and run!
             let app = NSRunningApplication::currentApplication(nil);
             app.activateWithOptions_(appkit::NSApplicationActivateIgnoringOtherApps);
-            // self.app.get_mut().run()
-
-            // [applicationObject
-            //     performSelectorOnMainThread:@selector(run)
-            //     withObject:nil
-            //     waitUntilDone:YES];
-
-            use cacao::action;
-            let action = action::create(move || f());
-
-            msg_send![action, performSelectorInBackground:sel!(act)
-                                               withObject:nil];
 
             let app = self.app.get_mut();
-            msg_send![*app, performSelectorOnMainThread: sel!(run)
-                            withObject: nil
-                            waitUntilDone: YES];
+            msg_send![*app, performSelectorOnMainThread:sel!(run)
+                                             withObject:nil
+                                          waitUntilDone:YES];
         }
     }
 }
