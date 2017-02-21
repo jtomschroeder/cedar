@@ -65,26 +65,29 @@ impl<M, S, F> Update<M, S> for F
     }
 }
 
-struct Application<M, U, V> {
+struct Application<S, M, U, V> {
     model: M,
     update: U,
     view: V,
+    message: std::marker::PhantomData<S>,
 }
 
-impl<M, U, V> Application<M, U, V> {
+impl<S, M, U, V> Application<S, M, U, V> {
     pub fn new(model: M, update: U, view: V) -> Self {
         Application {
             model: model,
             update: update,
             view: view,
+            message: std::marker::PhantomData,
         }
     }
 }
 
-impl<M, U, V> Application<M, U, V>
-    where M: Clone + Send + 'static,
-          U: Update<M, Message> + Send + 'static,
-          V: Viewable<M, Message>
+impl<S, M, U, V> Application<S, M, U, V>
+    where S: Send + 'static,
+          M: Clone + Send + 'static,
+          U: Update<M, S> + Send + 'static,
+          V: Viewable<M, S>
 {
     pub fn run(mut self) {
         let app = cedar::cacao::Application::new();
