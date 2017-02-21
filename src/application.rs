@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use super::cacao;
 use super::View;
 
-trait Viewable<M, S> {
+pub trait Viewable<M, S> {
     fn view(&mut self) -> View<M, S>;
 }
 
@@ -18,7 +18,7 @@ impl<M, S, F> Viewable<M, S> for F
     }
 }
 
-trait Update<M, S> {
+pub trait Update<M, S> {
     fn update(&mut self, model: M, message: S) -> M;
 }
 

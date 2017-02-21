@@ -5,7 +5,6 @@ use cedar::{Application, View};
 
 type Model = i32;
 
-#[derive(Debug)]
 enum Message {
     Increment,
     Decrement,
