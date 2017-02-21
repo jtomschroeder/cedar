@@ -65,31 +65,34 @@ impl<M, S, F> Update<M, S> for F
     }
 }
 
-struct Application<U, V> {
+struct Application<M, U, V> {
+    model: M,
     update: U,
     view: V,
 }
 
-impl<U, V> Application<U, V> {
-    pub fn new(update: U, view: V) -> Self {
+impl<M, U, V> Application<M, U, V> {
+    pub fn new(model: M, update: U, view: V) -> Self {
         Application {
+            model: model,
             update: update,
             view: view,
         }
     }
 }
 
-impl<U, V> Application<U, V>
-    where U: Update<Model, Message> + Send + 'static,
-          V: Viewable<Model, Message>
+impl<M, U, V> Application<M, U, V>
+    where M: Clone + Send + 'static,
+          U: Update<M, Message> + Send + 'static,
+          V: Viewable<M, Message>
 {
     pub fn run(mut self) {
         let app = cedar::cacao::Application::new();
 
         let mut view = self.view.view();
 
-        let mut model = 0;
-        view.update(model);
+        let mut model = self.model;
+        view.update(model.clone());
 
         let view = Arc::new(Mutex::new(view));
 
@@ -97,8 +100,8 @@ impl<U, V> Application<U, V>
         std::thread::spawn(move || loop {
             if let Ok(mut view) = view.lock() {
                 let message = view.stream().pop();
-                model = update.update(model, message);
-                view.update(model);
+                model = update.update(model.clone(), message);
+                view.update(model.clone());
             }
         });
 
@@ -109,6 +112,6 @@ impl<U, V> Application<U, V>
 ////
 
 fn main() {
-    let app = Application::new(update, view);
+    let app = Application::new(0, update, view);
     app.run()
 }
