@@ -1,24 +1,24 @@
 
-pub trait Property<T> {
-    fn process(&mut self, model: i32) -> T;
+pub trait Property<M, T> {
+    fn process(&mut self, model: M) -> T;
 }
 
-impl<T, F> Property<T> for F
-    where F: FnMut(i32) -> T
+impl<M, T, F> Property<M, T> for F
+    where F: FnMut(M) -> T
 {
-    fn process(&mut self, model: i32) -> T {
+    fn process(&mut self, model: M) -> T {
         self(model)
     }
 }
 
-impl Property<String> for String {
-    fn process(&mut self, _: i32) -> String {
+impl<M> Property<M, String> for String {
+    fn process(&mut self, _: M) -> String {
         self.clone()
     }
 }
 
-impl Property<String> for &'static str {
-    fn process(&mut self, _: i32) -> String {
+impl<M> Property<M, String> for &'static str {
+    fn process(&mut self, _: M) -> String {
         self.to_string()
     }
 }

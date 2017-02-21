@@ -7,8 +7,8 @@ use cacao::action;
 use property::Property;
 use stream::Stream;
 
-enum Attribute {
-    Text(Box<Property<String>>),
+enum Attribute<M> {
+    Text(Box<Property<M, String>>),
 }
 
 #[repr(u64)]
@@ -16,14 +16,14 @@ enum NSBezelStyle {
     NSRoundedBezelStyle = 1,
 }
 
-pub struct Button<M> {
+pub struct Button<M, S> {
     id: id,
-    attributes: Vec<Attribute>,
-    stream: Stream<M>,
+    attributes: Vec<Attribute<M>>,
+    stream: Stream<S>,
 }
 
-impl<M: 'static> Button<M> {
-    pub fn new(stream: Stream<M>) -> Self {
+impl<M, S: 'static> Button<M, S> {
+    pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
@@ -48,7 +48,7 @@ impl<M: 'static> Button<M> {
         }
     }
 
-    pub fn text<P: Property<String> + 'static>(mut self, attribute: P) -> Self {
+    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
         self.attributes.push(Attribute::Text(Box::new(attribute)));
         self
     }
@@ -64,7 +64,7 @@ impl<M: 'static> Button<M> {
         self
     }
 
-    pub fn click<F: FnMut() -> M + 'static>(self, mut action: F) -> Self {
+    pub fn click<F: FnMut() -> S + 'static>(self, mut action: F) -> Self {
         let stream = self.stream.clone();
         let target = action::create(move || stream.push(action()));
 
@@ -77,12 +77,12 @@ impl<M: 'static> Button<M> {
     }
 }
 
-impl<M: 'static> View for Button<M> {
+impl<M: Clone, S: 'static> View<M> for Button<M, S> {
     fn id(&self) -> id {
         self.id
     }
 
-    fn update(&mut self, model: i32) {
+    fn update(&mut self, model: M) {
         enum Attr {
             Text(String),
         }
@@ -90,7 +90,7 @@ impl<M: 'static> View for Button<M> {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model.clone())),
             })
             .collect();
 

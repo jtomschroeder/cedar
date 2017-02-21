@@ -19,7 +19,7 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view() -> View<Message> {
+fn view() -> View<Model, Message> {
     View::new()
         .button(|button| {
             button.text("+")
@@ -41,14 +41,14 @@ fn view() -> View<Message> {
 
 use std::sync::{Arc, Mutex};
 
-trait Viewable<S> {
-    fn view(&mut self) -> View<S>;
+trait Viewable<M, S> {
+    fn view(&mut self) -> View<M, S>;
 }
 
-impl<S, F> Viewable<S> for F
-    where F: FnMut() -> View<S>
+impl<M, S, F> Viewable<M, S> for F
+    where F: FnMut() -> View<M, S>
 {
-    fn view(&mut self) -> View<S> {
+    fn view(&mut self) -> View<M, S> {
         self()
     }
 }
@@ -81,7 +81,7 @@ impl<U, V> Application<U, V> {
 
 impl<U, V> Application<U, V>
     where U: Update<Model, Message> + Send + 'static,
-          V: Viewable<Message>
+          V: Viewable<Model, Message>
 {
     pub fn run(mut self) {
         let app = cedar::cacao::Application::new();

@@ -5,16 +5,16 @@ use cocoa::foundation::NSString;
 use cacao::view::View;
 use property::Property;
 
-enum Attribute {
-    Text(Box<Property<String>>),
+enum Attribute<M> {
+    Text(Box<Property<M, String>>),
 }
 
-pub struct Label {
+pub struct Label<M> {
     id: id,
-    attributes: Vec<Attribute>,
+    attributes: Vec<Attribute<M>>,
 }
 
-impl Label {
+impl<M> Label<M> {
     pub fn new() -> Self {
         unsafe {
             let string = NSString::alloc(nil).init_str("");
@@ -47,18 +47,18 @@ impl Label {
         }
     }
 
-    pub fn text<P: Property<String> + 'static>(mut self, attribute: P) -> Self {
+    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
         self.attributes.push(Attribute::Text(Box::new(attribute)));
         self
     }
 }
 
-impl View for Label {
+impl<M: Clone> View<M> for Label<M> {
     fn id(&self) -> id {
         self.id
     }
 
-    fn update(&mut self, model: i32) {
+    fn update(&mut self, model: M) {
         enum Attr {
             Text(String),
         }
@@ -66,7 +66,7 @@ impl View for Label {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model.clone())),
             })
             .collect();
 

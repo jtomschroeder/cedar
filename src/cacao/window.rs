@@ -11,12 +11,12 @@ use std::sync::Arc;
 use cacao::view::View;
 use atomic_box::AtomicBox;
 
-pub struct Window {
+pub struct Window<M> {
     id: AtomicPtr<objc::runtime::Object>,
-    views: Arc<Vec<AtomicBox<Box<View>>>>,
+    views: Arc<Vec<AtomicBox<Box<View<M>>>>>,
 }
 
-impl Window {
+impl<M: Clone> Window<M> {
     pub fn new(title: &str) -> Self {
         unsafe {
             let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(350., 350.));
@@ -41,7 +41,7 @@ impl Window {
         }
     }
 
-    pub fn add<V: View + 'static>(&mut self, view: V) {
+    pub fn add<V: View<M> + 'static>(&mut self, view: V) {
         use cocoa::appkit::NSView;
         unsafe { self.id.get_mut().contentView().addSubview_(view.id()) };
 
@@ -50,10 +50,10 @@ impl Window {
         }
     }
 
-    pub fn update(&mut self, model: i32) {
+    pub fn update(&mut self, model: M) {
         if let Some(views) = Arc::get_mut(&mut self.views) {
             for view in views.iter_mut() {
-                view.get_mut().update(model);
+                view.get_mut().update(model.clone());
             }
         }
     }

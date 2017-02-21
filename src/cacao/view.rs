@@ -1,8 +1,8 @@
 
 use cocoa::base::id;
 
-pub trait View {
+pub trait View<M> {
     fn id(&self) -> id;
 
-    fn update(&mut self, _model: i32) {}
+    fn update(&mut self, model: M);
 }
