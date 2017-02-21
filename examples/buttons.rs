@@ -20,34 +20,56 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(queue: Arc<MsQueue<Message>>) -> cedar::cacao::Window {
-    let mut window = cedar::cacao::Window::new("buttons");
+struct View {
+    window: cedar::cacao::Window,
+}
 
-    let inc = {
-        let queue = queue.clone();
-        cedar::cacao::Button::new()
-            .text("+")
-            .position(50., 100.)
-            .click(move || queue.push(Message::Increment))
-    };
+impl View {
+    fn new() -> Self {
+        View { window: cedar::cacao::Window::new("buttons") }
+    }
 
-    let dec = {
-        let queue = queue.clone();
-        cedar::cacao::Button::new()
-            .text("-")
-            .position(150., 100.)
-            .click(move || queue.push(Message::Decrement))
-    };
+    fn update(&mut self, model: Model) {
+        self.window.update(model)
+    }
 
-    let label = cedar::cacao::Label::new()
-        .text(|model: Model| model.to_string())
-        .position(100., 100.);
+    fn button<F>(mut self, f: F) -> Self
+        where F: FnOnce(cedar::cacao::Button) -> cedar::cacao::Button
+    {
+        let button = f(cedar::cacao::Button::new());
+        self.window.add(button);
+        self
+    }
 
-    window.add(inc);
-    window.add(dec);
-    window.add(label);
+    fn label<F>(mut self, f: F) -> Self
+        where F: FnOnce(cedar::cacao::Label) -> cedar::cacao::Label
+    {
+        let label = f(cedar::cacao::Label::new());
+        self.window.add(label);
+        self
+    }
+}
 
-    window
+fn view(queue: Arc<MsQueue<Message>>) -> View {
+    View::new()
+        .button(|button| {
+            let queue = queue.clone();
+            button.text("+")
+                .position(50., 100.)
+                .click(move || queue.push(Message::Increment))
+            // .click(|| Message::Increment)
+        })
+        .button(|button| {
+            let queue = queue.clone();
+            button.text("-")
+                .position(150., 100.)
+                .click(move || queue.push(Message::Decrement))
+            // .click(|| Message::Decrement)
+        })
+        .label(|label| {
+            label.text(|model: Model| model.to_string())
+                .position(100., 100.)
+        })
 }
 
 fn main() {
@@ -55,19 +77,19 @@ fn main() {
 
     let app = cedar::cacao::Application::new();
 
-    let mut window = view(queue.clone());
+    let mut view = view(queue.clone());
 
     let mut model = 0;
-    window.update(model);
+    view.update(model);
 
-    let window = Arc::new(Mutex::new(window));
+    let view = Arc::new(Mutex::new(view));
 
     std::thread::spawn(move || loop {
         let message = queue.pop();
         model = update(model, message);
 
-        if let Ok(mut window) = window.lock() {
-            window.update(model);
+        if let Ok(mut view) = view.lock() {
+            view.update(model);
         }
     });
 

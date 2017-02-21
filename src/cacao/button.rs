@@ -41,7 +41,6 @@ impl Button {
         unsafe {
             let title = NSString::alloc(nil).init_str(text);
             msg_send![self.id, setTitle: title];
-
             msg_send![self.id, sizeToFit];
         }
     }
