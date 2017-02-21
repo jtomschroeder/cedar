@@ -5,9 +5,10 @@ use cacao::view::View;
 use cacao::action;
 
 use property::Property;
+use stream::Stream;
 
-enum Attribute {
-    Text(Box<Property<String>>),
+enum Attribute<M> {
+    Text(Box<Property<M, String>>),
 }
 
 #[repr(u64)]
@@ -15,13 +16,14 @@ enum NSBezelStyle {
     NSRoundedBezelStyle = 1,
 }
 
-pub struct Button {
+pub struct Button<M, S> {
     id: id,
-    attributes: Vec<Attribute>,
+    attributes: Vec<Attribute<M>>,
+    stream: Stream<S>,
 }
 
-impl Button {
-    pub fn new() -> Self {
+impl<M, S: 'static> Button<M, S> {
+    pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
@@ -31,6 +33,7 @@ impl Button {
             Button {
                 id: button,
                 attributes: vec![],
+                stream: stream,
             }
         }
     }
@@ -41,12 +44,11 @@ impl Button {
         unsafe {
             let title = NSString::alloc(nil).init_str(text);
             msg_send![self.id, setTitle: title];
-
             msg_send![self.id, sizeToFit];
         }
     }
 
-    pub fn text<P: Property<String> + 'static>(mut self, attribute: P) -> Self {
+    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
         self.attributes.push(Attribute::Text(Box::new(attribute)));
         self
     }
@@ -62,23 +64,25 @@ impl Button {
         self
     }
 
-    pub fn click<F: FnMut() + 'static>(self, action: F) -> Self {
-        let target = action::create(action);
+    pub fn click<F: FnMut() -> S + 'static>(self, mut action: F) -> Self {
+        let stream = self.stream.clone();
+        let action = action::create(move || stream.push(action()));
+
         unsafe {
             msg_send![self.id, setAction: sel!(act)];
-            msg_send![self.id, setTarget: target];
+            msg_send![self.id, setTarget: action];
         }
 
         self
     }
 }
 
-impl View for Button {
-    fn view(&self) -> id {
+impl<M: Clone, S: 'static> View<M> for Button<M, S> {
+    fn id(&self) -> id {
         self.id
     }
 
-    fn update(&mut self, model: i32) {
+    fn update(&mut self, model: M) {
         enum Attr {
             Text(String),
         }
@@ -86,7 +90,7 @@ impl View for Button {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model.clone())),
             })
             .collect();
 

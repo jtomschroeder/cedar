@@ -1,14 +1,15 @@
 
 use std::sync::Arc;
+use std::sync::atomic::AtomicPtr;
 
+use objc;
 use cocoa::appkit;
-use cocoa::base::{id, selector, nil};
-
+use cocoa::base::{id, selector, nil, YES, NO};
 use cocoa::foundation::{NSProcessInfo, NSString};
 
 pub struct Application {
-    pool: Arc<id>,
-    app: Arc<id>,
+    pool: AtomicPtr<objc::runtime::Object>,
+    app: AtomicPtr<objc::runtime::Object>,
 }
 
 impl Application {
@@ -41,20 +42,27 @@ impl Application {
             app_menu_item.setSubmenu_(app_menu);
 
             Application {
-                pool: Arc::new(NSAutoreleasePool::new(nil)),
-                app: Arc::new(app),
+                pool: AtomicPtr::new(NSAutoreleasePool::new(nil)),
+                app: AtomicPtr::new(app),
             }
         }
     }
 
-    pub fn run(self) {
-        use cocoa::appkit::{NSApplication, NSRunningApplication};
+    pub fn run<F: FnMut() + 'static>(mut self, mut action: F) {
+        use cocoa::appkit::NSRunningApplication;
+
+        use cacao::action;
+        action::spawn(move || action());
 
         unsafe {
             // Set `app` to 'running' and run!
             let app = NSRunningApplication::currentApplication(nil);
             app.activateWithOptions_(appkit::NSApplicationActivateIgnoringOtherApps);
-            self.app.run()
+
+            let app = self.app.get_mut();
+            msg_send![*app, performSelectorOnMainThread:sel!(run)
+                                             withObject:nil
+                                          waitUntilDone:YES];
         }
     }
 }
@@ -62,6 +70,6 @@ impl Application {
 impl Drop for Application {
     fn drop(&mut self) {
         use cocoa::foundation::NSAutoreleasePool;
-        unsafe { self.pool.drain() };
+        unsafe { self.pool.get_mut().drain() };
     }
 }
