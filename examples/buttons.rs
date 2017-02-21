@@ -41,6 +41,18 @@ fn view() -> View<Message> {
 
 use std::sync::{Arc, Mutex};
 
+trait Viewable<S> {
+    fn view(&mut self) -> View<S>;
+}
+
+impl<S, F> Viewable<S> for F
+    where F: FnMut() -> View<S>
+{
+    fn view(&mut self) -> View<S> {
+        self()
+    }
+}
+
 trait Update<M, S> {
     fn update(&mut self, model: M, message: S) -> M;
 }
@@ -53,33 +65,39 @@ impl<M, S, F> Update<M, S> for F
     }
 }
 
-struct Application<U> {
+struct Application<U, V> {
     update: U,
+    view: V,
 }
 
-impl<U> Application<U> {
-    pub fn new(update: U) -> Self {
-        Application { update: update }
+impl<U, V> Application<U, V> {
+    pub fn new(update: U, view: V) -> Self {
+        Application {
+            update: update,
+            view: view,
+        }
     }
 }
 
-impl<U> Application<U>
-    where U: Update<Model, Message> + Send + 'static
+impl<U, V> Application<U, V>
+    where U: Update<Model, Message> + Send + 'static,
+          V: Viewable<Message>
 {
     pub fn run(mut self) {
         let app = cedar::cacao::Application::new();
 
-        let mut view = view();
+        let mut view = self.view.view();
 
         let mut model = 0;
         view.update(model);
 
         let view = Arc::new(Mutex::new(view));
 
+        let mut update = self.update;
         std::thread::spawn(move || loop {
             if let Ok(mut view) = view.lock() {
                 let message = view.stream().pop();
-                model = self.update.update(model, message);
+                model = update.update(model, message);
                 view.update(model);
             }
         });
@@ -91,6 +109,6 @@ impl<U> Application<U>
 ////
 
 fn main() {
-    let app = Application::new(update);
+    let app = Application::new(update, view);
     app.run()
 }
