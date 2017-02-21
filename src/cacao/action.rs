@@ -29,7 +29,7 @@ impl Action {
 }
 
 pub fn register() {
-    let superclass = Class::get("NSObject").unwrap();
+    let superclass = Class::get("NSObject").expect("NSObject");
 
     let mut decl = match ClassDecl::new("Action", superclass) {
         Some(decl) => decl,

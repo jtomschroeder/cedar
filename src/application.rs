@@ -49,8 +49,8 @@ impl<S, M, U, V> Application<S, M, U, V> {
 }
 
 impl<S, M, U, V> Application<S, M, U, V>
-    where S: Send + 'static,
-          M: Clone + Send + 'static,
+    where S: 'static,
+          M: Clone + 'static,
           U: Update<M, S> + Send + 'static,
           V: Viewable<M, S>
 {
@@ -64,15 +64,40 @@ impl<S, M, U, V> Application<S, M, U, V>
 
         let view = Arc::new(Mutex::new(view));
 
+        use crossbeam;
+        use std::sync::{Arc, Barrier};
+
+        let barrier = Arc::new(Barrier::new(2));
+
         let mut update = self.update;
-        std::thread::spawn(move || loop {
+        // crossbeam::scope(|scope| {
+        //
+        //     scope.spawn(|| {
+        //         // barrier.wait();
+        //         app.run()
+        //     });
+        //
+        //     // let c = barrier.clone();
+        //     scope.spawn(move || {
+        //         // c.wait();
+        //         loop {
+        //             if let Ok(mut view) = view.lock() {
+        //                 let message = view.stream().pop();
+        //                 model = update.update(model.clone(), message);
+        //                 view.update(model.clone());
+        //             }
+        //         }
+        //     });
+        // });
+
+        // std::thread::spawn();
+
+        app.run(move || loop {
             if let Ok(mut view) = view.lock() {
                 let message = view.stream().pop();
                 model = update.update(model.clone(), message);
                 view.update(model.clone());
             }
-        });
-
-        app.run()
+        })
     }
 }

@@ -66,11 +66,11 @@ impl<M, S: 'static> Button<M, S> {
 
     pub fn click<F: FnMut() -> S + 'static>(self, mut action: F) -> Self {
         let stream = self.stream.clone();
-        let target = action::create(move || stream.push(action()));
+        let action = action::create(move || stream.push(action()));
 
         unsafe {
             msg_send![self.id, setAction: sel!(act)];
-            msg_send![self.id, setTarget: target];
+            msg_send![self.id, setTarget: action];
         }
 
         self
