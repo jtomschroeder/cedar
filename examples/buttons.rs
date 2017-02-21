@@ -1,8 +1,6 @@
 
-extern crate cedar;
 extern crate crossbeam;
-
-use std::sync::{Arc, Mutex};
+extern crate cedar;
 
 use cedar::View;
 
@@ -39,23 +37,58 @@ fn view() -> View<Message> {
         })
 }
 
+////
+
+use std::sync::{Arc, Mutex};
+
+trait Update<M, S> {
+    fn update(&mut self, model: M, message: S) -> M;
+}
+
+impl<M, S, F> Update<M, S> for F
+    where F: FnMut(M, S) -> M
+{
+    fn update(&mut self, model: M, message: S) -> M {
+        self(model, message)
+    }
+}
+
+struct Application<U> {
+    update: U,
+}
+
+impl<U> Application<U>
+    where U: Update<Model, Message> + Send + 'static
+{
+    pub fn new(update: U) -> Self {
+        Application { update: update }
+    }
+
+    pub fn run(mut self) {
+        let app = cedar::cacao::Application::new();
+
+        let mut view = view();
+
+        let mut model = 0;
+        view.update(model);
+
+        let view = Arc::new(Mutex::new(view));
+
+        std::thread::spawn(move || loop {
+            if let Ok(mut view) = view.lock() {
+                let message = view.stream().pop();
+                model = self.update.update(model, message);
+                view.update(model);
+            }
+        });
+
+        app.run()
+    }
+}
+
+////
+
 fn main() {
-    let app = cedar::cacao::Application::new();
-
-    let mut view = view();
-
-    let mut model = 0;
-    view.update(model);
-
-    let view = Arc::new(Mutex::new(view));
-
-    std::thread::spawn(move || loop {
-        if let Ok(mut view) = view.lock() {
-            let message = view.stream().pop();
-            model = update(model, message);
-            view.update(model);
-        }
-    });
-
+    let app = Application::new(update);
     app.run()
 }
