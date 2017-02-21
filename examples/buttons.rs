@@ -57,13 +57,15 @@ struct Application<U> {
     update: U,
 }
 
-impl<U> Application<U>
-    where U: Update<Model, Message> + Send + 'static
-{
+impl<U> Application<U> {
     pub fn new(update: U) -> Self {
         Application { update: update }
     }
+}
 
+impl<U> Application<U>
+    where U: Update<Model, Message> + Send + 'static
+{
     pub fn run(mut self) {
         let app = cedar::cacao::Application::new();
 
