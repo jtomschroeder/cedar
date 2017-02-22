@@ -38,4 +38,12 @@ impl<M: Clone + 'static, S: 'static> View<M, S> {
         self.window.add(label);
         self
     }
+
+    pub fn field<F>(mut self, f: F) -> Self
+        where F: FnOnce(cacao::TextField<S>) -> cacao::TextField<S>
+    {
+        let field = f(cacao::TextField::new(self.stream.clone()));
+        self.window.add(field);
+        self
+    }
 }
