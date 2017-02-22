@@ -5,7 +5,6 @@ use cedar::{Application, View};
 
 type Model = String;
 
-#[derive(Debug)]
 enum Message {
     NewContent(String),
 }
