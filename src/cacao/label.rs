@@ -1,5 +1,5 @@
 
-use cocoa::base::{id, nil, class};
+use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
 use cacao::view::View;
@@ -18,7 +18,15 @@ impl<M> Label<M> {
     pub fn new() -> Self {
         unsafe {
             let string = NSString::alloc(nil).init_str("");
-            let label: id = msg_send![class("NSTextField"), labelWithString: string];
+
+            let label: id = msg_send![class("NSTextField"), alloc];
+            let label: id = msg_send![label, init];
+
+            msg_send![label, setStringValue: string];
+            msg_send![label, setBezeled: NO];
+            msg_send![label, setDrawsBackground: NO];
+            msg_send![label, setEditable: NO];
+            msg_send![label, setSelectable: NO];
 
             Label {
                 id: label,
