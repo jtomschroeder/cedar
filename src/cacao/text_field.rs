@@ -5,7 +5,6 @@ use cocoa::foundation::NSString;
 use cacao::view::View;
 use cacao::delegate;
 
-use property::Property;
 use stream::Stream;
 
 pub struct TextField<S> {

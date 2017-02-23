@@ -13,12 +13,11 @@ use atomic_box::AtomicBox;
 
 #[repr(u64)]
 enum UserInterfaceLayoutOrientation {
-    Horizontal = 0,
     Vertical = 1,
 }
 
 pub struct Window<M> {
-    id: AtomicPtr<objc::runtime::Object>,
+    _id: AtomicPtr<objc::runtime::Object>,
     stack: AtomicPtr<objc::runtime::Object>,
     views: Arc<Vec<AtomicBox<Box<View<M>>>>>,
 }
@@ -59,7 +58,7 @@ impl<M: Clone> Window<M> {
             };
 
             Window {
-                id: AtomicPtr::new(window),
+                _id: AtomicPtr::new(window),
                 stack: AtomicPtr::new(stack),
                 views: Arc::new(Vec::new()),
             }
