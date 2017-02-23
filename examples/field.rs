@@ -19,13 +19,9 @@ fn view() -> View<Model, Message> {
     View::new()
         .field(|field| {
             field.placeholder("Text to reverse")
-                .position(50., 200.)
                 .change(|s| Message::NewContent(s.chars().rev().collect()))
         })
-        .label(|label| {
-            label.text(|model: Model| model)
-                .position(100., 100.)
-        })
+        .label(|label| label.text(|model: Model| model))
 }
 
 fn main() {

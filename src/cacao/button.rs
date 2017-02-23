@@ -12,8 +12,8 @@ enum Attribute<M> {
 }
 
 #[repr(u64)]
-enum NSBezelStyle {
-    NSRoundedBezelStyle = 1,
+enum BezelStyle {
+    Rounded = 1,
 }
 
 pub struct Button<M, S> {
@@ -28,7 +28,7 @@ impl<M, S: 'static> Button<M, S> {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
 
-            msg_send![button, setBezelStyle: NSBezelStyle::NSRoundedBezelStyle];
+            msg_send![button, setBezelStyle: BezelStyle::Rounded];
 
             Button {
                 id: button,
@@ -44,23 +44,11 @@ impl<M, S: 'static> Button<M, S> {
         unsafe {
             let title = NSString::alloc(nil).init_str(text);
             msg_send![self.id, setTitle: title];
-            msg_send![self.id, sizeToFit];
         }
     }
 
     pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
         self.attributes.push(Attribute::Text(Box::new(attribute)));
-        self
-    }
-
-    pub fn position(self, x: f64, y: f64) -> Self {
-        use cocoa::foundation::NSRect;
-
-        let mut frame: NSRect = unsafe { msg_send![self.id, frame] };
-        frame.origin.x = x;
-        frame.origin.y = y;
-        unsafe { msg_send![self.id, setFrame: frame] };
-
         self
     }
 

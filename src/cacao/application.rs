@@ -1,10 +1,9 @@
 
-use std::sync::Arc;
 use std::sync::atomic::AtomicPtr;
 
 use objc;
 use cocoa::appkit;
-use cocoa::base::{id, selector, nil, YES, NO};
+use cocoa::base::{selector, nil, YES};
 use cocoa::foundation::{NSProcessInfo, NSString};
 
 pub struct Application {

@@ -1,11 +1,10 @@
 
-use cocoa::base::{id, nil, class};
+use cocoa::base::{id, nil, class, YES};
 use cocoa::foundation::NSString;
 
 use cacao::view::View;
 use cacao::delegate;
 
-use property::Property;
 use stream::Stream;
 
 pub struct TextField<S> {
@@ -17,24 +16,21 @@ impl<S: 'static> TextField<S> {
     pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let string = NSString::alloc(nil).init_str("");
-            let label: id = msg_send![class("NSTextField"), textFieldWithString: string];
+
+            let field: id = msg_send![class("NSTextField"), alloc];
+            let field: id = msg_send![field, init];
+
+            msg_send![field, setStringValue: string];
+            msg_send![field, setBezeled: YES];
+            msg_send![field, setDrawsBackground: YES];
+            msg_send![field, setEditable: YES];
+            msg_send![field, setSelectable: YES];
 
             TextField {
-                id: label,
+                id: field,
                 stream: stream,
             }
         }
-    }
-
-    pub fn position(self, x: f64, y: f64) -> Self {
-        use cocoa::foundation::NSRect;
-
-        let mut frame: NSRect = unsafe { msg_send![self.id, frame] };
-        frame.origin.x = x;
-        frame.origin.y = y;
-        unsafe { msg_send![self.id, setFrame: frame] };
-
-        self
     }
 
     pub fn placeholder(self, text: &str) -> Self {
@@ -45,7 +41,6 @@ impl<S: 'static> TextField<S> {
             let string: id = msg_send![string, initWithString: text];
 
             msg_send![self.id, setPlaceholderAttributedString: string];
-            msg_send![self.id, sizeToFit];
         }
 
         self
