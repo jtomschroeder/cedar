@@ -1,8 +1,6 @@
 
 extern crate cedar;
 
-use cedar::{Application, View};
-
 type Model = i32;
 
 enum Message {
@@ -17,13 +15,13 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view() -> View<Model, Message> {
-    View::new()
+fn view() -> cedar::View<Model, Message> {
+    cedar::View::new()
         .button(|button| {
             button.text("+")
                 .click(|| Message::Increment)
         })
-        .label(|label| label.text(|model: Model| model.to_string()))
+        .label(|label| label.text(Model::to_string))
         .button(|button| {
             button.text("-")
                 .click(|| Message::Decrement)
@@ -31,6 +29,5 @@ fn view() -> View<Model, Message> {
 }
 
 fn main() {
-    let app = Application::new(0, update, view);
-    app.run()
+    cedar::Application::new(0, update, view).run()
 }

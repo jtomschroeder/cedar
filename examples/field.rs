@@ -1,8 +1,6 @@
 
 extern crate cedar;
 
-use cedar::{Application, View};
-
 type Model = String;
 
 enum Message {
@@ -15,16 +13,15 @@ fn update(_: Model, message: Message) -> Model {
     }
 }
 
-fn view() -> View<Model, Message> {
-    View::new()
+fn view() -> cedar::View<Model, Message> {
+    cedar::View::new()
         .field(|field| {
             field.placeholder("Text to reverse")
                 .change(|s| Message::NewContent(s.chars().rev().collect()))
         })
-        .label(|label| label.text(|model: Model| model))
+        .label(|label| label.text(Model::clone))
 }
 
 fn main() {
-    let app = Application::new("--".into(), update, view);
-    app.run()
+    cedar::Application::new("--".into(), update, view).run()
 }

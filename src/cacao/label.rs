@@ -48,7 +48,7 @@ impl<M> Label<M> {
     }
 }
 
-impl<M: Clone> View<M> for Label<M> {
+impl<M> View<M> for Label<M> {
     fn id(&self) -> id {
         self.id
     }
@@ -61,7 +61,7 @@ impl<M: Clone> View<M> for Label<M> {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model.clone())),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(&model)),
             })
             .collect();
 

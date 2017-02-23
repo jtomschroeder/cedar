@@ -65,7 +65,7 @@ impl<M, S: 'static> Button<M, S> {
     }
 }
 
-impl<M: Clone, S: 'static> View<M> for Button<M, S> {
+impl<M, S: 'static> View<M> for Button<M, S> {
     fn id(&self) -> id {
         self.id
     }
@@ -78,7 +78,7 @@ impl<M: Clone, S: 'static> View<M> for Button<M, S> {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model.clone())),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(&model)),
             })
             .collect();
 
