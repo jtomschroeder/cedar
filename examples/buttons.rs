@@ -8,7 +8,7 @@ enum Message {
     Decrement,
 }
 
-fn update(model: Model, message: Message) -> Model {
+fn update(model: &Model, message: Message) -> Model {
     match message {
         Message::Increment => model + 1,
         Message::Decrement => model - 1,

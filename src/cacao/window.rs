@@ -22,7 +22,7 @@ pub struct Window<M> {
     views: Arc<Vec<AtomicBox<Box<View<M>>>>>,
 }
 
-impl<M: Clone> Window<M> {
+impl<M> Window<M> {
     pub fn new(title: &str) -> Self {
         unsafe {
             let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(350., 350.));
@@ -73,10 +73,10 @@ impl<M: Clone> Window<M> {
         }
     }
 
-    pub fn update(&mut self, model: M) {
+    pub fn update(&mut self, model: &M) {
         if let Some(views) = Arc::get_mut(&mut self.views) {
             for view in views.iter_mut() {
-                view.get_mut().update(model.clone());
+                view.get_mut().update(model);
             }
         }
     }

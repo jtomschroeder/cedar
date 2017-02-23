@@ -61,5 +61,5 @@ impl<M, S: 'static> View<M> for TextField<S> {
         self.id
     }
 
-    fn update(&mut self, _: M) {}
+    fn update(&mut self, _: &M) {}
 }

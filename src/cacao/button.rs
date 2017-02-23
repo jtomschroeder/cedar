@@ -70,7 +70,7 @@ impl<M, S: 'static> View<M> for Button<M, S> {
         self.id
     }
 
-    fn update(&mut self, model: M) {
+    fn update(&mut self, model: &M) {
         enum Attr {
             Text(String),
         }
@@ -78,7 +78,7 @@ impl<M, S: 'static> View<M> for Button<M, S> {
         let mut attrs: Vec<_> = self.attributes
             .iter_mut()
             .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(&model)),
+                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
             })
             .collect();
 

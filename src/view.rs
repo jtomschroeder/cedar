@@ -7,7 +7,7 @@ pub struct View<M, S> {
     stream: Stream<S>,
 }
 
-impl<M: Clone + 'static, S: 'static> View<M, S> {
+impl<M: 'static, S: 'static> View<M, S> {
     pub fn new() -> Self {
         View {
             window: cacao::Window::new("buttons"),
@@ -15,7 +15,7 @@ impl<M: Clone + 'static, S: 'static> View<M, S> {
         }
     }
 
-    pub fn update(&mut self, model: M) {
+    pub fn update(&mut self, model: &M) {
         self.window.update(model)
     }
 
