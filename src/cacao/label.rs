@@ -35,23 +35,10 @@ impl<M> Label<M> {
         }
     }
 
-    pub fn position(self, x: f64, y: f64) -> Self {
-        use cocoa::foundation::NSRect;
-
-        let mut frame: NSRect = unsafe { msg_send![self.id, frame] };
-        frame.origin.x = x;
-        frame.origin.y = y;
-        unsafe { msg_send![self.id, setFrame: frame] };
-
-        self
-    }
-
     fn set_text(&mut self, text: &str) {
         unsafe {
             let string = NSString::alloc(nil).init_str(text);
             msg_send![self.id, setStringValue: string];
-
-            msg_send![self.id, sizeToFit];
         }
     }
 

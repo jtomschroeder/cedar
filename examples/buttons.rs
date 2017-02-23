@@ -21,17 +21,12 @@ fn view() -> View<Model, Message> {
     View::new()
         .button(|button| {
             button.text("+")
-                .position(50., 100.)
                 .click(|| Message::Increment)
         })
+        .label(|label| label.text(|model: Model| model.to_string()))
         .button(|button| {
             button.text("-")
-                .position(150., 100.)
                 .click(|| Message::Decrement)
-        })
-        .label(|label| {
-            label.text(|model: Model| model.to_string())
-                .position(100., 100.)
         })
 }
 
