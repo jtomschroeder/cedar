@@ -1,9 +1,5 @@
 sudo: false
-
 os: osx
-# matrix:
-#   - env: TARGET=x86_64-apple-darwin
-#     os: osx
 
 language: rust
 rust: stable
