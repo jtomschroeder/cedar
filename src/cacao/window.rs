@@ -3,7 +3,10 @@ use objc;
 
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
-use cocoa::appkit::{NSWindow, NSTitledWindowMask, NSBackingStoreBuffered};
+
+use cocoa::appkit::{NSWindow, NSBackingStoreBuffered};
+use cocoa::appkit::{NSViewHeightSizable, NSViewWidthSizable};
+use cocoa::appkit::{NSTitledWindowMask, NSMiniaturizableWindowMask, NSResizableWindowMask};
 
 use std::sync::atomic::AtomicPtr;
 use std::sync::Arc;
@@ -25,10 +28,12 @@ pub struct Window<M> {
 impl<M> Window<M> {
     pub fn new(title: &str) -> Self {
         unsafe {
+            let style = NSResizableWindowMask as NSUInteger | NSTitledWindowMask as NSUInteger |
+                        NSMiniaturizableWindowMask as NSUInteger;
             let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(350., 350.));
             let window = NSWindow::alloc(nil)
                 .initWithContentRect_styleMask_backing_defer_(rect,
-                                                              NSTitledWindowMask as NSUInteger,
+                                                              style,
                                                               NSBackingStoreBuffered,
                                                               NO)
                 .autorelease();
@@ -47,6 +52,8 @@ impl<M> Window<M> {
                 // window.frame padded by 10.0 on each side
                 let rect = NSRect::new(NSPoint::new(10., 10.), NSSize::new(330., 330.));
                 msg_send![stack, setFrame: rect];
+
+                msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
 
                 msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
                 msg_send![stack, setSpacing: 25.0];
