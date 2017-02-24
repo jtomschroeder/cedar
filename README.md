@@ -5,6 +5,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/cedar.svg)](https://crates.io/crates/cedar)
 ![License](https://img.shields.io/crates/l/cedar.svg)
+[![Build Status](https://travis-ci.org/jtomschroeder/cedar.svg?branch=master)](https://travis-ci.org/jtomschroeder/cedar)
 
 **Status:** `cedar` is in the *alpha* stage and not yet ready for prime-time.
 
