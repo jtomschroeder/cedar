@@ -50,7 +50,7 @@ impl Application {
     pub fn run<F: FnMut() + 'static>(mut self, mut action: F) {
         use cocoa::appkit::NSRunningApplication;
 
-        use cacao::action;
+        use super::action;
         action::spawn(move || action());
 
         unsafe {

@@ -11,7 +11,7 @@ use cocoa::appkit::{NSTitledWindowMask, NSMiniaturizableWindowMask, NSResizableW
 use std::sync::atomic::AtomicPtr;
 use std::sync::Arc;
 
-use cacao::view::View;
+use super::view::View;
 use atomic_box::AtomicBox;
 
 #[repr(u64)]

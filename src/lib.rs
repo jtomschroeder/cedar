@@ -1,11 +1,15 @@
 
 #[macro_use]
+#[cfg(target_os = "macos")]
 extern crate objc;
+#[cfg(target_os = "macos")]
 extern crate cocoa;
 
 extern crate crossbeam;
 
-pub mod cacao;
+#[cfg(target_os = "macos")]
+#[path = "cocoa/mod.rs"]
+mod backend;
 
 mod property;
 mod atomic_box;

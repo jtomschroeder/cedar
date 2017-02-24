@@ -1,0 +1,9 @@
+sudo: false
+os: osx
+
+language: rust
+rust: stable
+
+notifications:
+  email:
+    on_success: never

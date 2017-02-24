@@ -1,8 +1,8 @@
 
 use cocoa::base::{id, nil, class};
 
-use cacao::view::View;
-use cacao::action;
+use super::view::View;
+use super::action;
 
 use property::Property;
 use stream::Stream;
