@@ -2,7 +2,7 @@
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
-use cacao::view::View;
+use super::view::View;
 use property::Property;
 
 enum Attribute<M> {

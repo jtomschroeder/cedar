@@ -1,7 +1,7 @@
 
 use std::marker::PhantomData;
 
-use super::cacao;
+use super::backend;
 use super::View;
 
 pub trait Viewable<M, S> {
@@ -53,7 +53,7 @@ impl<S, M, U, V> Application<S, M, U, V>
           V: Viewable<M, S>
 {
     pub fn run(mut self) {
-        let app = cacao::Application::new(); // TODO: enforce `app` created first
+        let app = backend::Application::new(); // TODO: enforce `app` created first
 
         let mut view = self.view.view();
 

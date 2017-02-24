@@ -2,8 +2,8 @@
 use cocoa::base::{id, nil, class, YES};
 use cocoa::foundation::NSString;
 
-use cacao::view::View;
-use cacao::delegate;
+use super::view::View;
+use super::delegate;
 
 use stream::Stream;
 
