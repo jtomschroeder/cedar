@@ -1,16 +1,16 @@
 
-use super::backend;
 use stream::Stream;
+use super::backend::{Window, Button, Label, TextField};
 
 pub struct View<M, S> {
-    window: backend::Window<M>,
+    window: Window<M>,
     stream: Stream<S>,
 }
 
 impl<M: 'static, S: 'static> View<M, S> {
     pub fn new() -> Self {
         View {
-            window: backend::Window::new("cedar"),
+            window: Window::new("cedar"),
             stream: Stream::new(),
         }
     }
@@ -24,25 +24,25 @@ impl<M: 'static, S: 'static> View<M, S> {
     }
 
     pub fn button<F>(mut self, f: F) -> Self
-        where F: FnOnce(backend::Button<M, S>) -> backend::Button<M, S>
+        where F: FnOnce(Button<M, S>) -> Button<M, S>
     {
-        let button = f(backend::Button::new(self.stream.clone()));
+        let button = f(Button::new(self.stream.clone()));
         self.window.add(button);
         self
     }
 
     pub fn label<F>(mut self, f: F) -> Self
-        where F: FnOnce(backend::Label<M>) -> backend::Label<M>
+        where F: FnOnce(Label<M>) -> Label<M>
     {
-        let label = f(backend::Label::new());
+        let label = f(Label::new());
         self.window.add(label);
         self
     }
 
     pub fn field<F>(mut self, f: F) -> Self
-        where F: FnOnce(backend::TextField<S>) -> backend::TextField<S>
+        where F: FnOnce(TextField<S>) -> TextField<S>
     {
-        let field = f(backend::TextField::new(self.stream.clone()));
+        let field = f(TextField::new(self.stream.clone()));
         self.window.add(field);
         self
     }

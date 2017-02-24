@@ -8,7 +8,7 @@ extern crate cocoa;
 extern crate crossbeam;
 
 #[cfg(target_os = "macos")]
-#[path = "cacao/mod.rs"]
+#[path = "cocoa/mod.rs"]
 mod backend;
 
 mod property;
