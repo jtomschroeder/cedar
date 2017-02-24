@@ -1,4 +1,5 @@
 sudo: false
+os: macos
 
 language: rust
 rust: stable
