@@ -9,10 +9,6 @@
 
 **Status:** `cedar` is in the *alpha* stage and not yet ready for prime-time.
 
-### Documentation
-
-[`cedar` documentation here!](https://docs.rs/cedar)
-
 ### Usage
 
 Add this to `Cargo.toml`:
