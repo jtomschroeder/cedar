@@ -7,7 +7,7 @@
 ![License](https://img.shields.io/crates/l/cedar.svg)
 [![Build Status](https://travis-ci.org/jtomschroeder/cedar.svg?branch=master)](https://travis-ci.org/jtomschroeder/cedar)
 
-**Status:** `cedar` is in the *alpha* stage and currently only supports `macOS (cocoa)`; not yet ready for prime-time.
+**Status:** `cedar` is in the *alpha* stage and currently only supports `macOS (cocoa)` - not yet ready for prime-time.
 
 ### Usage
 
