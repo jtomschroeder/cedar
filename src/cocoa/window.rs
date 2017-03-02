@@ -19,6 +19,11 @@ enum UserInterfaceLayoutOrientation {
     Vertical = 1,
 }
 
+#[repr(u64)]
+enum NSStackViewGravity {
+    Top = 1,
+}
+
 pub struct Window<M> {
     _id: AtomicPtr<objc::runtime::Object>,
     stack: AtomicPtr<objc::runtime::Object>,
@@ -73,7 +78,10 @@ impl<M> Window<M> {
     }
 
     pub fn add<V: View<M> + 'static>(&mut self, view: V) {
-        unsafe { msg_send![*self.stack.get_mut(), addArrangedSubview: view.id()] };
+        unsafe {
+            msg_send![*self.stack.get_mut(), addView:view.id()
+                                           inGravity:NSStackViewGravity::Top]
+        };
 
         if let Some(views) = Arc::get_mut(&mut self.views) {
             views.push(AtomicBox::new(Box::new(Box::new(view))));
