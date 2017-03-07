@@ -1,14 +1,13 @@
 
-use std::sync::atomic::AtomicPtr;
-
-use objc;
 use cocoa::appkit;
 use cocoa::base::{selector, nil, YES};
 use cocoa::foundation::{NSProcessInfo, NSString};
 
+use super::id::AtomicId;
+
 pub struct Application {
-    pool: AtomicPtr<objc::runtime::Object>,
-    app: AtomicPtr<objc::runtime::Object>,
+    pool: AtomicId,
+    app: AtomicId,
 }
 
 impl Application {
@@ -30,8 +29,8 @@ impl Application {
             // create Application menu
             let app_menu = NSMenu::new(nil).autorelease();
             let quit_prefix = NSString::alloc(nil).init_str("Quit ");
-            let quit_title =
-                quit_prefix.stringByAppendingString_(NSProcessInfo::processInfo(nil).processName());
+            let process_name = NSProcessInfo::processInfo(nil).processName();
+            let quit_title = quit_prefix.stringByAppendingString_(process_name);
             let quit_action = selector("terminate:");
             let quit_key = NSString::alloc(nil).init_str("q");
             let quit_item = NSMenuItem::alloc(nil)
@@ -41,27 +40,27 @@ impl Application {
             app_menu_item.setSubmenu_(app_menu);
 
             Application {
-                pool: AtomicPtr::new(NSAutoreleasePool::new(nil)),
-                app: AtomicPtr::new(app),
+                pool: NSAutoreleasePool::new(nil).into(),
+                app: app.into(),
             }
         }
     }
 
-    pub fn run<F: FnMut() + 'static>(mut self, mut action: F) {
+    pub fn run<F: FnMut() + Send + 'static>(mut self, action: F) {
         use cocoa::appkit::NSRunningApplication;
 
         use super::action;
-        action::spawn(move || action());
+        action::spawn(action);
 
         unsafe {
             // Set `app` to 'running' and run!
             let app = NSRunningApplication::currentApplication(nil);
             app.activateWithOptions_(appkit::NSApplicationActivateIgnoringOtherApps);
 
-            let app = self.app.get_mut();
-            msg_send![*app, performSelectorOnMainThread:sel!(run)
-                                             withObject:nil
-                                          waitUntilDone:YES];
+            let app = self.app.get();
+            msg_send![app, performSelectorOnMainThread:sel!(run)
+                                            withObject:nil
+                                         waitUntilDone:YES];
         }
     }
 }
@@ -69,6 +68,6 @@ impl Application {
 impl Drop for Application {
     fn drop(&mut self) {
         use cocoa::foundation::NSAutoreleasePool;
-        unsafe { self.pool.get_mut().drain() };
+        unsafe { self.pool.get().drain() };
     }
 }

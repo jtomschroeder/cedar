@@ -2,8 +2,7 @@
 use objc::runtime::{Object, Sel, Class};
 use objc::declare::ClassDecl;
 
-use cocoa::base::id;
-use cocoa::base::class;
+use cocoa::base::{id, class};
 
 use std;
 type Void = std::os::raw::c_void;
@@ -72,10 +71,9 @@ pub fn create<F: FnMut() + 'static>(action: F) -> id {
     register();
 
     unsafe {
-        // TODO: handle `release` of Action
-
         let act: id = msg_send![class("Action"), alloc];
         let target: id = msg_send![act, init];
+        msg_send![target, autorelease];
 
         let action = Box::new(Action(Box::new(action)));
 
@@ -86,8 +84,8 @@ pub fn create<F: FnMut() + 'static>(action: F) -> id {
     }
 }
 
-pub fn spawn<F: FnMut() + 'static>(mut action: F) {
-    let action = create(move || action());
+pub fn spawn<F: FnMut() + Send + 'static>(action: F) {
+    let action = create(action);
 
     unsafe {
         use cocoa::base::nil;

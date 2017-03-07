@@ -8,10 +8,7 @@ mod button;
 mod label;
 mod text_field;
 
-mod id;
 mod widget;
-mod action;
-mod delegate;
 
 pub use self::program::Program;
 pub use self::application::Application;

@@ -1,16 +1,18 @@
 
 use stream::Stream;
-use super::backend::{Window, Button, Label, TextField};
+use atomic_box::AtomicBox;
+
+use super::{Window, Button, Label, TextField};
 
 pub struct View<M, S> {
-    window: Window<M>,
+    window: AtomicBox<Window<M>>,
     stream: Stream<S>,
 }
 
 impl<M: 'static, S: 'static> View<M, S> {
     pub fn new() -> Self {
         View {
-            window: Window::new("cedar"),
+            window: AtomicBox::new(Window::new("cedar")),
             stream: Stream::new(),
         }
     }

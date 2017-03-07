@@ -2,7 +2,8 @@
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
-use super::view::View;
+use super::id::Id;
+use super::widget::Widget;
 use property::Property;
 
 enum Attribute<M> {
@@ -10,7 +11,7 @@ enum Attribute<M> {
 }
 
 pub struct Label<M> {
-    id: id,
+    id: Id,
     attributes: Vec<Attribute<M>>,
 }
 
@@ -29,7 +30,7 @@ impl<M> Label<M> {
             msg_send![label, setSelectable: NO];
 
             Label {
-                id: label,
+                id: label.into(),
                 attributes: vec![],
             }
         }
@@ -38,7 +39,7 @@ impl<M> Label<M> {
     fn set_text(&mut self, text: &str) {
         unsafe {
             let string = NSString::alloc(nil).init_str(text);
-            msg_send![self.id, setStringValue: string];
+            msg_send![*self.id, setStringValue: string];
         }
     }
 
@@ -48,9 +49,9 @@ impl<M> Label<M> {
     }
 }
 
-impl<M> View<M> for Label<M> {
-    fn id(&self) -> id {
-        self.id
+impl<M> Widget<M> for Label<M> {
+    fn id(&self) -> &Id {
+        &self.id
     }
 
     fn update(&mut self, model: &M) {

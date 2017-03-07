@@ -2,8 +2,7 @@
 use objc::runtime::{Object, Sel, Class};
 use objc::declare::ClassDecl;
 
-use cocoa::base::id;
-use cocoa::base::class;
+use cocoa::base::{id, class};
 
 use std;
 type Void = std::os::raw::c_void;
@@ -67,19 +66,19 @@ pub fn register<F>(class: &str, mut f: F)
 pub fn create<F: FnMut(&str) + 'static>(delegate: F) -> id {
     register("CRTextDelegate", |decl| {
         extern "C" fn delegate_act(this: &mut Object, _cmd: Sel, notification: id) {
+            use std::{str, mem, slice};
             use cocoa::foundation::NSString;
 
             unsafe {
                 let field: id = msg_send![notification, object];
                 let text: id = msg_send![field, stringValue];
 
-                let string = std::slice::from_raw_parts(NSString::UTF8String(text),
-                                                        NSString::len(text));
+                let string = slice::from_raw_parts(NSString::UTF8String(text), NSString::len(text));
 
-                let string = std::str::from_utf8(std::mem::transmute::<&[i8], &[u8]>(string));
+                let string = str::from_utf8(mem::transmute::<&[i8], &[u8]>(string));
 
                 let delegate: &mut Box<Delegate> =
-                    std::mem::transmute(this.get_mut_ivar::<*mut Void>("_delegate"));
+                    mem::transmute(this.get_mut_ivar::<*mut Void>("_delegate"));
                 delegate.delegate(string.unwrap());
             }
         }
@@ -91,10 +90,9 @@ pub fn create<F: FnMut(&str) + 'static>(delegate: F) -> id {
     });
 
     unsafe {
-        // TODO: handle `release` of Delegate
-
         let act: id = msg_send![class("CRTextDelegate"), alloc];
         let target: id = msg_send![act, init];
+        msg_send![target, autorelease];
 
         let delegate = Box::new(Delegate(Box::new(delegate)));
 

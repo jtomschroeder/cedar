@@ -57,7 +57,7 @@ fn view() -> cedar::View<Model, Message> {
 }
 
 fn main() {
-    cedar::Application::new(0, update, view).run()
+    cedar::Program::new(0, update, view).run()
 }
 ```
 

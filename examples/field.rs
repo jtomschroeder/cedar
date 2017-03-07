@@ -23,5 +23,5 @@ fn view() -> cedar::View<Model, Message> {
 }
 
 fn main() {
-    cedar::Application::new("--".into(), update, view).run()
+    cedar::Program::new("--".into(), update, view).run()
 }

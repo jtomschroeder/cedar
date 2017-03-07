@@ -4,7 +4,7 @@ pub trait Property<M, T> {
 }
 
 impl<M, T, F> Property<M, T> for F
-    where F: FnMut(&M) -> T
+    where F: Fn(&M) -> T
 {
     fn process(&mut self, model: &M) -> T {
         self(model)

@@ -2,13 +2,14 @@
 use cocoa::base::{id, nil, class, YES};
 use cocoa::foundation::NSString;
 
-use super::view::View;
+use super::id::Id;
+use super::widget::Widget;
 use super::delegate;
 
 use stream::Stream;
 
 pub struct TextField<S> {
-    id: id,
+    id: Id,
     stream: Stream<S>,
 }
 
@@ -27,7 +28,7 @@ impl<S: 'static> TextField<S> {
             msg_send![field, setSelectable: YES];
 
             TextField {
-                id: field,
+                id: field.into(),
                 stream: stream,
             }
         }
@@ -40,25 +41,30 @@ impl<S: 'static> TextField<S> {
             let string: id = msg_send![class("NSAttributedString"), alloc];
             let string: id = msg_send![string, initWithString: text];
 
-            msg_send![self.id, setPlaceholderAttributedString: string];
+            msg_send![*self.id, setPlaceholderAttributedString: string];
+
+            // set "minimum size" through anchor constraint
+            let anchor: id = msg_send![*self.id, widthAnchor];
+            let constraint: id = msg_send![anchor, constraintGreaterThanOrEqualToConstant: 120.];
+            msg_send![constraint, setActive: YES];
         }
 
         self
     }
 
-    pub fn change<F: FnMut(&str) -> S + 'static>(self, mut delegate: F) -> Self {
+    pub fn change<F: Fn(&str) -> S + 'static>(self, delegate: F) -> Self {
         let stream = self.stream.clone();
         let delegate = delegate::create(move |s| stream.push(delegate(s)));
 
-        unsafe { msg_send![self.id, setDelegate: delegate] };
+        unsafe { msg_send![*self.id, setDelegate: delegate] };
 
         self
     }
 }
 
-impl<M, S: 'static> View<M> for TextField<S> {
-    fn id(&self) -> id {
-        self.id
+impl<M, S> Widget<M> for TextField<S> {
+    fn id(&self) -> &Id {
+        &self.id
     }
 
     fn update(&mut self, _: &M) {}

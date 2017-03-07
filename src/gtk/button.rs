@@ -1,50 +1,28 @@
 
-use cocoa::base::{id, nil, class};
-
-use super::id::Id;
 use super::widget::Widget;
-use super::action;
 
 use property::Property;
 use stream::Stream;
+
+use gtk;
+use gtk::prelude::*;
 
 enum Attribute<M> {
     Text(Box<Property<M, String>>),
 }
 
-#[repr(u64)]
-enum BezelStyle {
-    Rounded = 1,
-}
-
 pub struct Button<M, S> {
-    id: Id,
+    button: gtk::Button,
     attributes: Vec<Attribute<M>>,
     stream: Stream<S>,
 }
 
 impl<M, S: 'static> Button<M, S> {
     pub fn new(stream: Stream<S>) -> Self {
-        unsafe {
-            let button: id = msg_send![class("NSButton"), alloc];
-            let button: id = msg_send![button, init];
-
-            msg_send![button, setBezelStyle: BezelStyle::Rounded];
-
-            Button {
-                id: button.into(),
-                attributes: vec![],
-                stream: stream,
-            }
-        }
-    }
-
-    fn set_text(&mut self, text: &str) {
-        use cocoa::foundation::NSString;
-
-        unsafe {
-            let title = NSString::alloc(nil).init_str(text);
-            msg_send![*self.id, setTitle: title];
+        Button {
+            button: gtk::Button::new(),
+            attributes: vec![],
+            stream: stream,
         }
     }
 
@@ -55,20 +33,15 @@ impl<M, S: 'static> Button<M, S> {
 
     pub fn click<F: Fn() -> S + 'static>(self, action: F) -> Self {
         let stream = self.stream.clone();
-        let action = action::create(move || stream.push(action()));
-
-        unsafe {
-            msg_send![*self.id, setAction: sel!(act)];
-            msg_send![*self.id, setTarget: action];
-        }
-
+        self.button.connect_clicked(move |_| stream.push(action()));
         self
     }
 }
 
 impl<M, S: 'static> Widget<M> for Button<M, S> {
-    fn id(&self) -> &Id {
-        &self.id
+    fn add(&self, container: &gtk::Box) {
+        container.add(&self.button);
+        self.button.show();
     }
 
     fn update(&mut self, model: &M) {
@@ -85,7 +58,7 @@ impl<M, S: 'static> Widget<M> for Button<M, S> {
 
         for attr in attrs.drain(..) {
             match attr {
-                Attr::Text(s) => self.set_text(&s),
+                Attr::Text(s) => self.button.set_label(&s),
             }
         }
     }
