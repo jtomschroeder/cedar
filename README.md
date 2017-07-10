@@ -1,13 +1,13 @@
 
 # cedar :evergreen_tree:
 
-`cedar` is a functional-reactive GUI library.
+`cedar` is a functional-reactive framework.
 
 [![crates.io](https://img.shields.io/crates/v/cedar.svg)](https://crates.io/crates/cedar)
 ![License](https://img.shields.io/crates/l/cedar.svg)
 [![Build Status](https://travis-ci.org/jtomschroeder/cedar.svg?branch=master)](https://travis-ci.org/jtomschroeder/cedar)
 
-**Status:** `cedar` is in the *alpha* stage and currently only supports `macOS (cocoa)` - not yet ready for prime-time.
+**Status:** `cedar` is in the *alpha* stage - not yet ready for prime-time.
 
 ### Usage
 
