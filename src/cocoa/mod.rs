@@ -1,5 +1,4 @@
 
-mod program;
 mod application;
 mod window;
 mod view;
@@ -13,7 +12,6 @@ mod widget;
 mod action;
 mod delegate;
 
-pub use self::program::Program;
 pub use self::application::Application;
 pub use self::window::Window;
 pub use self::view::View;

@@ -40,7 +40,7 @@ impl<S, M, U, V> Program<S, M, U, V>
           V: Viewable<M, S>
 {
     pub fn run(mut self) {
-        let app = super::Application::new(); // TODO: enforce `app` created first
+        let app = ::Application::new();  // TODO: enforce `app` created first
 
         let mut view = self.view.view();
 
@@ -48,9 +48,8 @@ impl<S, M, U, V> Program<S, M, U, V>
         view.update(&model);
 
         let mut update = self.update;
-        app.run(move || loop {
-            let message = view.stream().pop();
-            model = update.update(&model, message);
+        app.run(move || if let Some(msg) = view.stream().try_pop() {
+            model = update.update(&model, msg);
             view.update(&model);
         })
     }

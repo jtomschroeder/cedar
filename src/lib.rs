@@ -18,7 +18,7 @@ mod cacao;
 #[cfg(all(target_os = "macos", not(feature = "gtk3")))]
 pub mod backend {
     pub use cacao::View;
-    pub use cacao::Program;
+    pub use cacao::Application;
 }
 
 // --- gtk ---
@@ -33,7 +33,7 @@ pub mod gtk3;
 #[cfg(any(feature = "gtk3", not(target_os = "macos")))]
 pub mod backend {
     pub use gtk3::View;
-    pub use gtk3::Program;
+    pub use gtk3::Application;
 }
 
 // --- common ---
@@ -44,5 +44,7 @@ mod property;
 mod atomic_box;
 mod stream;
 mod update;
+mod program;
 
 pub use self::update::Update;
+pub use self::program::Program;
