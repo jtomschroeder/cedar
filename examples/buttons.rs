@@ -75,17 +75,42 @@ fn view(model: &Model) -> Node {
           Box::new(button())])
 }
 
+#[derive(Clone, Debug)]
+enum Change {
+    Replace,
+}
+
+fn diff(old: Vec<Node>, new: Vec<Node>) -> Vec<Change> {
+
+    // -      if `old` doesn't exist: CREATE new
+    // - else if `new` doesn't exist: REMOVE old
+    // - else if old.type != new.type: REPLACE old with new
+    // - else    update properties and keep going
+
+    // Traverse by 'level'
+
+    // if old.object == new.object {}
+
+    let mut changes = vec![];
+
+    for (old, new) in old.iter().zip(&new) {}
+
+    changes
+}
+
 fn program(model: Model, update: Update, view: View) {
     let v1 = view(&model);
-    println!("{:?} :: {:#?}", model, v1);
+    // println!("{:?} :: {:#?}", model, v1);
 
     let model = update(model, Message::Increment);
     let v2 = view(&model);
-    println!("{:?} :: {:#?}", model, v2);
+    // println!("{:?} :: {:#?}", model, v2);
 
     let model = update(model, Message::Decrement);
     let v3 = view(&model);
-    println!("{:?} :: {:#?}", model, v3);
+    // println!("{:?} :: {:#?}", model, v3);
+
+    println!("{:#?}", diff(vec![v1], vec![v2.clone()]));
 }
 
 fn main() {
