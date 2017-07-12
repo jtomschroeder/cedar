@@ -96,6 +96,7 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
 }
 
 // TODO: drain old & new trees instead slicing and cloning
+// TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`
 
 fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changeset<T>
     where T: fmt::Debug + PartialEq + Clone
