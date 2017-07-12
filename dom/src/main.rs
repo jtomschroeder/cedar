@@ -44,14 +44,14 @@ impl Path {
 // enum Operation = Add(Tree) | Remove | Update(Tree)
 
 #[derive(Debug)]
-enum Operation {
-    Create,
+enum Operation<T> {
+    Create(T),
     Delete,
-    Update,
-    Replace,
+    Update(T, T),
+    Replace(T),
 }
 
-type Changeset = Vec<(Path, Operation)>;
+type Changeset<T> = Vec<(Path, Operation<T>)>;
 
 // diff :: Tree -> Tree -> Changeset
 // - can add Path to the parameters to create a recursive implementation
@@ -95,8 +95,10 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
     }
 }
 
-fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changeset
-    where T: fmt::Debug + PartialEq
+// TODO: drain old & new trees instead slicing and cloning
+
+fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changeset<T>
+    where T: fmt::Debug + PartialEq + Clone
 {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: REMOVE old
@@ -121,7 +123,8 @@ fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changese
 
                 if t.value != u.value {
                     println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
-                    changeset.push((Path::new(level, n), Operation::Update));
+                    changeset.push((Path::new(level, n),
+                                    Operation::Update(t.value.clone(), u.value.clone())));
                 }
 
                 changeset.extend(diff(&t.children, &u.children, level + 1));
@@ -129,7 +132,7 @@ fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changese
 
             Pair::Right(u) => {
                 println!("Create {:?} @ {}:{}", u.value, level, n);
-                changeset.push((Path::new(level, n), Operation::Create));
+                changeset.push((Path::new(level, n), Operation::Create(u.value.clone())));
             }
         }
     }
@@ -150,5 +153,5 @@ fn main() {
 
     let changeset = diff(&[Box::new(t)], &[Box::new(u)], 0);
 
-    println!("changeset: {:?}", changeset);
+    println!("changeset: {:#?}", changeset);
 }
