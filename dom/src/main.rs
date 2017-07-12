@@ -29,9 +29,29 @@ macro_rules! node {
 
 // Path :: XPath-like location into tree
 
+#[derive(Debug)]
+struct Path {
+    pub depth: usize,
+    pub index: usize,
+}
+
+impl Path {
+    fn new(depth: usize, index: usize) -> Self {
+        Path { depth, index }
+    }
+}
+
 // enum Operation = Add(Tree) | Remove | Update(Tree)
 
-// type Changeset = Vec<(Path, Operation)>
+#[derive(Debug)]
+enum Operation {
+    Create,
+    Delete,
+    Update,
+    Replace,
+}
+
+type Changeset = Vec<(Path, Operation)>;
 
 // diff :: Tree -> Tree -> Changeset
 // - can add Path to the parameters to create a recursive implementation
@@ -75,9 +95,7 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
     }
 }
 
-// TODO: turn `level` into `path`
-
-fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize)
+fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changeset
     where T: fmt::Debug + PartialEq
 {
     // -      if `old` doesn't exist: CREATE new
@@ -85,17 +103,13 @@ fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize)
     // - else if old.type != new.type: REPLACE old with new
     // - else    update properties and keep going
 
-    // let display = |t: &[Box<Node<T>>]| {
-    //     t.iter()
-    //         .map(|n| format!("{:?}", n.value))
-    //         .collect::<Vec<_>>()
-    // };
-    // println!("{:?} :: {:?} :: {:?}", display(old), display(new), level);
+    let mut changeset = vec![];
 
-    for pair in zip(old, new) {
+    for (n, pair) in zip(old, new).enumerate() {
         match pair {
             Pair::Left(t) => {
-                println!("Delete {:?} @ {}", t.value, level);
+                println!("Delete {:?} @ {}:{}", t.value, level, n);
+                changeset.push((Path::new(level, n), Operation::Delete));
             }
 
             Pair::Both(t, u) => {
@@ -106,17 +120,21 @@ fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize)
                 // TODO: compare types (don't diff children if 'replace')
 
                 if t.value != u.value {
-                    println!("Update {:?} with {:?} @ {}", t.value, u.value, level);
+                    println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
+                    changeset.push((Path::new(level, n), Operation::Update));
                 }
 
-                diff(&t.children, &u.children, level + 1)
+                changeset.extend(diff(&t.children, &u.children, level + 1));
             }
 
             Pair::Right(u) => {
-                println!("Create {:?} @ {}", u.value, level);
+                println!("Create {:?} @ {}:{}", u.value, level, n);
+                changeset.push((Path::new(level, n), Operation::Create));
             }
         }
     }
+
+    changeset
 }
 
 fn patch() {}
@@ -130,5 +148,7 @@ fn main() {
 
     let u = node![1];
 
-    diff(&[Box::new(t)], &[Box::new(u)], 0);
+    let changeset = diff(&[Box::new(t)], &[Box::new(u)], 0);
+
+    println!("changeset: {:?}", changeset);
 }
