@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Debug)]
 struct Node<T> {
     value: T,
-    children: Vec<Box<Node<T>>>,
+    children: Vec<Node<T>>,
 }
 
 macro_rules! node {
@@ -21,7 +21,7 @@ macro_rules! node {
     ( $v:expr => $( $c:expr ),* ) => {{
         let mut children = vec![];
 
-        $( children.push(Box::new($c)); )*
+        $( children.push($c); )*
 
         Node { value: $v, children }
     }};
@@ -98,7 +98,7 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
 // TODO: drain old & new trees instead slicing and cloning
 // TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`
 
-fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changeset<T>
+fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
     where T: fmt::Debug + PartialEq + Clone
 {
     // -      if `old` doesn't exist: CREATE new
@@ -144,15 +144,10 @@ fn diff<T>(old: &[Box<Node<T>>], new: &[Box<Node<T>>], level: usize) -> Changese
 fn patch() {}
 
 fn main() {
-    let t = node![ 
-        0 => node![1], 
-             node![2 => node![3] 
-        ] 
-    ];
-
+    let t = node![0 => node![1], node![2 => node![3]]];
     let u = node![1];
 
-    let changeset = diff(&[Box::new(t)], &[Box::new(u)], 0);
+    let changeset = diff(&[t], &[u], 0);
 
     println!("changeset: {:#?}", changeset);
 }
