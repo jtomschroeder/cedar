@@ -26,7 +26,7 @@ macro_rules! node {
     }};
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 struct Path {
     pub depth: usize,
     pub index: usize,
@@ -38,7 +38,7 @@ impl Path {
     }
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 enum Operation<T> {
     Create(T),
     Delete,
@@ -84,6 +84,8 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
     }
 }
 
+use Operation::*;
+
 // TODO: drain old & new trees instead slicing and cloning
 // TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
 
@@ -101,7 +103,7 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
         match pair {
             Pair::Left(t) => {
                 println!("Delete {:?} @ {}:{}", t.value, level, n);
-                changeset.push((Path::new(level, n), Operation::Delete));
+                changeset.push((Path::new(level, n), Delete));
             }
 
             Pair::Both(t, u) => {
@@ -113,8 +115,7 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
 
                 if t.value != u.value {
                     println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
-                    changeset.push((Path::new(level, n),
-                                    Operation::Update(t.value.clone(), u.value.clone())));
+                    changeset.push((Path::new(level, n), Update(t.value.clone(), u.value.clone())));
                 }
 
                 changeset.extend(diff(&t.children, &u.children, level + 1));
@@ -122,7 +123,7 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
 
             Pair::Right(u) => {
                 println!("Create {:?} @ {}:{}", u.value, level, n);
-                changeset.push((Path::new(level, n), Operation::Create(u.value.clone())));
+                changeset.push((Path::new(level, n), Create(u.value.clone())));
             }
         }
     }
@@ -139,6 +140,11 @@ fn main() {
 
         let changeset = diff(&[t], &[u], 0);
         println!("changeset: {:#?}", changeset);
+
+        assert_eq!(changeset,
+                   vec![(Path::new(0, 0), Update(0, 1)),
+                        (Path::new(1, 0), Delete),
+                        (Path::new(1, 1), Delete)]);
     }
 
     {
@@ -147,5 +153,7 @@ fn main() {
 
         let changeset = diff(&[t], &[u], 0);
         println!("changeset: {:#?}", changeset);
+
+        assert_eq!(changeset, vec![(Path::new(0, 0), Update(0, 1))]);
     }
 }
