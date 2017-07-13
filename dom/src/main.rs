@@ -43,7 +43,7 @@ enum Operation<T> {
     Create(T),
     Delete,
     Update(T, T),
-    Replace(T),
+    Replace(T, T),
 }
 
 type Changeset<T> = Vec<(Path, Operation<T>)>;
@@ -89,8 +89,23 @@ use Operation::*;
 // TODO: drain old & new trees instead slicing and cloning
 // TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
 
+trait Diffable {
+    fn kind(&self, &Self) -> bool;
+    fn value(&self, &Self) -> bool;
+}
+
+impl Diffable for u32 {
+    fn kind(&self, _: &u32) -> bool {
+        true
+    }
+
+    fn value(&self, other: &u32) -> bool {
+        self == other
+    }
+}
+
 fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
-    where T: fmt::Debug + PartialEq + Clone
+    where T: fmt::Debug + PartialEq + Clone + Diffable
 {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: REMOVE old
@@ -111,14 +126,19 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
                 // else if t != u (properties changes) => update and diff children
                 // else (if t == u) diff children
 
-                // TODO: compare types (don't diff children if 'replace')
+                if !t.value.kind(&u.value) {
+                    println!("Replace {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
+                    changeset.push((Path::new(level, n),
+                                    Replace(t.value.clone(), u.value.clone())));
+                } else {
+                    if !t.value.value(&u.value) {
+                        println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
+                        changeset.push((Path::new(level, n),
+                                        Update(t.value.clone(), u.value.clone())));
+                    }
 
-                if t.value != u.value {
-                    println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
-                    changeset.push((Path::new(level, n), Update(t.value.clone(), u.value.clone())));
+                    changeset.extend(diff(&t.children, &u.children, level + 1));
                 }
-
-                changeset.extend(diff(&t.children, &u.children, level + 1));
             }
 
             Pair::Right(u) => {
