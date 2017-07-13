@@ -105,7 +105,7 @@ impl Diffable for u32 {
 }
 
 fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
-    where T: fmt::Debug + PartialEq + Clone + Diffable
+    where T: fmt::Debug + Clone + Diffable
 {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: REMOVE old
@@ -117,7 +117,7 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
     for (n, pair) in zip(old, new).enumerate() {
         match pair {
             Pair::Left(t) => {
-                println!("Delete {:?} @ {}:{}", t.value, level, n);
+                // println!("Delete {:?} @ {}:{}", t.value, level, n);
                 changeset.push((Path::new(level, n), Delete));
             }
 
@@ -127,12 +127,12 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
                 // else (if t == u) diff children
 
                 if !t.value.kind(&u.value) {
-                    println!("Replace {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
+                    // println!("Replace {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
                     changeset.push((Path::new(level, n),
                                     Replace(t.value.clone(), u.value.clone())));
                 } else {
                     if !t.value.value(&u.value) {
-                        println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
+                        // println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
                         changeset.push((Path::new(level, n),
                                         Update(t.value.clone(), u.value.clone())));
                     }
@@ -142,7 +142,7 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
             }
 
             Pair::Right(u) => {
-                println!("Create {:?} @ {}:{}", u.value, level, n);
+                // println!("Create {:?} @ {}:{}", u.value, level, n);
                 changeset.push((Path::new(level, n), Create(u.value.clone())));
             }
         }
@@ -154,12 +154,17 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
 fn patch() {}
 
 fn main() {
+    integers();
+    objects();
+}
+
+fn integers() {
     {
         let t = node![0 => node![1], node![2 => node![3]]];
         let u = node![1];
 
         let changeset = diff(&[t], &[u], 0);
-        println!("changeset: {:#?}", changeset);
+        // println!("changeset: {:#?}", changeset);
 
         assert_eq!(changeset,
                    vec![(Path::new(0, 0), Update(0, 1)),
@@ -172,8 +177,60 @@ fn main() {
         let u = node![1];
 
         let changeset = diff(&[t], &[u], 0);
-        println!("changeset: {:#?}", changeset);
+        // println!("changeset: {:#?}", changeset);
 
         assert_eq!(changeset, vec![(Path::new(0, 0), Update(0, 1))]);
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+enum Object {
+    Div,
+    Button,
+    Text(String),
+}
+
+impl Diffable for Object {
+    fn kind(&self, other: &Object) -> bool {
+        use Object::*;
+        match (self, other) {
+            (&Div, &Div) |
+            (&Button, &Button) |
+            (&Text(_), &Text(_)) => true,
+
+            _ => false,
+        }
+    }
+
+    fn value(&self, other: &Object) -> bool {
+        self == other
+    }
+}
+
+fn objects() {
+    use Object::*;
+
+    {
+        let t = node![Div];
+        let u = node![Div];
+
+        let changeset = diff(&[t], &[u], 0);
+        println!("changeset: {:#?}", changeset);
+    }
+
+    {
+        let t = node![Div];
+        let u = node![Button];
+
+        let changeset = diff(&[t], &[u], 0);
+        println!("changeset: {:#?}", changeset);
+    }
+
+    {
+        let t = node![Text("".into())];
+        let u = node![Text("!".into())];
+
+        let changeset = diff(&[t], &[u], 0);
+        println!("changeset: {:#?}", changeset);
     }
 }
