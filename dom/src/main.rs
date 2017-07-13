@@ -19,15 +19,12 @@ macro_rules! node {
     };
 
     ( $v:expr => $( $c:expr ),* ) => {{
-        let mut children = vec![];
-
-        $( children.push($c); )*
-
-        Node { value: $v, children }
+        Node { 
+            value: $v, 
+            children: vec![ $( $c ),* ]
+        }
     }};
 }
-
-// Path :: XPath-like location into tree
 
 #[derive(Debug)]
 struct Path {
@@ -41,8 +38,6 @@ impl Path {
     }
 }
 
-// enum Operation = Add(Tree) | Remove | Update(Tree)
-
 #[derive(Debug)]
 enum Operation<T> {
     Create(T),
@@ -52,12 +47,6 @@ enum Operation<T> {
 }
 
 type Changeset<T> = Vec<(Path, Operation<T>)>;
-
-// diff :: Tree -> Tree -> Changeset
-// - can add Path to the parameters to create a recursive implementation
-//
-// `diff(old, new, Path::Root)`
-//
 
 enum Pair<T, U> {
     Left(T),
@@ -96,7 +85,7 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
 }
 
 // TODO: drain old & new trees instead slicing and cloning
-// TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`
+// TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
 
 fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
     where T: fmt::Debug + PartialEq + Clone
@@ -144,10 +133,19 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
 fn patch() {}
 
 fn main() {
-    let t = node![0 => node![1], node![2 => node![3]]];
-    let u = node![1];
+    {
+        let t = node![0 => node![1], node![2 => node![3]]];
+        let u = node![1];
 
-    let changeset = diff(&[t], &[u], 0);
+        let changeset = diff(&[t], &[u], 0);
+        println!("changeset: {:#?}", changeset);
+    }
 
-    println!("changeset: {:#?}", changeset);
+    {
+        let t = node![0];
+        let u = node![1];
+
+        let changeset = diff(&[t], &[u], 0);
+        println!("changeset: {:#?}", changeset);
+    }
 }
