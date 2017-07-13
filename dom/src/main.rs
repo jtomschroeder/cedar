@@ -26,15 +26,17 @@ macro_rules! node {
     }};
 }
 
+type Path = Vec<Location>;
+
 #[derive(PartialEq, Debug)]
-struct Path {
+struct Location {
     pub depth: usize,
     pub index: usize,
 }
 
-impl Path {
+impl Location {
     fn new(depth: usize, index: usize) -> Self {
-        Path { depth, index }
+        Location { depth, index }
     }
 }
 
@@ -46,7 +48,7 @@ enum Operation<T> {
     Replace(T, T),
 }
 
-type Changeset<T> = Vec<(Path, Operation<T>)>;
+type Changeset<T> = Vec<(Location, Operation<T>)>;
 
 enum Pair<T, U> {
     Left(T),
@@ -86,7 +88,6 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
 
 use Operation::*;
 
-// TODO: drain old & new trees instead slicing and cloning
 // TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
 
 trait Diffable {
@@ -104,21 +105,23 @@ impl Diffable for u32 {
     }
 }
 
-fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
-    where T: fmt::Debug + Clone + Diffable
+type Nodes<T> = Vec<Node<T>>;
+
+fn diff<T>(old: Nodes<T>, new: Nodes<T>, level: usize) -> Changeset<T>
+    where T: Diffable
 {
     // -      if `old` doesn't exist: CREATE new
-    // - else if `new` doesn't exist: REMOVE old
+    // - else if `new` doesn't exist: DELETE old
     // - else if old.type != new.type: REPLACE old with new
-    // - else    update properties and keep going
+    // - else    UPDATE properties and check children
 
     let mut changeset = vec![];
 
     for (n, pair) in zip(old, new).enumerate() {
+        let location = Location::new(level, n);
         match pair {
-            Pair::Left(t) => {
-                // println!("Delete {:?} @ {}:{}", t.value, level, n);
-                changeset.push((Path::new(level, n), Delete));
+            Pair::Left(_) => {
+                changeset.push((location, Delete));
             }
 
             Pair::Both(t, u) => {
@@ -127,23 +130,18 @@ fn diff<T>(old: &[Node<T>], new: &[Node<T>], level: usize) -> Changeset<T>
                 // else (if t == u) diff children
 
                 if !t.value.kind(&u.value) {
-                    // println!("Replace {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
-                    changeset.push((Path::new(level, n),
-                                    Replace(t.value.clone(), u.value.clone())));
+                    changeset.push((location, Replace(t.value, u.value)));
                 } else {
                     if !t.value.value(&u.value) {
-                        // println!("Update {:?} with {:?} @ {}:{}", t.value, u.value, level, n);
-                        changeset.push((Path::new(level, n),
-                                        Update(t.value.clone(), u.value.clone())));
+                        changeset.push((location, Update(t.value, u.value)));
                     }
 
-                    changeset.extend(diff(&t.children, &u.children, level + 1));
+                    changeset.extend(diff(t.children, u.children, level + 1));
                 }
             }
 
             Pair::Right(u) => {
-                // println!("Create {:?} @ {}:{}", u.value, level, n);
-                changeset.push((Path::new(level, n), Create(u.value.clone())));
+                changeset.push((location, Create(u.value)));
             }
         }
     }
@@ -155,7 +153,7 @@ fn patch() {}
 
 fn main() {
     integers();
-    objects();
+    // objects();
 }
 
 fn integers() {
@@ -163,74 +161,74 @@ fn integers() {
         let t = node![0 => node![1], node![2 => node![3]]];
         let u = node![1];
 
-        let changeset = diff(&[t], &[u], 0);
-        // println!("changeset: {:#?}", changeset);
+        let changeset = diff(vec![t], vec![u], 0);
+        println!("changeset: {:#?}", changeset);
 
         assert_eq!(changeset,
-                   vec![(Path::new(0, 0), Update(0, 1)),
-                        (Path::new(1, 0), Delete),
-                        (Path::new(1, 1), Delete)]);
+                   vec![(Location::new(0, 0), Update(0, 1)),
+                        (Location::new(1, 0), Delete),
+                        (Location::new(1, 1), Delete)]);
     }
 
     {
         let t = node![0];
         let u = node![1];
 
-        let changeset = diff(&[t], &[u], 0);
-        // println!("changeset: {:#?}", changeset);
-
-        assert_eq!(changeset, vec![(Path::new(0, 0), Update(0, 1))]);
-    }
-}
-
-#[derive(PartialEq, Clone, Debug)]
-enum Object {
-    Div,
-    Button,
-    Text(String),
-}
-
-impl Diffable for Object {
-    fn kind(&self, other: &Object) -> bool {
-        use Object::*;
-        match (self, other) {
-            (&Div, &Div) |
-            (&Button, &Button) |
-            (&Text(_), &Text(_)) => true,
-
-            _ => false,
-        }
-    }
-
-    fn value(&self, other: &Object) -> bool {
-        self == other
-    }
-}
-
-fn objects() {
-    use Object::*;
-
-    {
-        let t = node![Div];
-        let u = node![Div];
-
-        let changeset = diff(&[t], &[u], 0);
+        let changeset = diff(vec![t], vec![u], 0);
         println!("changeset: {:#?}", changeset);
-    }
 
-    {
-        let t = node![Div];
-        let u = node![Button];
-
-        let changeset = diff(&[t], &[u], 0);
-        println!("changeset: {:#?}", changeset);
-    }
-
-    {
-        let t = node![Text("".into())];
-        let u = node![Text("!".into())];
-
-        let changeset = diff(&[t], &[u], 0);
-        println!("changeset: {:#?}", changeset);
+        assert_eq!(changeset, vec![(Location::new(0, 0), Update(0, 1))]);
     }
 }
+
+// #[derive(PartialEq, Clone, Debug)]
+// enum Object {
+//     Div,
+//     Button,
+//     Text(String),
+// }
+
+// impl Diffable for Object {
+//     fn kind(&self, other: &Object) -> bool {
+//         use Object::*;
+//         match (self, other) {
+//             (&Div, &Div) |
+//             (&Button, &Button) |
+//             (&Text(_), &Text(_)) => true,
+
+//             _ => false,
+//         }
+//     }
+
+//     fn value(&self, other: &Object) -> bool {
+//         self == other
+//     }
+// }
+
+// fn objects() {
+//     use Object::*;
+
+//     {
+//         let t = node![Div];
+//         let u = node![Div];
+
+//         let changeset = diff(&[t], &[u], 0);
+//         println!("changeset: {:#?}", changeset);
+//     }
+
+//     {
+//         let t = node![Div];
+//         let u = node![Button];
+
+//         let changeset = diff(&[t], &[u], 0);
+//         println!("changeset: {:#?}", changeset);
+//     }
+
+//     {
+//         let t = node![Text("".into())];
+//         let u = node![Text("!".into())];
+
+//         let changeset = diff(&[t], &[u], 0);
+//         println!("changeset: {:#?}", changeset);
+//     }
+// }
