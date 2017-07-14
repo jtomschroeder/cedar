@@ -1,6 +1,7 @@
 
 use std::marker::PhantomData;
 
+use dom;
 use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 
@@ -34,11 +35,10 @@ impl<S, M, U, V> Program<S, M, U, V> {
     }
 }
 
-use dom;
 fn create(node: dom::Node) -> Box<Widget> {
     let mut widget: Box<Widget> = match node.kind {
         dom::Kind::Label => Box::new(Label::new()),
-        dom::Kind::Button => Box::new(Label::new()), // TODO: use Label
+        dom::Kind::Button => Box::new(Button::new()), 
         dom::Kind::Stack => Box::new(Stack::new()),
     };
 

@@ -17,25 +17,29 @@ enum BezelStyle {
     Rounded = 1,
 }
 
-pub struct Button<M, S> {
-    id: Id,
-    attributes: Vec<Attribute<M>>,
-    stream: Stream<S>,
+pub struct Button {
+    id: Id, 
+    // attributes: Vec<Attribute<M>>,
+    // stream: Stream<S>,
 }
 
-impl<M, S: 'static> Button<M, S> {
-    pub fn new(stream: Stream<S>) -> Self {
+impl Button {
+    pub fn new() -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
 
             msg_send![button, setBezelStyle: BezelStyle::Rounded];
 
-            Button {
-                id: button.into(),
-                attributes: vec![],
-                stream: stream,
-            }
+            let mut button = Button {
+                id: button.into(), 
+                // attributes: vec![],
+                // stream: stream,
+            };
+
+            button.set_text("TEST!");
+
+            button
         }
     }
 
@@ -48,26 +52,26 @@ impl<M, S: 'static> Button<M, S> {
         }
     }
 
-    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-        self.attributes
-            .push(Attribute::Text(Box::new(attribute)));
-        self
-    }
+    // pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
+    //     self.attributes
+    //         .push(Attribute::Text(Box::new(attribute)));
+    //     self
+    // }
 
-    pub fn click<F: Fn() -> S + 'static>(self, action: F) -> Self {
-        let stream = self.stream.clone();
-        let action = action::create(move || stream.push(action()));
+    // pub fn click<F: Fn() -> S + 'static>(self, action: F) -> Self {
+    //     let stream = self.stream.clone();
+    //     let action = action::create(move || stream.push(action()));
 
-        unsafe {
-            msg_send![*self.id, setAction: sel!(act)];
-            msg_send![*self.id, setTarget: action];
-        }
+    //     unsafe {
+    //         msg_send![*self.id, setAction: sel!(act)];
+    //         msg_send![*self.id, setTarget: action];
+    //     }
 
-        self
-    }
+    //     self
+    // }
 }
 
-impl<M, S: 'static> Widget for Button<M, S> {
+impl Widget for Button {
     fn id(&self) -> &Id {
         &self.id
     }
