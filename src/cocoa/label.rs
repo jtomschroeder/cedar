@@ -14,7 +14,7 @@ pub struct Label {
 impl Label {
     pub fn new() -> Self {
         unsafe {
-            let string = NSString::alloc(nil).init_str("TEXT");
+            let string = NSString::alloc(nil).init_str("");
 
             let label: id = msg_send![class("NSTextField"), alloc];
             let label: id = msg_send![label, init];
