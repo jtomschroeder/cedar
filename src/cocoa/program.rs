@@ -5,15 +5,15 @@ use dom;
 use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 
-pub trait Viewable<S> {
-    fn view(&self) -> dom::Node;
+pub trait Viewable<M, S> {
+    fn view(&self, &M) -> dom::Node;
 }
 
-impl<S, F> Viewable<S> for F
-    where F: Fn() -> dom::Node
+impl<M, S, F> Viewable<M, S> for F
+    where F: Fn(&M) -> dom::Node
 {
-    fn view(&self) -> dom::Node {
-        self()
+    fn view(&self, model: &M) -> dom::Node {
+        self(model)
     }
 }
 
@@ -56,15 +56,17 @@ impl<S, M, U, V> Program<S, M, U, V>
     where S: Send + 'static,
           M: Send + 'static,
           U: ::Update<M, S> + Send + 'static,
-          V: Viewable<S>
+          V: Viewable<M, S>
 {
     pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
 
+        let model = self.model;
+
         let mut window = Window::new("cedar");
 
         let view = self.view;
-        let node = view.view();
+        let node = view.view(&model);
 
         window.add(create(node));
 
