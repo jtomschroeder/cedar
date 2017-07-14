@@ -15,7 +15,7 @@ mod delegate;
 
 pub use self::program::Program;
 pub use self::application::Application;
-pub use self::window::Window;
+pub use self::window::{Window, Stack};
 pub use self::view::View;
 
 pub use self::button::Button;

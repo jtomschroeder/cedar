@@ -47,11 +47,13 @@ impl NSEdgeInsets {
 pub struct Window {
     window: AtomicId,
     stack: Stack,
-    views: Arc<Vec<AtomicBox<Box<Widget>>>>,
+    // views: Arc<Vec<AtomicBox<Box<Widget>>>>,
+    views: Vec<Box<Widget>>,
 }
 
 pub struct Stack {
     id: Id,
+    children: Vec<Box<Widget>>,
 }
 
 impl Widget for Stack {
@@ -61,16 +63,18 @@ impl Widget for Stack {
 
     // fn update(&mut self, model: &M) {}
 
-    fn add(&self, widget: &Widget) {
+    fn add(&mut self, widget: Box<Widget>) {
         unsafe {
-            msg_send![*self.id, addView:widget.id()
-                                      inGravity:NSStackViewGravity::Top];
+            msg_send![*self.id, addView:**widget.id()
+                              inGravity:NSStackViewGravity::Top];
 
             // msg_send![self.window.get(), layoutIfNeeded];
 
             // let frame: NSRect = msg_send![self.stack.get(), frame];
             // msg_send![self.window.get(), setContentSize:frame.size];
         };
+
+        self.children.push(widget);
     }
 }
 
@@ -99,7 +103,10 @@ impl Stack {
                 stack
             };
 
-            Stack { id: stack.into() }
+            Stack {
+                id: stack.into(),
+                children: vec![],
+            }
         }
     }
 }
@@ -132,15 +139,15 @@ impl Window {
                 window: window.into(),
                 // stack: stack.into(),
                 stack: stack,
-                views: Arc::new(Vec::new()),
+                views: vec![],
             }
         }
     }
 
-    pub fn add<V: Widget + 'static>(&mut self, view: V) {
+    pub fn add(&mut self, widget: Box<Widget>) {
         unsafe {
             let stack: id = **self.stack.id();
-            msg_send![stack, addView:**view.id()
+            msg_send![stack, addView:**widget.id()
                            inGravity:NSStackViewGravity::Top];
 
             msg_send![self.window.get(), layoutIfNeeded];
@@ -149,9 +156,11 @@ impl Window {
             msg_send![self.window.get(), setContentSize:frame.size];
         };
 
-        if let Some(views) = Arc::get_mut(&mut self.views) {
-            views.push(AtomicBox::new(Box::new(view)));
-        }
+        // if let Some(views) = Arc::get_mut(&mut self.views) {
+        //     views.push(AtomicBox::new(Box::new(widget)));
+        // }
+
+        self.views.push(widget);
     }
 
     // pub fn update(&mut self, model: &M) {

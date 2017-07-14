@@ -1,7 +1,8 @@
 
 use std::marker::PhantomData;
 
-use super::{View, Window, Label};
+use super::{View, Window, Label, Stack, Button};
+use cacao::widget::Widget;
 
 pub trait Viewable<S> {
     fn view(&self) -> View<S>;
@@ -34,7 +35,19 @@ impl<S, M, U, V> Program<S, M, U, V> {
 }
 
 use dom;
-fn create(node: dom::Node) {}
+fn create(node: dom::Node) -> Box<Widget> {
+    let mut widget: Box<Widget> = match node.kind {
+        dom::Kind::Label => Box::new(Label::new()),
+        dom::Kind::Button => Box::new(Label::new()), // TODO: use Label
+        dom::Kind::Stack => Box::new(Stack::new()),
+    };
+
+    for child in node.children.into_iter() {
+        widget.add(create(child));
+    }
+
+    widget
+}
 
 impl<S, M, U, V> Program<S, M, U, V>
     where S: Send + 'static,
@@ -53,38 +66,46 @@ impl<S, M, U, V> Program<S, M, U, V>
             use dom::Attribute::*;
             use dom::Operation;
 
-            let u = node![Kind::Label |> Text("!".into())];
+            // let u = node![Kind::Label |> Text("!".into())];
 
-            // let u = node![Kind::Stack => node![Kind::Button]
-            //                      , node![Kind::Label |> Text("!".into())]
-            //                      , node![Kind::Button]
-            //             ];
+            let u = node![Kind::Stack => node![Kind::Button]
+                                 , node![Kind::Label |> Text("!".into())]
+                                 , node![Kind::Button]
+                        ];
 
             // let u = node![Stack => node![Button]
             //                      , node![Label |> Text("!".into())]
             //                      , node![Button]
             //             ];
 
-            let changeset = dom::diff(vec![], vec![u]);
+            println!("nodes: {:?}", u);
+
+            // let changeset = dom::diff(vec![], vec![u]);
             // println!("changeset: {:#?}", changeset);
 
-            for (path, operation) in changeset.into_iter() {
-                println!("{:?}", path);
-                println!("{:?}", operation);
+            // for (path, operation) in changeset.into_iter() {
+            //     println!("{:?}", path);
+            //     println!("{:?}", operation);
 
-                // - traverse to `path`
-                // - apply operation
+            //     // - traverse to `path`
+            //     // - apply operation
 
-                match operation {
-                    Operation::Create(node) => {
-                        match node.kind {
-                            Kind::Label => window.add(Label::new()),
-                            _ => {}
-                        }
-                    }
-                    _ => {}
-                }
-            }
+            //     match operation {
+            //         Operation::Create(node) => {
+            //             match node.kind {
+            //                 Kind::Label => window.add(Label::new()),
+            //                 _ => {}
+            //             }
+            //         }
+            //         _ => {}
+            //     }
+            // }
+
+            // let label = Label::new();
+            // let mut stack = Stack::new();
+            // stack.add(Box::new(label));
+
+            window.add(create(u));
         }
 
 

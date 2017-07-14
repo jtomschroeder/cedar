@@ -6,5 +6,5 @@ pub trait Widget {
 
     // fn update(&mut self, model: &M);
 
-    fn add(&self, widget: &Widget) {}
+    fn add(&mut self, widget: Box<Widget>) {}
 }
