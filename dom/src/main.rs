@@ -1,31 +1,64 @@
 
 #[derive(PartialEq, Debug)]
-struct Node<T> {
-    value: T,
-    children: Vec<Node<T>>,
+enum Kind {
+    Stack,
+    Button,
+    Label,
 }
 
-enum Kind {}
+#[derive(PartialEq, Debug)]
+enum Attribute {
+    Text(String),
+}
 
-enum Attribute {}
+type Attributes = Vec<Attribute>;
 
-struct DomNode {
+#[derive(PartialEq, Debug)]
+struct Node {
     kind: Kind,
-    attributes: Vec<Attribute>,
-    children: Vec<DomNode>,
+    attributes: Attributes,
+    children: Vec<Node>,
+}
+
+impl Node {
+    fn is(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+
+    fn eq(&self, other: &Self) -> bool {
+        self.is(other) && self.attributes == other.attributes
+    }
 }
 
 macro_rules! node {
-    ($v:expr) => {
+    ($k:path) => {
         Node {
-            value: $v,
+            kind: $k,
+            attributes: vec![],
             children: vec![]
         }
     };
 
-    ( $v:expr => $( $c:expr ),* ) => {{
+    ( $k:path => $( $c:expr ),* ) => {{
         Node { 
-            value: $v, 
+            kind: $k,
+            attributes: vec![],
+            children: vec![ $( $c ),* ]
+        }
+    }};
+
+    ( $k:path |> $( $a:expr ),* ) => {{
+        Node { 
+            kind: $k,
+            attributes: vec![ $( $a ),* ],
+            children: vec![]
+        }
+    }};
+
+    ( $k:path |> $( $a:expr ),* => $( $c:expr ),* ) => {{
+        Node { 
+            kind: $k,
+            attributes: vec![ $( $a ),* ],
             children: vec![ $( $c ),* ]
         }
     }};
@@ -54,14 +87,14 @@ impl Location {
 }
 
 #[derive(PartialEq, Debug)]
-enum Operation<T> {
-    Create(Node<T>),
+enum Operation {
+    Create(Node),
     Delete,
-    Update(T, T),
-    Replace(Node<T>),
+    Update(Attributes),
+    Replace(Node),
 }
 
-type Changeset<T> = Vec<(Path, Operation<T>)>;
+type Changeset = Vec<(Path, Operation)>;
 
 enum Pair<T, U> {
     Left(T),
@@ -101,30 +134,11 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
 
 use Operation::*;
 
-// TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
-
-trait Diffable {
-    fn is(&self, &Self) -> bool;
-    fn eq(&self, &Self) -> bool;
-}
-
-impl Diffable for u32 {
-    fn is(&self, _: &u32) -> bool {
-        true
-    }
-
-    fn eq(&self, other: &u32) -> bool {
-        self == other
-    }
-}
-
 use std::collections::VecDeque;
 
-type Nodes<T> = Vec<Node<T>>;
+type Nodes = Vec<Node>;
 
-fn diff<T>(old: Nodes<T>, new: Nodes<T>) -> Changeset<T>
-    where T: Diffable
-{
+fn diff(old: Nodes, new: Nodes) -> Changeset {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
     // - else if old.type != new.type: REPLACE old with new
@@ -158,11 +172,11 @@ fn diff<T>(old: Nodes<T>, new: Nodes<T>) -> Changeset<T>
                     // else if t != u (properties changes) => update and diff children
                     // else (if t == u) diff children
 
-                    if !t.value.is(&u.value) {
+                    if !t.is(&u) {
                         changeset.push((path.clone(), Replace(u)));
                     } else {
-                        if !t.value.eq(&u.value) {
-                            changeset.push((path.clone(), Update(t.value, u.value)));
+                        if !t.eq(&u) {
+                            changeset.push((path.clone(), Update(u.attributes)));
                         }
 
                         queue.push_back((t.children, u.children, level + 1, path));
@@ -182,61 +196,12 @@ fn diff<T>(old: Nodes<T>, new: Nodes<T>) -> Changeset<T>
 fn patch() {}
 
 fn main() {
-    integers();
     objects();
 }
 
-fn integers() {
-    {
-        let t = node![0 => node![1], node![2 => node![3]]];
-        let u = node![1];
-
-        let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:?}", changeset);
-
-        // assert_eq!(changeset,
-        //            vec![(Location::new(0, 0), Update(0, 1)),
-        //                 (Location::new(1, 0), Delete),
-        //                 (Location::new(1, 1), Delete)]);
-    }
-
-    {
-        let t = node![0];
-        let u = node![1];
-
-        let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:?}", changeset);
-
-        // assert_eq!(changeset, vec![(Location::new(0, 0), Update(0, 1))]);
-    }
-}
-
-#[derive(PartialEq, Clone, Debug)]
-enum Object {
-    Stack,
-    Button,
-    Text(String),
-}
-
-impl Diffable for Object {
-    fn is(&self, other: &Object) -> bool {
-        use Object::*;
-        match (self, other) {
-            (&Stack, &Stack) |
-            (&Button, &Button) |
-            (&Text(_), &Text(_)) => true,
-
-            _ => false,
-        }
-    }
-
-    fn eq(&self, other: &Object) -> bool {
-        self == other
-    }
-}
-
 fn objects() {
-    use Object::*;
+    use Kind::*;
+    use Attribute::*;
 
     {
         let t = node![Stack];
@@ -255,10 +220,20 @@ fn objects() {
     }
 
     {
-        let t = node![Text("".into())];
-        let u = node![Text("!".into())];
+        let t = node![Label |> Text("".into())];
+        let u = node![Label |> Text("!".into())];
 
         let changeset = diff(vec![t], vec![u]);
         println!("changeset: {:?}", changeset);
+    }
+
+    {
+        let u = node![Stack => node![Button]
+                             , node![Label |> Text("!".into())]
+                             , node![Button]
+                     ];
+
+        let changeset = diff(vec![], vec![u]);
+        println!("changeset: {:#?}", changeset);
     }
 }
