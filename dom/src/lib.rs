@@ -1,23 +1,23 @@
 
 #[derive(PartialEq, Debug)]
-enum Kind {
+pub enum Kind {
     Stack,
     Button,
     Label,
 }
 
 #[derive(PartialEq, Debug)]
-enum Attribute {
+pub enum Attribute {
     Text(String),
 }
 
 type Attributes = Vec<Attribute>;
 
 #[derive(PartialEq, Debug)]
-struct Node {
-    kind: Kind,
-    attributes: Attributes,
-    children: Vec<Node>,
+pub struct Node {
+    pub kind: Kind,
+    pub attributes: Attributes,
+    pub children: Vec<Node>,
 }
 
 impl Node {
@@ -30,9 +30,10 @@ impl Node {
     }
 }
 
+#[macro_export]
 macro_rules! node {
     ($k:path) => {
-        Node {
+        $crate::Node {
             kind: $k,
             attributes: vec![],
             children: vec![]
@@ -40,7 +41,7 @@ macro_rules! node {
     };
 
     ( $k:path => $( $c:expr ),* ) => {{
-        Node { 
+        $crate::Node { 
             kind: $k,
             attributes: vec![],
             children: vec![ $( $c ),* ]
@@ -48,7 +49,7 @@ macro_rules! node {
     }};
 
     ( $k:path |> $( $a:expr ),* ) => {{
-        Node { 
+        $crate::Node { 
             kind: $k,
             attributes: vec![ $( $a ),* ],
             children: vec![]
@@ -56,7 +57,7 @@ macro_rules! node {
     }};
 
     ( $k:path |> $( $a:expr ),* => $( $c:expr ),* ) => {{
-        Node { 
+        $crate::Node { 
             kind: $k,
             attributes: vec![ $( $a ),* ],
             children: vec![ $( $c ),* ]
@@ -67,7 +68,7 @@ macro_rules! node {
 type Path = Vec<Location>;
 
 #[derive(PartialEq, Clone)]
-struct Location {
+pub struct Location {
     pub depth: usize,
     pub index: usize,
 }
@@ -87,7 +88,7 @@ impl Location {
 }
 
 #[derive(PartialEq, Debug)]
-enum Operation {
+pub enum Operation {
     Create(Node),
     Delete,
     Update(Attributes),
@@ -138,7 +139,7 @@ use std::collections::VecDeque;
 
 type Nodes = Vec<Node>;
 
-fn diff(old: Nodes, new: Nodes) -> Changeset {
+pub fn diff(old: Nodes, new: Nodes) -> Changeset {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
     // - else if old.type != new.type: REPLACE old with new
