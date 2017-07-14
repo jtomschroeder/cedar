@@ -5,14 +5,14 @@ use atomic_box::AtomicBox;
 use super::{Window, Button, Label, TextField};
 
 pub struct View<S> {
-    window: AtomicBox<Window>,
+    // window: AtomicBox<Window>,
     stream: Stream<S>,
 }
 
 impl<S: 'static> View<S> {
     pub fn new() -> Self {
         View {
-            window: AtomicBox::new(Window::new("cedar")),
+            // window: AtomicBox::new(Window::new("cedar")),
             stream: Stream::new(),
         }
     }

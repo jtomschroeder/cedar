@@ -2,17 +2,13 @@
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
+use dom::Attributes;
+
 use super::id::Id;
 use super::widget::Widget;
-use property::Property;
-
-// enum Attribute<M> {
-//     Text(Box<Property<M, String>>),
-// }
 
 pub struct Label {
-    id: Id, 
-    // attributes: Vec<Attribute>,
+    id: Id,
 }
 
 impl Label {
@@ -29,10 +25,7 @@ impl Label {
             msg_send![label, setEditable: NO];
             msg_send![label, setSelectable: NO];
 
-            Label {
-                id: label.into(), 
-                // attributes: vec![],
-            }
+            Label { id: label.into() }
         }
     }
 
@@ -42,12 +35,6 @@ impl Label {
             msg_send![*self.id, setStringValue: string];
         }
     }
-
-    // pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-    //     self.attributes
-    //         .push(Attribute::Text(Box::new(attribute)));
-    //     self
-    // }
 }
 
 impl Widget for Label {
@@ -55,22 +42,12 @@ impl Widget for Label {
         &self.id
     }
 
-    // fn update(&mut self, model: &M) {
-    //     enum Attr {
-    //         Text(String),
-    //     }
-
-    //     let mut attrs: Vec<_> = self.attributes
-    //         .iter_mut()
-    //         .map(|attr| match attr {
-    //                  &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
-    //              })
-    //         .collect();
-
-    //     for attr in attrs.drain(..) {
-    //         match attr {
-    //             Attr::Text(s) => self.set_text(&s),
-    //         }
-    //     }
-    // }
+    fn update(&mut self, attributes: Attributes) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Text(text) => self.set_text(&text),
+            }
+        }
+    }
 }

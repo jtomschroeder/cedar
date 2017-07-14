@@ -42,6 +42,9 @@ fn create(node: dom::Node) -> Box<Widget> {
         dom::Kind::Stack => Box::new(Stack::new()),
     };
 
+    let attrs = node.attributes;
+    widget.update(attrs);
+
     for child in node.children.into_iter() {
         widget.add(create(child));
     }
@@ -63,12 +66,12 @@ impl<S, M, U, V> Program<S, M, U, V>
 
         let model = self.model;
 
-        let mut window = Window::new("cedar");
+        let (window, mut stack) = Window::new("cedar");
 
         let view = self.view;
         let node = view.view(&model);
 
-        window.add(create(node));
+        stack.add(create(node));
 
         // let mut view = self.view.view();
 

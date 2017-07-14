@@ -11,7 +11,7 @@ pub enum Attribute {
     Text(String),
 }
 
-type Attributes = Vec<Attribute>;
+pub type Attributes = Vec<Attribute>;
 
 #[derive(PartialEq, Debug)]
 pub struct Node {
