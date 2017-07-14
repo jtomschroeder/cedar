@@ -4,13 +4,13 @@ use std::marker::PhantomData;
 use super::View;
 
 pub trait Viewable<M, S> {
-    fn view(&mut self) -> View<M, S>;
+    fn view(&self) -> View<M, S>;
 }
 
 impl<M, S, F> Viewable<M, S> for F
-    where F: FnMut() -> View<M, S>
+    where F: Fn() -> View<M, S>
 {
-    fn view(&mut self) -> View<M, S> {
+    fn view(&self) -> View<M, S> {
         self()
     }
 }
@@ -39,7 +39,7 @@ impl<S, M, U, V> Program<S, M, U, V>
           U: ::Update<M, S> + Send + 'static,
           V: Viewable<M, S>
 {
-    pub fn run(mut self) {
+    pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
 
         let mut view = self.view.view();
@@ -49,9 +49,9 @@ impl<S, M, U, V> Program<S, M, U, V>
 
         let mut update = self.update;
         app.run(move || loop {
-            let message = view.stream().pop();
-            model = update.update(&model, message);
-            view.update(&model);
-        })
+                    let message = view.stream().pop();
+                    model = update.update(&model, message);
+                    view.update(&model);
+                })
     }
 }

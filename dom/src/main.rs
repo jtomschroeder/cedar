@@ -174,7 +174,7 @@ fn integers() {
         let u = node![1];
 
         let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:#?}", changeset);
+        println!("changeset: {:?}", changeset);
 
         // assert_eq!(changeset,
         //            vec![(Location::new(0, 0), Update(0, 1)),
@@ -187,7 +187,7 @@ fn integers() {
         let u = node![1];
 
         let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:#?}", changeset);
+        println!("changeset: {:?}", changeset);
 
         // assert_eq!(changeset, vec![(Location::new(0, 0), Update(0, 1))]);
     }
@@ -225,7 +225,7 @@ fn objects() {
         let u = node![Div];
 
         let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:#?}", changeset);
+        println!("changeset: {:?}", changeset);
     }
 
     {
@@ -233,7 +233,7 @@ fn objects() {
         let u = node![Button];
 
         let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:#?}", changeset);
+        println!("changeset: {:?}", changeset);
     }
 
     {
@@ -241,6 +241,6 @@ fn objects() {
         let u = node![Text("!".into())];
 
         let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:#?}", changeset);
+        println!("changeset: {:?}", changeset);
     }
 }
