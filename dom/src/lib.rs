@@ -139,6 +139,8 @@ use std::collections::VecDeque;
 
 type Nodes = Vec<Node>;
 
+// take function to compare Both nodes: NotIs, Eq, Neq
+
 pub fn diff(old: Nodes, new: Nodes) -> Changeset {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
