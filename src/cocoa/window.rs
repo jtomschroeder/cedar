@@ -125,30 +125,7 @@ impl Window {
 
             window.makeKeyAndOrderFront_(nil);
 
-            // let stack = {
-            //     let stack: id = msg_send![class("NSStackView"), alloc];
-            //     let stack: id = msg_send![stack, init];
-
-            //     // window.frame padded by 10.0 on each side
-            //     let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
-            //     msg_send![stack, setFrame: rect];
-
-            //     msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
-
-            //     msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
-            //     msg_send![stack, setSpacing: 5.0];
-
-            //     let insets = NSEdgeInsets::new(10., 10., 10., 10.);
-            //     msg_send![stack, setEdgeInsets: insets];
-
-            //     use cocoa::appkit::NSView;
-            //     window.contentView().addSubview_(stack);
-
-            //     stack
-            // };
-
             let stack: Stack = Stack::new();
-
             msg_send![window.contentView(), addSubview:**stack.id()];
 
             Window {
@@ -161,22 +138,14 @@ impl Window {
     }
 
     pub fn add<V: Widget + 'static>(&mut self, view: V) {
-        // unsafe {
-        //     msg_send![self.stack.get(), addView:**view.id()
-        //                               inGravity:NSStackViewGravity::Top];
-
-        //     msg_send![self.window.get(), layoutIfNeeded];
-
-        //     let frame: NSRect = msg_send![self.stack.get(), frame];
-        //     msg_send![self.window.get(), setContentSize:frame.size];
-        // };
-
         unsafe {
-            msg_send![self.window.get().contentView(), addSubview:**view.id()];
+            let stack: id = **self.stack.id();
+            msg_send![stack, addView:**view.id()
+                           inGravity:NSStackViewGravity::Top];
 
             msg_send![self.window.get(), layoutIfNeeded];
 
-            let frame: NSRect = msg_send![**view.id(), frame];
+            let frame: NSRect = msg_send![stack, frame];
             msg_send![self.window.get(), setContentSize:frame.size];
         };
 
