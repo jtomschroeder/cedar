@@ -1,6 +1,9 @@
 
 extern crate cedar;
 
+#[macro_use]
+extern crate dom;
+
 type Model = i32;
 
 enum Message {
@@ -8,18 +11,22 @@ enum Message {
     Decrement,
 }
 
-fn update(model: &Model, message: Message) -> Model {
+fn update(model: Model, message: Message) -> Model {
     match message {
         Message::Increment => model + 1,
         Message::Decrement => model - 1,
     }
 }
 
-fn view() -> cedar::View<Message> {
-    cedar::View::new()
-    // .button(|button| button.text("+").click(|| Message::Increment))
-    // .label(|label| label.text(Model::to_string))
-    // .button(|button| button.text("-").click(|| Message::Decrement))
+fn view() -> cedar::dom::Node {
+    use dom::Kind;
+    use dom::Attribute::*;
+    use dom::Operation;
+
+    node![Kind::Stack => node![Kind::Button]
+                       , node![Kind::Label |> Text("!".into())]
+                       , node![Kind::Button]
+         ]
 }
 
 fn main() {

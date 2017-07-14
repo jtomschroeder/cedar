@@ -6,13 +6,13 @@ use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 
 pub trait Viewable<S> {
-    fn view(&self) -> View<S>;
+    fn view(&self) -> dom::Node;
 }
 
 impl<S, F> Viewable<S> for F
-    where F: Fn() -> View<S>
+    where F: Fn() -> dom::Node
 {
-    fn view(&self) -> View<S> {
+    fn view(&self) -> dom::Node {
         self()
     }
 }
@@ -49,6 +49,9 @@ fn create(node: dom::Node) -> Box<Widget> {
     widget
 }
 
+// TODO: use `removeFromSuperview()` to 'delete' nodes
+// TODO: maintain `tree` of widgets here instead of in each widget
+
 impl<S, M, U, V> Program<S, M, U, V>
     where S: Send + 'static,
           M: Send + 'static,
@@ -60,26 +63,10 @@ impl<S, M, U, V> Program<S, M, U, V>
 
         let mut window = Window::new("cedar");
 
-        {
-            use dom;
-            use dom::Kind;
-            use dom::Attribute::*;
-            use dom::Operation;
+        let view = self.view;
+        let node = view.view();
 
-            // let u = node![Kind::Label |> Text("!".into())];
-
-            let u = node![Kind::Stack => node![Kind::Button]
-                                       , node![Kind::Label |> Text("!".into())]
-                                       , node![Kind::Button]
-                         ];
-
-            println!("nodes: {:?}", u);
-
-            // let changeset = dom::diff(vec![], vec![u]);
-            // println!("changeset: {:#?}", changeset);
-
-            window.add(create(u));
-        }
+        window.add(create(node));
 
         // let mut view = self.view.view();
 
