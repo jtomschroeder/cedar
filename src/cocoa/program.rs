@@ -69,46 +69,17 @@ impl<S, M, U, V> Program<S, M, U, V>
             // let u = node![Kind::Label |> Text("!".into())];
 
             let u = node![Kind::Stack => node![Kind::Button]
-                                 , node![Kind::Label |> Text("!".into())]
-                                 , node![Kind::Button]
-                        ];
-
-            // let u = node![Stack => node![Button]
-            //                      , node![Label |> Text("!".into())]
-            //                      , node![Button]
-            //             ];
+                                       , node![Kind::Label |> Text("!".into())]
+                                       , node![Kind::Button]
+                         ];
 
             println!("nodes: {:?}", u);
 
             // let changeset = dom::diff(vec![], vec![u]);
             // println!("changeset: {:#?}", changeset);
 
-            // for (path, operation) in changeset.into_iter() {
-            //     println!("{:?}", path);
-            //     println!("{:?}", operation);
-
-            //     // - traverse to `path`
-            //     // - apply operation
-
-            //     match operation {
-            //         Operation::Create(node) => {
-            //             match node.kind {
-            //                 Kind::Label => window.add(Label::new()),
-            //                 _ => {}
-            //             }
-            //         }
-            //         _ => {}
-            //     }
-            // }
-
-            // let label = Label::new();
-            // let mut stack = Stack::new();
-            // stack.add(Box::new(label));
-
             window.add(create(u));
         }
-
-
 
         // let mut view = self.view.view();
 
