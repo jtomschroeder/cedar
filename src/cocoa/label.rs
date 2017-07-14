@@ -6,19 +6,19 @@ use super::id::Id;
 use super::widget::Widget;
 use property::Property;
 
-enum Attribute<M> {
-    Text(Box<Property<M, String>>),
+// enum Attribute<M> {
+//     Text(Box<Property<M, String>>),
+// }
+
+pub struct Label {
+    id: Id, 
+    // attributes: Vec<Attribute>,
 }
 
-pub struct Label<M> {
-    id: Id,
-    attributes: Vec<Attribute<M>>,
-}
-
-impl<M> Label<M> {
+impl Label {
     pub fn new() -> Self {
         unsafe {
-            let string = NSString::alloc(nil).init_str("");
+            let string = NSString::alloc(nil).init_str("TEXT");
 
             let label: id = msg_send![class("NSTextField"), alloc];
             let label: id = msg_send![label, init];
@@ -30,8 +30,8 @@ impl<M> Label<M> {
             msg_send![label, setSelectable: NO];
 
             Label {
-                id: label.into(),
-                attributes: vec![],
+                id: label.into(), 
+                // attributes: vec![],
             }
         }
     }
@@ -43,33 +43,34 @@ impl<M> Label<M> {
         }
     }
 
-    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-        self.attributes.push(Attribute::Text(Box::new(attribute)));
-        self
-    }
+    // pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
+    //     self.attributes
+    //         .push(Attribute::Text(Box::new(attribute)));
+    //     self
+    // }
 }
 
-impl<M> Widget<M> for Label<M> {
+impl Widget for Label {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, model: &M) {
-        enum Attr {
-            Text(String),
-        }
+    // fn update(&mut self, model: &M) {
+    //     enum Attr {
+    //         Text(String),
+    //     }
 
-        let mut attrs: Vec<_> = self.attributes
-            .iter_mut()
-            .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
-            })
-            .collect();
+    //     let mut attrs: Vec<_> = self.attributes
+    //         .iter_mut()
+    //         .map(|attr| match attr {
+    //                  &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
+    //              })
+    //         .collect();
 
-        for attr in attrs.drain(..) {
-            match attr {
-                Attr::Text(s) => self.set_text(&s),
-            }
-        }
-    }
+    //     for attr in attrs.drain(..) {
+    //         match attr {
+    //             Attr::Text(s) => self.set_text(&s),
+    //         }
+    //     }
+    // }
 }

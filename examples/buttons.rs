@@ -15,11 +15,11 @@ fn update(model: &Model, message: Message) -> Model {
     }
 }
 
-fn view() -> cedar::View<Model, Message> {
+fn view() -> cedar::View<Message> {
     cedar::View::new()
-        .button(|button| button.text("+").click(|| Message::Increment))
-        .label(|label| label.text(Model::to_string))
-        .button(|button| button.text("-").click(|| Message::Decrement))
+    // .button(|button| button.text("+").click(|| Message::Increment))
+    // .label(|label| label.text(Model::to_string))
+    // .button(|button| button.text("-").click(|| Message::Decrement))
 }
 
 fn main() {

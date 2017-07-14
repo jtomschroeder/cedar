@@ -1,16 +1,16 @@
 
 use std::marker::PhantomData;
 
-use super::View;
+use super::{View, Window, Label};
 
-pub trait Viewable<M, S> {
-    fn view(&self) -> View<M, S>;
+pub trait Viewable<S> {
+    fn view(&self) -> View<S>;
 }
 
-impl<M, S, F> Viewable<M, S> for F
-    where F: Fn() -> View<M, S>
+impl<S, F> Viewable<S> for F
+    where F: Fn() -> View<S>
 {
-    fn view(&self) -> View<M, S> {
+    fn view(&self) -> View<S> {
         self()
     }
 }
@@ -33,25 +33,72 @@ impl<S, M, U, V> Program<S, M, U, V> {
     }
 }
 
+use dom;
+fn create(node: dom::Node) {}
+
 impl<S, M, U, V> Program<S, M, U, V>
     where S: Send + 'static,
           M: Send + 'static,
           U: ::Update<M, S> + Send + 'static,
-          V: Viewable<M, S>
+          V: Viewable<S>
 {
     pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
 
-        let mut view = self.view.view();
+        let mut window = Window::new("cedar");
 
-        let mut model = self.model;
-        view.update(&model);
+        {
+            use dom;
+            use dom::Kind;
+            use dom::Attribute::*;
+            use dom::Operation;
 
-        let mut update = self.update;
+            let u = node![Kind::Label |> Text("!".into())];
+
+            // let u = node![Kind::Stack => node![Kind::Button]
+            //                      , node![Kind::Label |> Text("!".into())]
+            //                      , node![Kind::Button]
+            //             ];
+
+            // let u = node![Stack => node![Button]
+            //                      , node![Label |> Text("!".into())]
+            //                      , node![Button]
+            //             ];
+
+            let changeset = dom::diff(vec![], vec![u]);
+            // println!("changeset: {:#?}", changeset);
+
+            for (path, operation) in changeset.into_iter() {
+                println!("{:?}", path);
+                println!("{:?}", operation);
+
+                // - traverse to `path`
+                // - apply operation
+
+                match operation {
+                    Operation::Create(node) => {
+                        match node.kind {
+                            Kind::Label => window.add(Label::new()),
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+
+
+        // let mut view = self.view.view();
+
+        // let mut model = self.model;
+        // view.update(&model);
+
+        // let mut update = self.update;
         app.run(move || loop {
-                    let message = view.stream().pop();
-                    model = update.update(&model, message);
-                    view.update(&model);
+                    // let message = view.stream().pop();
+                    // model = update.update(&model, message);
+                    // view.update(&model);
                 })
     }
 }

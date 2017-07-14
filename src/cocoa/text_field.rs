@@ -62,10 +62,10 @@ impl<S: 'static> TextField<S> {
     }
 }
 
-impl<M, S> Widget<M> for TextField<S> {
+impl<S> Widget for TextField<S> {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, _: &M) {}
+    // fn update(&mut self, _: &M) {}
 }

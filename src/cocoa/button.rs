@@ -49,7 +49,8 @@ impl<M, S: 'static> Button<M, S> {
     }
 
     pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-        self.attributes.push(Attribute::Text(Box::new(attribute)));
+        self.attributes
+            .push(Attribute::Text(Box::new(attribute)));
         self
     }
 
@@ -66,27 +67,27 @@ impl<M, S: 'static> Button<M, S> {
     }
 }
 
-impl<M, S: 'static> Widget<M> for Button<M, S> {
+impl<M, S: 'static> Widget for Button<M, S> {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, model: &M) {
-        enum Attr {
-            Text(String),
-        }
+    // fn update(&mut self, model: &M) {
+    //     enum Attr {
+    //         Text(String),
+    //     }
 
-        let mut attrs: Vec<_> = self.attributes
-            .iter_mut()
-            .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
-            })
-            .collect();
+    //     let mut attrs: Vec<_> = self.attributes
+    //         .iter_mut()
+    //         .map(|attr| match attr {
+    //                  &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
+    //              })
+    //         .collect();
 
-        for attr in attrs.drain(..) {
-            match attr {
-                Attr::Text(s) => self.set_text(&s),
-            }
-        }
-    }
+    //     for attr in attrs.drain(..) {
+    //         match attr {
+    //             Attr::Text(s) => self.set_text(&s),
+    //         }
+    //     }
+    // }
 }
