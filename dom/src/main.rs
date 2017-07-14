@@ -1,8 +1,18 @@
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 struct Node<T> {
     value: T,
     children: Vec<Node<T>>,
+}
+
+enum Kind {}
+
+enum Attribute {}
+
+struct DomNode {
+    kind: Kind,
+    attributes: Vec<Attribute>,
+    children: Vec<DomNode>,
 }
 
 macro_rules! node {
@@ -23,10 +33,18 @@ macro_rules! node {
 
 type Path = Vec<Location>;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 struct Location {
     pub depth: usize,
     pub index: usize,
+}
+
+use std::fmt;
+
+impl fmt::Debug for Location {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Location({}:{})", self.depth, self.index)
+    }
 }
 
 impl Location {
@@ -37,10 +55,10 @@ impl Location {
 
 #[derive(PartialEq, Debug)]
 enum Operation<T> {
-    Create(T),
+    Create(Node<T>),
     Delete,
     Update(T, T),
-    Replace(T, T),
+    Replace(Node<T>),
 }
 
 type Changeset<T> = Vec<(Path, Operation<T>)>;
@@ -86,16 +104,16 @@ use Operation::*;
 // TODO: add param to diff `FnMut(Pair<T, T>) -> Operation` to decouple determining operations from `diff`?
 
 trait Diffable {
-    fn kind(&self, &Self) -> bool;
-    fn value(&self, &Self) -> bool;
+    fn is(&self, &Self) -> bool;
+    fn eq(&self, &Self) -> bool;
 }
 
 impl Diffable for u32 {
-    fn kind(&self, _: &u32) -> bool {
+    fn is(&self, _: &u32) -> bool {
         true
     }
 
-    fn value(&self, other: &u32) -> bool {
+    fn eq(&self, other: &u32) -> bool {
         self == other
     }
 }
@@ -140,10 +158,10 @@ fn diff<T>(old: Nodes<T>, new: Nodes<T>) -> Changeset<T>
                     // else if t != u (properties changes) => update and diff children
                     // else (if t == u) diff children
 
-                    if !t.value.kind(&u.value) {
-                        changeset.push((path.clone(), Replace(t.value, u.value)));
+                    if !t.value.is(&u.value) {
+                        changeset.push((path.clone(), Replace(u)));
                     } else {
-                        if !t.value.value(&u.value) {
+                        if !t.value.eq(&u.value) {
                             changeset.push((path.clone(), Update(t.value, u.value)));
                         }
 
@@ -152,7 +170,7 @@ fn diff<T>(old: Nodes<T>, new: Nodes<T>) -> Changeset<T>
                 }
 
                 Pair::Right(u) => {
-                    changeset.push((path.clone(), Create(u.value)));
+                    changeset.push((path.clone(), Create(u)));
                 }
             }
         }
@@ -195,16 +213,16 @@ fn integers() {
 
 #[derive(PartialEq, Clone, Debug)]
 enum Object {
-    Div,
+    Stack,
     Button,
     Text(String),
 }
 
 impl Diffable for Object {
-    fn kind(&self, other: &Object) -> bool {
+    fn is(&self, other: &Object) -> bool {
         use Object::*;
         match (self, other) {
-            (&Div, &Div) |
+            (&Stack, &Stack) |
             (&Button, &Button) |
             (&Text(_), &Text(_)) => true,
 
@@ -212,7 +230,7 @@ impl Diffable for Object {
         }
     }
 
-    fn value(&self, other: &Object) -> bool {
+    fn eq(&self, other: &Object) -> bool {
         self == other
     }
 }
@@ -221,15 +239,15 @@ fn objects() {
     use Object::*;
 
     {
-        let t = node![Div];
-        let u = node![Div];
+        let t = node![Stack];
+        let u = node![Stack];
 
         let changeset = diff(vec![t], vec![u]);
         println!("changeset: {:?}", changeset);
     }
 
     {
-        let t = node![Div];
+        let t = node![Stack];
         let u = node![Button];
 
         let changeset = diff(vec![t], vec![u]);
