@@ -37,16 +37,17 @@ impl Label {
     }
 }
 
-impl Widget for Label {
+impl<S> Widget<S> for Label {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, attributes: Attributes) {
+    fn update(&mut self, attributes: Attributes<S>) {
         use super::Attribute::*;
         for attr in attributes.into_iter() {
             match attr {
                 Text(text) => self.set_text(&text),
+                _ => {}
             }
         }
     }

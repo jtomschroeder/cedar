@@ -44,26 +44,26 @@ impl NSEdgeInsets {
     }
 }
 
-pub struct Window {
+pub struct Window<S> {
     window: AtomicId,
     // stack: Stack,
     // views: Arc<Vec<AtomicBox<Box<Widget>>>>,
-    views: Vec<Box<Widget>>,
+    views: Vec<Box<Widget<S>>>,
 }
 
-pub struct Stack {
+pub struct Stack<S> {
     id: Id,
-    children: Vec<Box<Widget>>,
+    children: Vec<Box<Widget<S>>>,
 }
 
-impl Widget for Stack {
+impl<S> Widget<S> for Stack<S> {
     fn id(&self) -> &Id {
         &self.id
     }
 
     // fn update(&mut self, model: &M) {}
 
-    fn add(&mut self, widget: Box<Widget>) {
+    fn add(&mut self, widget: Box<Widget<S>>) {
         unsafe {
             msg_send![*self.id, addView:**widget.id()
                               inGravity:NSStackViewGravity::Top];
@@ -78,7 +78,7 @@ impl Widget for Stack {
     }
 }
 
-impl Stack {
+impl<S> Stack<S> {
     pub fn new() -> Self {
         unsafe {
             let stack = {
@@ -111,8 +111,8 @@ impl Stack {
     }
 }
 
-impl Window {
-    pub fn new(title: &str) -> (Self, Stack) {
+impl<S> Window<S> {
+    pub fn new(title: &str) -> (Self, Stack<S>) {
         unsafe {
             let style = NSResizableWindowMask as NSUInteger | NSTitledWindowMask as NSUInteger |
                         NSMiniaturizableWindowMask as NSUInteger |
@@ -132,7 +132,7 @@ impl Window {
 
             window.makeKeyAndOrderFront_(nil);
 
-            let stack: Stack = Stack::new();
+            let stack: Stack<S> = Stack::new();
             msg_send![window.contentView(), addSubview:**stack.id()];
 
             (Window {

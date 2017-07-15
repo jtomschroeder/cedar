@@ -18,7 +18,7 @@ enum BezelStyle {
 }
 
 pub struct Button {
-    id: Id, 
+    id: Id,
     // attributes: Vec<Attribute<M>>,
     // stream: Stream<S>,
 }
@@ -32,7 +32,7 @@ impl Button {
             msg_send![button, setBezelStyle: BezelStyle::Rounded];
 
             let mut button = Button {
-                id: button.into(), 
+                id: button.into(),
                 // attributes: vec![],
                 // stream: stream,
             };
@@ -71,7 +71,7 @@ impl Button {
     // }
 }
 
-impl Widget for Button {
+impl<S> Widget<S> for Button {
     fn id(&self) -> &Id {
         &self.id
     }

@@ -18,14 +18,14 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> cedar::backend::Node {
+fn view(model: &Model) -> cedar::backend::Node<Message> {
     use cedar::backend::Kind::*;
     use cedar::backend::Attribute::*;
 
     node![(Stack, vec![]) 
-            => node![(Button, vec![])]
+            => node![(Button, vec![Click(Message::Increment)])]
                 , node![(Label, vec![Text("!".into())])]
-                , node![(Button, vec![])]
+                , node![(Button, vec![Click(Message::Decrement)])]
             ]
 }
 

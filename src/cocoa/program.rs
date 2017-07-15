@@ -6,13 +6,13 @@ use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 
 pub trait Viewable<M, S> {
-    fn view(&self, &M) -> Node;
+    fn view(&self, &M) -> Node<S>;
 }
 
 impl<M, S, F> Viewable<M, S> for F
-    where F: Fn(&M) -> Node
+    where F: Fn(&M) -> Node<S>
 {
-    fn view(&self, model: &M) -> Node {
+    fn view(&self, model: &M) -> Node<S> {
         self(model)
     }
 }
@@ -44,17 +44,18 @@ pub enum Kind {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum Attribute {
+pub enum Attribute<S> {
     Text(String),
+    Click(S),
 }
 
-pub type Attributes = Vec<Attribute>;
+pub type Attributes<S> = Vec<Attribute<S>>;
 
-pub type Value = (Kind, Attributes);
-pub type Node = dom::Node<Value>;
+pub type Value<S> = (Kind, Attributes<S>);
+pub type Node<S> = dom::Node<Value<S>>;
 
-fn create(node: Node) -> Box<Widget> {
-    let mut widget: Box<Widget> = match node.value.0 {
+fn create<S: 'static>(node: Node<S>) -> Box<Widget<S>> {
+    let mut widget: Box<Widget<S>> = match node.value.0 {
         Kind::Label => Box::new(Label::new()),
         Kind::Button => Box::new(Button::new()), 
         Kind::Stack => Box::new(Stack::new()),

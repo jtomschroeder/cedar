@@ -62,7 +62,7 @@ impl<S: 'static> TextField<S> {
     }
 }
 
-impl<S> Widget for TextField<S> {
+impl<S> Widget<S> for TextField<S> {
     fn id(&self) -> &Id {
         &self.id
     }
