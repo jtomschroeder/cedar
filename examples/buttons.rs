@@ -18,15 +18,15 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> cedar::dom::Node {
-    use dom::Kind;
-    use dom::Attribute::*;
-    use dom::Operation;
+fn view(model: &Model) -> cedar::backend::Node {
+    use cedar::backend::Kind::*;
+    use cedar::backend::Attribute::*;
 
-    node![Kind::Stack => node![Kind::Button]
-                       , node![Kind::Label |> Text(model.to_string())]
-                       , node![Kind::Button]
-         ]
+    node![(Stack, vec![]) 
+            => node![(Button, vec![])]
+                , node![(Label, vec![Text("!".into())])]
+                , node![(Button, vec![])]
+            ]
 }
 
 fn main() {

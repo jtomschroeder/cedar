@@ -20,8 +20,10 @@ mod cacao;
 
 #[cfg(all(target_os = "macos", not(feature = "gtk3")))]
 pub mod backend {
-    pub use cacao::View;
-    pub use cacao::Program;
+    pub use cacao::*;
+
+    // pub use cacao::View;
+    // pub use cacao::Program;
 }
 
 // --- gtk ---

@@ -2,7 +2,7 @@
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
-use dom::Attributes;
+use super::Attributes;
 
 use super::id::Id;
 use super::widget::Widget;
@@ -43,7 +43,7 @@ impl Widget for Label {
     }
 
     fn update(&mut self, attributes: Attributes) {
-        use dom::Attribute::*;
+        use super::Attribute::*;
         for attr in attributes.into_iter() {
             match attr {
                 Text(text) => self.set_text(&text),

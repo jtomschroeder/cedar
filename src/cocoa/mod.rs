@@ -13,7 +13,8 @@ mod widget;
 mod action;
 mod delegate;
 
-pub use self::program::Program;
+pub use self::program::{Program, Kind, Attribute, Attributes, Node};
+
 pub use self::application::Application;
 pub use self::window::{Window, Stack};
 pub use self::view::View;

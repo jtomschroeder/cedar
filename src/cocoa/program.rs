@@ -6,13 +6,13 @@ use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 
 pub trait Viewable<M, S> {
-    fn view(&self, &M) -> dom::Node;
+    fn view(&self, &M) -> Node;
 }
 
 impl<M, S, F> Viewable<M, S> for F
-    where F: Fn(&M) -> dom::Node
+    where F: Fn(&M) -> Node
 {
-    fn view(&self, model: &M) -> dom::Node {
+    fn view(&self, model: &M) -> Node {
         self(model)
     }
 }
@@ -35,14 +35,32 @@ impl<S, M, U, V> Program<S, M, U, V> {
     }
 }
 
-fn create(node: dom::Node) -> Box<Widget> {
-    let mut widget: Box<Widget> = match node.kind {
-        dom::Kind::Label => Box::new(Label::new()),
-        dom::Kind::Button => Box::new(Button::new()), 
-        dom::Kind::Stack => Box::new(Stack::new()),
+
+#[derive(PartialEq, Debug)]
+pub enum Kind {
+    Stack,
+    Button,
+    Label,
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Attribute {
+    Text(String),
+}
+
+pub type Attributes = Vec<Attribute>;
+
+pub type Value = (Kind, Attributes);
+pub type Node = dom::Node<Value>;
+
+fn create(node: Node) -> Box<Widget> {
+    let mut widget: Box<Widget> = match node.value.0 {
+        Kind::Label => Box::new(Label::new()),
+        Kind::Button => Box::new(Button::new()), 
+        Kind::Stack => Box::new(Stack::new()),
     };
 
-    let attrs = node.attributes;
+    let attrs = node.value.1;
     widget.update(attrs);
 
     for child in node.children.into_iter() {
