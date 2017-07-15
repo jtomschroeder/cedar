@@ -1,5 +1,6 @@
 
 use std::marker::PhantomData;
+use std::sync::Arc;
 
 use dom;
 use super::{View, Window, Label, Stack, Button};
@@ -79,7 +80,7 @@ impl<S, M, U, V> Program<S, M, U, V>
     where S: Clone + Send + 'static,
           M: Send + 'static,
           U: ::Update<M, S> + Send + 'static,
-          V: Viewable<M, S>
+          V: Send + Viewable<M, S> + 'static
 {
     pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
@@ -93,8 +94,6 @@ impl<S, M, U, V> Program<S, M, U, V>
         let view = self.view;
         let node = view.view(&model);
 
-        let mut model = Some(model);
-
         stack.add(create(stream.clone(), node));
 
         // let mut view = self.view.view();
@@ -102,14 +101,24 @@ impl<S, M, U, V> Program<S, M, U, V>
         // let mut model = self.model;
         // view.update(&model);
 
+        // Use `Option` to allow for move/mutation in FnMut `run`
+        let mut model = Some(model);
+
+        // let mut stack = Arc::new(stack);
+
         let mut update = self.update;
         app.run(move || loop {
                     let message = stream.pop();
 
                     // println!("msg: {:?}", message);
 
-                    model = Some(update.update(model.take().unwrap(), message));
-                    // view.update(&model);
+                    let m = update.update(model.take().unwrap(), message);
+
+                    let node = view.view(&m);
+
+                    // stack.add(create(stream.clone(), node));
+
+                    model = Some(m);
                 })
     }
 }
