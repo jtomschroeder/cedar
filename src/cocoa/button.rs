@@ -7,6 +7,7 @@ use super::action;
 
 use property::Property;
 use stream::Stream;
+use super::Attributes;
 
 enum Attribute<M> {
     Text(Box<Property<M, String>>),
@@ -17,14 +18,14 @@ enum BezelStyle {
     Rounded = 1,
 }
 
-pub struct Button {
+pub struct Button<S> {
     id: Id,
     // attributes: Vec<Attribute<M>>,
-    // stream: Stream<S>,
+    stream: Stream<S>,
 }
 
-impl Button {
-    pub fn new() -> Self {
+impl<S: Clone + 'static> Button<S> {
+    pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
             let button: id = msg_send![button, init];
@@ -34,7 +35,7 @@ impl Button {
             let mut button = Button {
                 id: button.into(),
                 // attributes: vec![],
-                // stream: stream,
+                stream: stream,
             };
 
             button.set_text("TEST!");
@@ -69,9 +70,19 @@ impl Button {
 
     //     self
     // }
+
+    pub fn register_click(&mut self, message: S) {
+        let stream = self.stream.clone();
+        let action = action::create(move || stream.push(message.clone()));
+
+        unsafe {
+            msg_send![*self.id, setAction: sel!(act)];
+            msg_send![*self.id, setTarget: action];
+        }
+    }
 }
 
-impl<S> Widget<S> for Button {
+impl<S: Clone + 'static> Widget<S> for Button<S> {
     fn id(&self) -> &Id {
         &self.id
     }
@@ -94,4 +105,14 @@ impl<S> Widget<S> for Button {
     //         }
     //     }
     // }
+
+    fn update(&mut self, attributes: Attributes<S>) {
+        use super::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Click(message) => self.register_click(message),
+                _ => {}
+            }
+        }
+    }
 }

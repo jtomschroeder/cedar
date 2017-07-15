@@ -6,12 +6,15 @@ extern crate dom;
 
 type Model = i32;
 
+#[derive(Debug, Clone)]
 enum Message {
     Increment,
     Decrement,
 }
 
 fn update(model: Model, message: Message) -> Model {
+    println!("UPDATE! {} :: {:?}", model, message);
+
     match message {
         Message::Increment => model + 1,
         Message::Decrement => model - 1,

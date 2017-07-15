@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use dom;
 use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
+use stream::Stream;
 
 pub trait Viewable<M, S> {
     fn view(&self, &M) -> Node<S>;
@@ -54,10 +55,10 @@ pub type Attributes<S> = Vec<Attribute<S>>;
 pub type Value<S> = (Kind, Attributes<S>);
 pub type Node<S> = dom::Node<Value<S>>;
 
-fn create<S: 'static>(node: Node<S>) -> Box<Widget<S>> {
+fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Box<Widget<S>> {
     let mut widget: Box<Widget<S>> = match node.value.0 {
         Kind::Label => Box::new(Label::new()),
-        Kind::Button => Box::new(Button::new()), 
+        Kind::Button => Box::new(Button::new(stream.clone())), 
         Kind::Stack => Box::new(Stack::new()),
     };
 
@@ -65,7 +66,7 @@ fn create<S: 'static>(node: Node<S>) -> Box<Widget<S>> {
     widget.update(attrs);
 
     for child in node.children.into_iter() {
-        widget.add(create(child));
+        widget.add(create(stream.clone(), child));
     }
 
     widget
@@ -75,13 +76,15 @@ fn create<S: 'static>(node: Node<S>) -> Box<Widget<S>> {
 // TODO: maintain `tree` of widgets here instead of in each widget
 
 impl<S, M, U, V> Program<S, M, U, V>
-    where S: Send + 'static,
+    where S: Clone + Send + 'static,
           M: Send + 'static,
           U: ::Update<M, S> + Send + 'static,
           V: Viewable<M, S>
 {
     pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
+
+        let stream = Stream::new();
 
         let model = self.model;
 
@@ -90,17 +93,22 @@ impl<S, M, U, V> Program<S, M, U, V>
         let view = self.view;
         let node = view.view(&model);
 
-        stack.add(create(node));
+        let mut model = Some(model);
+
+        stack.add(create(stream.clone(), node));
 
         // let mut view = self.view.view();
 
         // let mut model = self.model;
         // view.update(&model);
 
-        // let mut update = self.update;
+        let mut update = self.update;
         app.run(move || loop {
-                    // let message = view.stream().pop();
-                    // model = update.update(&model, message);
+                    let message = stream.pop();
+
+                    // println!("msg: {:?}", message);
+
+                    model = Some(update.update(model.take().unwrap(), message));
                     // view.update(&model);
                 })
     }
