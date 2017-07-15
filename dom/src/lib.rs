@@ -21,11 +21,11 @@ pub struct Node {
 }
 
 impl Node {
-    fn is(&self, other: &Self) -> bool {
+    pub fn is(&self, other: &Self) -> bool {
         self.kind == other.kind
     }
 
-    fn eq(&self, other: &Self) -> bool {
+    pub fn eq(&self, other: &Self) -> bool {
         self.is(other) && self.attributes == other.attributes
     }
 }
@@ -139,9 +139,14 @@ use std::collections::VecDeque;
 
 type Nodes = Vec<Node>;
 
-// take function to compare Both nodes: NotIs, Eq, Neq
+pub enum Difference {
+    Kind,
+    Value,
+}
 
-pub fn diff(old: Nodes, new: Nodes) -> Changeset {
+pub fn diff<F>(old: Nodes, new: Nodes, comparator: F) -> Changeset
+    where F: Fn(&Node, &Node) -> Option<Difference>
+{
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
     // - else if old.type != new.type: REPLACE old with new
@@ -175,14 +180,17 @@ pub fn diff(old: Nodes, new: Nodes) -> Changeset {
                     // else if t != u (properties changes) => update and diff children
                     // else (if t == u) diff children
 
-                    if !t.is(&u) {
-                        changeset.push((path.clone(), Replace(u)));
-                    } else {
-                        if !t.eq(&u) {
-                            changeset.push((path.clone(), Update(u.attributes)));
+                    match comparator(&t, &u) {
+                        Some(Difference::Kind) => {
+                            changeset.push((path.clone(), Replace(u)));
                         }
+                        cmp => {
+                            if let Some(Difference::Value) = cmp {
+                                changeset.push((path.clone(), Update(u.attributes)));
+                            }
 
-                        queue.push_back((t.children, u.children, level + 1, path));
+                            queue.push_back((t.children, u.children, level + 1, path));
+                        }
                     }
                 }
 
@@ -197,46 +205,3 @@ pub fn diff(old: Nodes, new: Nodes) -> Changeset {
 }
 
 fn patch() {}
-
-fn main() {
-    objects();
-}
-
-fn objects() {
-    use Kind::*;
-    use Attribute::*;
-
-    {
-        let t = node![Stack];
-        let u = node![Stack];
-
-        let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:?}", changeset);
-    }
-
-    {
-        let t = node![Stack];
-        let u = node![Button];
-
-        let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:?}", changeset);
-    }
-
-    {
-        let t = node![Label |> Text("".into())];
-        let u = node![Label |> Text("!".into())];
-
-        let changeset = diff(vec![t], vec![u]);
-        println!("changeset: {:?}", changeset);
-    }
-
-    {
-        let u = node![Stack => node![Button]
-                             , node![Label |> Text("!".into())]
-                             , node![Button]
-                     ];
-
-        let changeset = diff(vec![], vec![u]);
-        println!("changeset: {:#?}", changeset);
-    }
-}

@@ -10,11 +10,21 @@ fn objects() {
     use dom::Kind::*;
     use dom::Attribute::*;
 
+    fn comparator(t: &dom::Node, u: &dom::Node) -> Option<dom::Difference> {
+        if !t.is(u) {
+            Some(dom::Difference::Kind)
+        } else if !t.eq(u) {
+            Some(dom::Difference::Value)
+        } else {
+            None
+        }
+    }
+
     {
         let t = node![Stack];
         let u = node![Stack];
 
-        let changeset = dom::diff(vec![t], vec![u]);
+        let changeset = dom::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -22,7 +32,7 @@ fn objects() {
         let t = node![Stack];
         let u = node![Button];
 
-        let changeset = dom::diff(vec![t], vec![u]);
+        let changeset = dom::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -30,7 +40,7 @@ fn objects() {
         let t = node![Label |> Text("".into())];
         let u = node![Label |> Text("!".into())];
 
-        let changeset = dom::diff(vec![t], vec![u]);
+        let changeset = dom::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -40,7 +50,7 @@ fn objects() {
                              , node![Button]
                      ];
 
-        let changeset = dom::diff(vec![], vec![u]);
+        let changeset = dom::diff(vec![], vec![u], comparator);
         println!("changeset: {:#?}", changeset);
     }
 }
