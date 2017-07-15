@@ -1,65 +1,36 @@
 
-#[derive(PartialEq, Debug)]
-pub enum Kind {
-    Stack,
-    Button,
-    Label,
-}
-
-#[derive(PartialEq, Debug)]
-pub enum Attribute {
-    Text(String),
-}
-
-pub type Attributes = Vec<Attribute>;
-
 #[derive(Debug)]
-pub struct Node {
-    pub kind: Kind,
-    pub attributes: Attributes,
-    pub children: Vec<Node>,
+pub struct Node<T> {
+    // pub kind: Kind,
+    // pub attributes: Attributes,
+    pub value: T,
+    pub children: Vec<Node<T>>,
 }
 
-impl Node {
-    pub fn is(&self, other: &Self) -> bool {
-        self.kind == other.kind
-    }
+// impl<T> Node<T> {
+//     pub fn is(&self, other: &Self) -> bool {
+//         // self.kind == other.kind
+//         false
+//     }
 
-    pub fn eq(&self, other: &Self) -> bool {
-        self.is(other) && self.attributes == other.attributes
-    }
-}
+//     pub fn eq(&self, other: &Self) -> bool {
+//         // self.is(other) && self.attributes == other.attributes
+//         false
+//     }
+// }
 
 #[macro_export]
 macro_rules! node {
-    ($k:path) => {
+    ($v:expr) => {
         $crate::Node {
-            kind: $k,
-            attributes: vec![],
+            value: $v,
             children: vec![]
         }
     };
 
-    ( $k:path => $( $c:expr ),* ) => {{
-        $crate::Node { 
-            kind: $k,
-            attributes: vec![],
-            children: vec![ $( $c ),* ]
-        }
-    }};
-
-    ( $k:path |> $( $a:expr ),* ) => {{
-        $crate::Node { 
-            kind: $k,
-            attributes: vec![ $( $a ),* ],
-            children: vec![]
-        }
-    }};
-
-    ( $k:path |> $( $a:expr ),* => $( $c:expr ),* ) => {{
-        $crate::Node { 
-            kind: $k,
-            attributes: vec![ $( $a ),* ],
+    ( $v:expr => $( $c:expr ),* ) => {{
+        $crate::Node {
+            value: $v,
             children: vec![ $( $c ),* ]
         }
     }};
@@ -88,14 +59,14 @@ impl Location {
 }
 
 #[derive(Debug)]
-pub enum Operation {
-    Create(Node),
+pub enum Operation<T> {
+    Create(Node<T>),
     Delete,
-    Update(Attributes),
-    Replace(Node),
+    Update(T),
+    Replace(Node<T>),
 }
 
-type Changeset = Vec<(Path, Operation)>;
+type Changeset<T> = Vec<(Path, Operation<T>)>;
 
 enum Pair<T, U> {
     Left(T),
@@ -137,15 +108,15 @@ use Operation::*;
 
 use std::collections::VecDeque;
 
-type Nodes = Vec<Node>;
+type Nodes<T> = Vec<Node<T>>;
 
 pub enum Difference {
     Kind,
     Value,
 }
 
-pub fn diff<F>(old: Nodes, new: Nodes, comparator: F) -> Changeset
-    where F: Fn(&Node, &Node) -> Option<Difference>
+pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
+    where F: Fn(&Node<T>, &Node<T>) -> Option<Difference>
 {
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
@@ -186,7 +157,7 @@ pub fn diff<F>(old: Nodes, new: Nodes, comparator: F) -> Changeset
                         }
                         cmp => {
                             if let Some(Difference::Value) = cmp {
-                                changeset.push((path.clone(), Update(u.attributes)));
+                                changeset.push((path.clone(), Update(u.value)));
                             }
 
                             queue.push_back((t.children, u.children, level + 1, path));
