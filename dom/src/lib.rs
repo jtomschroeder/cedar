@@ -13,7 +13,7 @@ pub enum Attribute {
 
 pub type Attributes = Vec<Attribute>;
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug)]
 pub struct Node {
     pub kind: Kind,
     pub attributes: Attributes,
@@ -67,7 +67,7 @@ macro_rules! node {
 
 type Path = Vec<Location>;
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Location {
     pub depth: usize,
     pub index: usize,
@@ -87,7 +87,7 @@ impl Location {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug)]
 pub enum Operation {
     Create(Node),
     Delete,
