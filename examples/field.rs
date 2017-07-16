@@ -1,9 +1,6 @@
 
 extern crate cedar;
 
-#[macro_use]
-extern crate tree;
-
 type Model = String;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -18,22 +15,13 @@ fn update(_: Model, message: Message) -> Model {
 }
 
 fn view(model: &Model) -> cedar::dom::Node<Message> {
-    // cedar::View::new()
-    //     .field(|field| {
-    //                field
-    //                    .placeholder("Text to reverse")
-    //                    .change(|s| Message::NewContent(s.into()))
-    //            })
-    //     .label(|label| label.text(|m: &Model| m.chars().rev().collect()));
-
-    use cedar::dom::Kind::*;
-    use cedar::dom::Attribute::*;
-
-    node![(Stack, vec![]) 
-            => node![(Field, vec![Placeholder("".into()),
-                                  Change(Message::NewContent)])]
-             , node![(Label, vec![Text(model.chars().rev().collect())])]
-         ]
+    use cedar::dom;
+    dom::stack()
+        .add(dom::field()
+                 .placeholder("Text to reverse!".into())
+                 .change(Message::NewContent))
+        .add(dom::label().text(model.chars().rev().collect()))
+        .create()
 }
 
 fn main() {

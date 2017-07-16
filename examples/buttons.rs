@@ -1,9 +1,6 @@
 
 extern crate cedar;
 
-#[macro_use]
-extern crate tree;
-
 type Model = i32;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -20,16 +17,12 @@ fn update(model: Model, message: Message) -> Model {
 }
 
 fn view(model: &Model) -> cedar::dom::Node<Message> {
-    use cedar::dom::Kind::*;
-    use cedar::dom::Attribute::*;
-
-    node![(Stack, vec![]) 
-            => node![(Button, vec![Text("+".into()), 
-                                   Click(Message::Increment)])]
-             , node![(Label,  vec![Text(model.to_string())])]
-             , node![(Button, vec![Text("-".into()), 
-                                   Click(Message::Decrement)])]
-         ]
+    use cedar::dom;
+    dom::stack()
+        .add(dom::button().text("+".into()).click(Message::Increment))
+        .add(dom::label().text(model.to_string()))
+        .add(dom::button().text("-".into()).click(Message::Decrement))
+        .create()
 }
 
 fn main() {
