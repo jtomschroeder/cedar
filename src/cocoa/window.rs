@@ -8,6 +8,7 @@ use cocoa::appkit::{NSTitledWindowMask, NSMiniaturizableWindowMask, NSResizableW
                     NSClosableWindowMask};
 
 use std::sync::Arc;
+use std::marker::PhantomData;
 
 use super::id::{Id, AtomicId};
 use super::widget::Widget;
@@ -53,7 +54,8 @@ pub struct Window<S> {
 
 pub struct Stack<S> {
     id: Id,
-    children: Vec<Box<Widget<S>>>,
+    // children: Vec<Box<Widget<S>>>,
+    children: PhantomData<S>,
 }
 
 impl<S> Widget<S> for Stack<S> {
@@ -74,7 +76,7 @@ impl<S> Widget<S> for Stack<S> {
             // msg_send![self.window.get(), setContentSize:frame.size];
         };
 
-        self.children.push(widget);
+        // self.children.push(widget);
     }
 }
 
@@ -105,7 +107,8 @@ impl<S> Stack<S> {
 
             Stack {
                 id: stack.into(),
-                children: vec![],
+                // children: vec![],
+                children: PhantomData,
             }
         }
     }

@@ -7,18 +7,6 @@ use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 use stream::Stream;
 
-pub trait Viewable<M, S> {
-    fn view(&self, &M) -> Node<S>;
-}
-
-impl<M, S, F> Viewable<M, S> for F
-    where F: Fn(&M) -> Node<S>
-{
-    fn view(&self, model: &M) -> Node<S> {
-        self(model)
-    }
-}
-
 pub struct Program<S, M, U, V> {
     model: M,
     update: U,
@@ -36,7 +24,6 @@ impl<S, M, U, V> Program<S, M, U, V> {
         }
     }
 }
-
 
 #[derive(PartialEq, Debug)]
 pub enum Kind {
@@ -80,7 +67,7 @@ impl<S, M, U, V> Program<S, M, U, V>
     where S: Clone + Send + 'static,
           M: Send + 'static,
           U: ::Update<M, S> + Send + 'static,
-          V: Send + Viewable<M, S> + 'static
+          V: Send + Fn(&M) -> Node<S> + 'static
 {
     pub fn run(self) {
         let app = super::Application::new(); // TODO: enforce `app` created first
@@ -92,7 +79,7 @@ impl<S, M, U, V> Program<S, M, U, V>
         let (window, mut stack) = Window::new("cedar");
 
         let view = self.view;
-        let node = view.view(&model);
+        let node = view(&model);
 
         stack.add(create(stream.clone(), node));
 
@@ -114,7 +101,7 @@ impl<S, M, U, V> Program<S, M, U, V>
 
                     let m = update.update(model.take().unwrap(), message);
 
-                    let node = view.view(&m);
+                    let node = view(&m);
 
                     // stack.add(create(stream.clone(), node));
 

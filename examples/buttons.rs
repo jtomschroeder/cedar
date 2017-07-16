@@ -27,9 +27,9 @@ fn view(model: &Model) -> cedar::backend::Node<Message> {
 
     node![(Stack, vec![]) 
             => node![(Button, vec![Click(Message::Increment)])]
-                , node![(Label, vec![Text(model.to_string())])]
-                , node![(Button, vec![Click(Message::Decrement)])]
-            ]
+             , node![(Label, vec![Text(model.to_string())])]
+             , node![(Button, vec![Click(Message::Decrement)])]
+         ]
 }
 
 fn main() {
