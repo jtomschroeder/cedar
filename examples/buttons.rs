@@ -24,12 +24,14 @@ fn view(model: &Model) -> cedar::backend::Node<Message> {
     use cedar::backend::Attribute::*;
 
     node![(Stack, vec![]) 
-            => node![(Button, vec![Click(Message::Increment)])]
-             , node![(Label, vec![Text(model.to_string())])]
-             , node![(Button, vec![Click(Message::Decrement)])]
+            => node![(Button, vec![Text("+".into()), 
+                                   Click(Message::Increment)])]
+             , node![(Label,  vec![Text(model.to_string())])]
+             , node![(Button, vec![Text("-".into()), 
+                                   Click(Message::Decrement)])]
          ]
 }
 
 fn main() {
-    cedar::Program::new(0, update, view).run()
+    cedar::program(0, update, view)
 }

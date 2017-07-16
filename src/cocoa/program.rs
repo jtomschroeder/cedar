@@ -1,30 +1,9 @@
 
-use std::marker::PhantomData;
-use std::sync::Arc;
-
 use dom;
 use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 use stream::Stream;
 use atomic_box::AtomicBox;
-
-pub struct Program<S, M, U, V> {
-    model: M,
-    update: U,
-    view: V,
-    message: PhantomData<S>,
-}
-
-impl<S, M, U, V> Program<S, M, U, V> {
-    pub fn new(model: M, update: U, view: V) -> Self {
-        Program {
-            model: model,
-            update: update,
-            view: view,
-            message: PhantomData,
-        }
-    }
-}
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Kind {
@@ -114,58 +93,51 @@ fn traverse<S: Debug>(tree: &mut Tree<S>, change: Change<S>) {
     }
 }
 
-impl<S, M, U, V> Program<S, M, U, V>
+pub fn program<S, M, U, V>(model: M, mut update: U, view: V)
     where S: Clone + Send + 'static + PartialEq + Debug,
           M: Send + 'static + Debug,
           U: ::Update<M, S> + Send + 'static,
           V: Send + Fn(&M) -> Node<S> + 'static
 {
-    pub fn run(self) {
-        let app = super::Application::new(); // TODO: enforce `app` created first
+    let app = super::Application::new(); // TODO: enforce `app` created first
 
-        let stream = Stream::new();
+    let stream = Stream::new();
 
-        let model = self.model;
+    let (window, mut stack) = Window::new("cedar");
 
-        let (window, mut stack) = Window::new("cedar");
+    let node = view(&model);
 
-        let view = self.view;
-        let node = view(&model);
+    let vertex = create(stream.clone(), node.clone());
+    stack.add(&vertex.widget);
 
-        let vertex = create(stream.clone(), node.clone());
-        stack.add(&vertex.widget);
+    let mut tree = vec![vertex];
 
-        let mut tree = vec![vertex];
+    // Use `Option` to allow for move/mutation in FnMut `run`
+    let mut model = Some(model);
+    let mut node = Some(node);
 
-        // Use `Option` to allow for move/mutation in FnMut `run`
-        let mut model = Some(model);
-        let mut node = Some(node);
+    app.run(move || loop {
+                let message = stream.pop();
 
-        // let mut stack = Arc::new(stack);
+                // println!("msg: {:?}", message);
 
-        let mut update = self.update;
-        app.run(move || loop {
-                    let message = stream.pop();
+                let m = update.update(model.take().unwrap(), message);
 
-                    // println!("msg: {:?}", message);
+                let new = view(&m);
 
-                    let m = update.update(model.take().unwrap(), message);
+                // println!("node: {:?}", new);
 
-                    let new = view(&m);
+                let old = node.take().unwrap();
+                let changeset = dom::diff(vec![old], vec![new.clone()], comparator);
 
-                    // println!("node: {:?}", new);
+                // println!("diff: {:?}", changeset);
 
-                    let old = node.take().unwrap();
-                    let changeset = dom::diff(vec![old], vec![new.clone()], comparator);
+                for change in changeset.into_iter() {
+                    traverse(&mut tree, change);
+                }
 
-                    // println!("diff: {:?}", changeset);
+                node = Some(new);
+                model = Some(m);
+            })
 
-                    for change in changeset.into_iter() {
-                        traverse(&mut tree, change);
-                    }
-
-                    node = Some(new);
-                    model = Some(m);
-                })
-    }
 }
