@@ -1,6 +1,6 @@
 
 #[macro_use]
-extern crate dom;
+extern crate tree;
 
 #[derive(PartialEq, Debug)]
 pub enum Kind {
@@ -24,13 +24,13 @@ use Kind::*;
 use Attribute::*;
 
 type Value = (Kind, Attributes);
-type Node = dom::Node<Value>;
+type Node = tree::Node<Value>;
 
-fn comparator(t: &Node, u: &Node) -> Option<dom::Difference> {
+fn comparator(t: &Node, u: &Node) -> Option<tree::Difference> {
     if t.value.0 != u.value.0 {
-        Some(dom::Difference::Kind)
+        Some(tree::Difference::Kind)
     } else if t.value.1 != u.value.1 {
-        Some(dom::Difference::Value)
+        Some(tree::Difference::Value)
     } else {
         None
     }
@@ -41,7 +41,7 @@ fn objects() {
         let t = node![(Stack, vec![])];
         let u = node![(Stack, vec![])];
 
-        let changeset = dom::diff(vec![t], vec![u], comparator);
+        let changeset = tree::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -49,7 +49,7 @@ fn objects() {
         let t = node![(Stack, vec![])];
         let u = node![(Button, vec![])];
 
-        let changeset = dom::diff(vec![t], vec![u], comparator);
+        let changeset = tree::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -57,7 +57,7 @@ fn objects() {
         let t = node![(Label, vec![Text("".into())])];
         let u = node![(Label, vec![Text("!".into())])];
 
-        let changeset = dom::diff(vec![t], vec![u], comparator);
+        let changeset = tree::diff(vec![t], vec![u], comparator);
         println!("changeset: {:?}", changeset);
     }
 
@@ -68,7 +68,7 @@ fn objects() {
                          , node![(Button, vec![])]
                      ];
 
-        let changeset = dom::diff(vec![], vec![u], comparator);
+        let changeset = tree::diff(vec![], vec![u], comparator);
         println!("changeset: {:#?}", changeset);
     }
 }

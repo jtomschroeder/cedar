@@ -2,7 +2,7 @@
 extern crate cedar;
 
 #[macro_use]
-extern crate dom;
+extern crate tree;
 
 type Model = i32;
 

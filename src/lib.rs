@@ -2,7 +2,7 @@
 extern crate crossbeam;
 
 #[macro_use]
-pub extern crate dom;
+extern crate tree;
 
 // --- macOS ---
 

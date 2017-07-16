@@ -1,5 +1,5 @@
 
-use dom;
+use tree;
 use super::{View, Window, Label, Stack, Button};
 use cacao::widget::Widget;
 use stream::Stream;
@@ -21,7 +21,7 @@ pub enum Attribute<S> {
 pub type Attributes<S> = Vec<Attribute<S>>;
 
 pub type Value<S> = (Kind, Attributes<S>);
-pub type Node<S> = dom::Node<Value<S>>;
+pub type Node<S> = tree::Node<Value<S>>;
 
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
@@ -57,20 +57,20 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Vertex<S> {
 
 use std::fmt::Debug;
 
-fn comparator<S>(t: &Node<S>, u: &Node<S>) -> Option<dom::Difference>
+fn comparator<S>(t: &Node<S>, u: &Node<S>) -> Option<tree::Difference>
     where S: PartialEq
 {
     if t.value.0 != u.value.0 {
-        Some(dom::Difference::Kind)
+        Some(tree::Difference::Kind)
     } else if t.value.1 != u.value.1 {
-        Some(dom::Difference::Value)
+        Some(tree::Difference::Value)
     } else {
         None
     }
 }
 
-type Change<S> = dom::Change<Value<S>>;
-type Changeset<S> = dom::Changeset<Value<S>>;
+type Change<S> = tree::Change<Value<S>>;
+type Changeset<S> = tree::Changeset<Value<S>>;
 
 fn traverse<S: Debug>(tree: &mut Tree<S>, change: Change<S>) {
     if change.0.is_empty() {
@@ -83,7 +83,7 @@ fn traverse<S: Debug>(tree: &mut Tree<S>, change: Change<S>) {
     if path.is_empty() {
         let widget = &mut tree[location.index].widget;
 
-        use dom::Operation::*;
+        use tree::Operation::*;
         match op {
             Update((_, attrs)) => widget.update(attrs),
             op => panic!("Not yet implemented! {:?}", op),
@@ -128,7 +128,7 @@ pub fn program<S, M, U, V>(model: M, mut update: U, view: V)
                 // println!("node: {:?}", new);
 
                 let old = node.take().unwrap();
-                let changeset = dom::diff(vec![old], vec![new.clone()], comparator);
+                let changeset = tree::diff(vec![old], vec![new.clone()], comparator);
 
                 // println!("diff: {:?}", changeset);
 

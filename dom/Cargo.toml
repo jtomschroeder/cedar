@@ -1,8 +1,0 @@
-[package]
-name = "dom"
-version = "0.1.0"
-authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
-
-[dependencies]
-# typed-arena = "1.0"
-# arena-tree = { path = "../../rust-forest/arena-tree" }
