@@ -2,7 +2,6 @@
 mod program;
 mod application;
 mod window;
-mod view;
 
 mod button;
 mod label;
@@ -17,7 +16,6 @@ pub use self::program::{program, Kind, Attribute, Attributes, Node};
 
 pub use self::application::Application;
 pub use self::window::{Window, Stack};
-pub use self::view::View;
 
 pub use self::button::Button;
 pub use self::label::Label;

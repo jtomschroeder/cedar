@@ -7,12 +7,8 @@ use cocoa::appkit::{NSViewHeightSizable, NSViewWidthSizable};
 use cocoa::appkit::{NSTitledWindowMask, NSMiniaturizableWindowMask, NSResizableWindowMask,
                     NSClosableWindowMask};
 
-use std::sync::Arc;
-use std::marker::PhantomData;
-
 use super::id::{Id, AtomicId};
 use super::widget::Widget;
-use atomic_box::AtomicBox;
 
 #[repr(u64)]
 enum UserInterfaceLayoutOrientation {

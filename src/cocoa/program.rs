@@ -1,7 +1,9 @@
 
 use tree;
-use super::{View, Window, Label, Stack, Button, TextField};
-use cacao::widget::Widget;
+
+use super::{Window, Label, Stack, Button, TextField};
+use super::widget::Widget;
+
 use stream::Stream;
 use atomic_box::AtomicBox;
 
