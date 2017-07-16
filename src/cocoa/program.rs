@@ -46,13 +46,8 @@ pub type Node<S> = dom::Node<Value<S>>;
 
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
-
     children: Vec<Vertex<S>>,
-
- // children: Arc<Vec<AtomicBox<Box<Widget>>>>,
- // children: Arc<Vec<AtomicBox<Box<Widget>>>>,
 }
-
 
 type Tree<S> = Vec<Vertex<S>>;
 
@@ -80,7 +75,6 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Vertex<S> {
 }
 
 // TODO: use `removeFromSuperview()` to 'delete' nodes
-// TODO: maintain `tree` of widgets here instead of in each widget
 
 use std::fmt::Debug;
 
@@ -143,11 +137,6 @@ impl<S, M, U, V> Program<S, M, U, V>
 
         let mut tree = vec![vertex];
 
-        // let mut view = self.view.view();
-
-        // let mut model = self.model;
-        // view.update(&model);
-
         // Use `Option` to allow for move/mutation in FnMut `run`
         let mut model = Some(model);
         let mut node = Some(node);
@@ -170,8 +159,6 @@ impl<S, M, U, V> Program<S, M, U, V>
                     let changeset = dom::diff(vec![old], vec![new.clone()], comparator);
 
                     // println!("diff: {:?}", changeset);
-
-                    // stack.add(create(stream.clone(), node));
 
                     for change in changeset.into_iter() {
                         traverse(&mut tree, change);

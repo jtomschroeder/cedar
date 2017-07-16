@@ -1,23 +1,9 @@
 
 #[derive(Clone, Debug)]
 pub struct Node<T> {
-    // pub kind: Kind,
-    // pub attributes: Attributes,
     pub value: T,
     pub children: Vec<Node<T>>,
 }
-
-// impl<T> Node<T> {
-//     pub fn is(&self, other: &Self) -> bool {
-//         // self.kind == other.kind
-//         false
-//     }
-
-//     pub fn eq(&self, other: &Self) -> bool {
-//         // self.is(other) && self.attributes == other.attributes
-//         false
-//     }
-// }
 
 #[macro_export]
 macro_rules! node {
