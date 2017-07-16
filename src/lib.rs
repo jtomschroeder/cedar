@@ -45,6 +45,8 @@ pub mod backend {
 
 pub use backend::*;
 
+pub mod dom;
+
 mod property;
 mod atomic_box;
 mod stream;

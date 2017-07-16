@@ -12,7 +12,7 @@ mod widget;
 mod action;
 mod delegate;
 
-pub use self::program::{program, dom};
+pub use self::program::program;
 
 pub use self::application::Application;
 pub use self::window::{Window, Stack};

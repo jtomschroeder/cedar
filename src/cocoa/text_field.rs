@@ -7,7 +7,7 @@ use super::widget::Widget;
 use super::delegate;
 
 use stream::Stream;
-use super::dom::Attributes;
+use dom::Attributes;
 
 pub struct TextField<S> {
     id: Id,
@@ -65,7 +65,7 @@ impl<S: 'static> Widget<S> for TextField<S> {
     }
 
     fn update(&mut self, attributes: Attributes<S>) {
-        use super::dom::Attribute::*;
+        use dom::Attribute::*;
         for attr in attributes.into_iter() {
             match attr {
                 Placeholder(text) => self.set_placeholder(&text),

@@ -6,7 +6,7 @@ use super::widget::Widget;
 use super::action;
 
 use stream::Stream;
-use super::dom::Attributes;
+use dom::Attributes;
 
 #[repr(u64)]
 enum BezelStyle {
@@ -58,7 +58,7 @@ impl<S: Clone + 'static> Widget<S> for Button<S> {
     }
 
     fn update(&mut self, attributes: Attributes<S>) {
-        use super::dom::Attribute::*;
+        use dom::Attribute::*;
         for attr in attributes.into_iter() {
             match attr {
                 Text(text) => self.set_text(&text),
