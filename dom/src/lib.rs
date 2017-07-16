@@ -1,5 +1,5 @@
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Node<T> {
     // pub kind: Kind,
     // pub attributes: Attributes,
@@ -36,7 +36,7 @@ macro_rules! node {
     }};
 }
 
-type Path = Vec<Location>;
+pub type Path = Vec<Location>;
 
 #[derive(Clone)]
 pub struct Location {
@@ -66,7 +66,8 @@ pub enum Operation<T> {
     Replace(Node<T>),
 }
 
-type Changeset<T> = Vec<(Path, Operation<T>)>;
+pub type Change<T> = (Path, Operation<T>);
+pub type Changeset<T> = Vec<Change<T>>;
 
 enum Pair<T, U> {
     Left(T),

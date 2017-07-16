@@ -65,7 +65,7 @@ impl<S> Widget<S> for Stack<S> {
 
     // fn update(&mut self, model: &M) {}
 
-    fn add(&mut self, widget: Box<Widget<S>>) {
+    fn add(&mut self, widget: &Box<Widget<S>>) {
         unsafe {
             msg_send![*self.id, addView:**widget.id()
                               inGravity:NSStackViewGravity::Top];
