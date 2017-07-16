@@ -1,6 +1,6 @@
 
 use super::id::Id;
-use super::Attributes;
+use super::dom::Attributes;
 
 pub trait Widget<S> {
     fn id(&self) -> &Id;

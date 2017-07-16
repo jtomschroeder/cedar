@@ -19,9 +19,9 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> cedar::backend::Node<Message> {
-    use cedar::backend::Kind::*;
-    use cedar::backend::Attribute::*;
+fn view(model: &Model) -> cedar::dom::Node<Message> {
+    use cedar::dom::Kind::*;
+    use cedar::dom::Attribute::*;
 
     node![(Stack, vec![]) 
             => node![(Button, vec![Text("+".into()), 

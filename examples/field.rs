@@ -17,7 +17,7 @@ fn update(_: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> cedar::backend::Node<Message> {
+fn view(model: &Model) -> cedar::dom::Node<Message> {
     // cedar::View::new()
     //     .field(|field| {
     //                field
@@ -26,8 +26,8 @@ fn view(model: &Model) -> cedar::backend::Node<Message> {
     //            })
     //     .label(|label| label.text(|m: &Model| m.chars().rev().collect()));
 
-    use cedar::backend::Kind::*;
-    use cedar::backend::Attribute::*;
+    use cedar::dom::Kind::*;
+    use cedar::dom::Attribute::*;
 
     node![(Stack, vec![]) 
             => node![(Field, vec![Placeholder("".into()),

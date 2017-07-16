@@ -7,26 +7,55 @@ use super::widget::Widget;
 use stream::Stream;
 use atomic_box::AtomicBox;
 
-#[derive(PartialEq, Clone, Debug)]
-pub enum Kind {
-    Stack,
-    Button,
-    Label,
-    Field,
+pub mod dom {
+    use tree;
+
+    #[derive(PartialEq, Clone, Debug)]
+    pub enum Kind {
+        Stack,
+        Button,
+        Label,
+        Field,
+    }
+
+    #[derive(PartialEq, Clone, Debug)]
+    pub enum Attribute<S> {
+        Text(String),
+        Click(S),
+        Placeholder(String),
+        Change(fn(String) -> S),
+    }
+
+    pub type Attributes<S> = Vec<Attribute<S>>;
+
+    pub type Value<S> = (Kind, Attributes<S>);
+    pub type Node<S> = tree::Node<Value<S>>;
+
+    pub fn diff<S>(old: Node<S>, new: Node<S>) -> Changeset<S>
+        where S: PartialEq
+    {
+        fn comparator<S>(t: &Node<S>, u: &Node<S>) -> Option<tree::Difference>
+            where S: PartialEq
+        {
+            if t.value.0 != u.value.0 {
+                Some(tree::Difference::Kind)
+            } else if t.value.1 != u.value.1 {
+                Some(tree::Difference::Value)
+            } else {
+                None
+            }
+
+        }
+
+        tree::diff(vec![old], vec![new], comparator)
+    }
+
+
+    pub type Change<S> = tree::Change<Value<S>>;
+    pub type Changeset<S> = tree::Changeset<Value<S>>;
 }
 
-#[derive(PartialEq, Clone, Debug)]
-pub enum Attribute<S> {
-    Text(String),
-    Click(S),
-    Placeholder(String),
-    Change(fn(String) -> S),
-}
-
-pub type Attributes<S> = Vec<Attribute<S>>;
-
-pub type Value<S> = (Kind, Attributes<S>);
-pub type Node<S> = tree::Node<Value<S>>;
+// use dom::*;
 
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
@@ -35,12 +64,12 @@ struct Vertex<S> {
 
 type Tree<S> = Vec<Vertex<S>>;
 
-fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Vertex<S> {
+fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Node<S>) -> Vertex<S> {
     let mut widget: Box<Widget<S>> = match node.value.0 {
-        Kind::Label => Box::new(Label::new()),
-        Kind::Button => Box::new(Button::new(stream.clone())), 
-        Kind::Stack => Box::new(Stack::new()),
-        Kind::Field => Box::new(TextField::new(stream.clone())),
+        dom::Kind::Label => Box::new(Label::new()),
+        dom::Kind::Button => Box::new(Button::new(stream.clone())), 
+        dom::Kind::Stack => Box::new(Stack::new()),
+        dom::Kind::Field => Box::new(TextField::new(stream.clone())),
     };
 
     let attrs = node.value.1;
@@ -63,22 +92,7 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Vertex<S> {
 
 use std::fmt::Debug;
 
-fn comparator<S>(t: &Node<S>, u: &Node<S>) -> Option<tree::Difference>
-    where S: PartialEq
-{
-    if t.value.0 != u.value.0 {
-        Some(tree::Difference::Kind)
-    } else if t.value.1 != u.value.1 {
-        Some(tree::Difference::Value)
-    } else {
-        None
-    }
-}
-
-type Change<S> = tree::Change<Value<S>>;
-type Changeset<S> = tree::Changeset<Value<S>>;
-
-fn traverse<S: Debug>(tree: &mut Tree<S>, change: Change<S>) {
+fn patch<S: Debug>(tree: &mut Tree<S>, change: dom::Change<S>) {
     if change.0.is_empty() {
         return;
     }
@@ -95,7 +109,7 @@ fn traverse<S: Debug>(tree: &mut Tree<S>, change: Change<S>) {
             op => panic!("Not yet implemented! {:?}", op),
         }
     } else {
-        traverse(&mut tree[location.index].children, (path, op));
+        patch(&mut tree[location.index].children, (path, op));
     }
 }
 
@@ -103,7 +117,7 @@ pub fn program<S, M, U, V>(model: M, mut update: U, view: V)
     where S: Clone + Send + 'static + PartialEq + Debug,
           M: Send + 'static + Debug,
           U: ::Update<M, S> + Send + 'static,
-          V: Send + Fn(&M) -> Node<S> + 'static
+          V: Send + Fn(&M) -> dom::Node<S> + 'static
 {
     let app = super::Application::new(); // TODO: enforce `app` created first
 
@@ -134,12 +148,12 @@ pub fn program<S, M, U, V>(model: M, mut update: U, view: V)
                 // println!("node: {:?}", new);
 
                 let old = node.take().unwrap();
-                let changeset = tree::diff(vec![old], vec![new.clone()], comparator);
+                let changeset = dom::diff(old, new.clone());
 
                 // println!("diff: {:?}", changeset);
 
                 for change in changeset.into_iter() {
-                    traverse(&mut tree, change);
+                    patch(&mut tree, change);
                 }
 
                 node = Some(new);
