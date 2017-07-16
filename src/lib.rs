@@ -47,9 +47,8 @@ pub use backend::*;
 
 pub mod dom;
 
+// TODO: remove property!
+
 mod property;
 mod atomic_box;
 mod stream;
-mod update;
-
-pub use self::update::Update;
