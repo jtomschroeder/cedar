@@ -7,6 +7,7 @@ use super::widget::Widget;
 use super::delegate;
 
 use stream::Stream;
+use super::Attributes;
 
 pub struct TextField<S> {
     id: Id,
@@ -34,7 +35,7 @@ impl<S: 'static> TextField<S> {
         }
     }
 
-    pub fn placeholder(self, text: &str) -> Self {
+    pub fn set_placeholder(&mut self, text: &str) {
         unsafe {
             let text = NSString::alloc(nil).init_str(text);
 
@@ -48,24 +49,29 @@ impl<S: 'static> TextField<S> {
             let constraint: id = msg_send![anchor, constraintGreaterThanOrEqualToConstant: 120.];
             msg_send![constraint, setActive: YES];
         }
-
-        self
     }
 
-    pub fn change<F: Fn(&str) -> S + 'static>(self, delegate: F) -> Self {
+    pub fn register_change(&mut self, messenger: fn(String) -> S) {
         let stream = self.stream.clone();
-        let delegate = delegate::create(move |s| stream.push(delegate(s)));
+        let delegate = delegate::create(move |s| stream.push(messenger(s.into())));
 
         unsafe { msg_send![*self.id, setDelegate: delegate] };
-
-        self
     }
 }
 
-impl<S> Widget<S> for TextField<S> {
+impl<S: 'static> Widget<S> for TextField<S> {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    // fn update(&mut self, _: &M) {}
+    fn update(&mut self, attributes: Attributes<S>) {
+        use super::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Placeholder(text) => self.set_placeholder(&text),
+                Change(messenger) => self.register_change(messenger),
+                _ => {}
+            }
+        }
+    }
 }

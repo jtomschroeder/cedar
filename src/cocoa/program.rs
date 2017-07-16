@@ -1,6 +1,6 @@
 
 use tree;
-use super::{View, Window, Label, Stack, Button};
+use super::{View, Window, Label, Stack, Button, TextField};
 use cacao::widget::Widget;
 use stream::Stream;
 use atomic_box::AtomicBox;
@@ -10,12 +10,15 @@ pub enum Kind {
     Stack,
     Button,
     Label,
+    Field,
 }
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Attribute<S> {
     Text(String),
     Click(S),
+    Placeholder(String),
+    Change(fn(String) -> S),
 }
 
 pub type Attributes<S> = Vec<Attribute<S>>;
@@ -35,6 +38,7 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: Node<S>) -> Vertex<S> {
         Kind::Label => Box::new(Label::new()),
         Kind::Button => Box::new(Button::new(stream.clone())), 
         Kind::Stack => Box::new(Stack::new()),
+        Kind::Field => Box::new(TextField::new(stream.clone())),
     };
 
     let attrs = node.value.1;

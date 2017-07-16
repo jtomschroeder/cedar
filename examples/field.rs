@@ -1,27 +1,41 @@
 
 extern crate cedar;
 
+#[macro_use]
+extern crate tree;
+
 type Model = String;
 
+#[derive(PartialEq, Clone, Debug)]
 enum Message {
     NewContent(String),
 }
 
-fn update(_: &Model, message: Message) -> Model {
+fn update(_: Model, message: Message) -> Model {
     match message {
         Message::NewContent(content) => content,
     }
 }
 
-fn view() -> cedar::View<Model, Message> {
-    cedar::View::new()
-        .field(|field| {
-            field.placeholder("Text to reverse")
-                .change(|s| Message::NewContent(s.into()))
-        })
-        .label(|label| label.text(|m: &Model| m.chars().rev().collect()))
+fn view(model: &Model) -> cedar::backend::Node<Message> {
+    // cedar::View::new()
+    //     .field(|field| {
+    //                field
+    //                    .placeholder("Text to reverse")
+    //                    .change(|s| Message::NewContent(s.into()))
+    //            })
+    //     .label(|label| label.text(|m: &Model| m.chars().rev().collect()));
+
+    use cedar::backend::Kind::*;
+    use cedar::backend::Attribute::*;
+
+    node![(Stack, vec![]) 
+            => node![(Field, vec![Placeholder("".into()),
+                                  Change(Message::NewContent)])]
+             , node![(Label, vec![Text(model.chars().rev().collect())])]
+         ]
 }
 
 fn main() {
-    cedar::Program::new("--".into(), update, view).run()
+    cedar::program("--".into(), update, view)
 }

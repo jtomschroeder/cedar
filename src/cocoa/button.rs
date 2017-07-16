@@ -63,6 +63,7 @@ impl<S: Clone + 'static> Widget<S> for Button<S> {
             match attr {
                 Text(text) => self.set_text(&text),
                 Click(message) => self.register_click(message),
+                _ => {}
             }
         }
     }
