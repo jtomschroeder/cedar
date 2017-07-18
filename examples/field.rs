@@ -14,14 +14,16 @@ fn update(_: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> cedar::dom::Node<Message> {
+use cedar::dom;
+use cedar::dom::Builder;
+
+fn view(model: &Model) -> dom::Object<Message> {
     use cedar::dom;
     dom::stack()
         .add(dom::field()
                  .placeholder("Text to reverse!".into())
                  .change(Message::NewContent))
         .add(dom::label().text(model.chars().rev().collect()))
-        .create()
 }
 
 fn main() {

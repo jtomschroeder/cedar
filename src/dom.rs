@@ -20,13 +20,13 @@ pub enum Attribute<S> {
 pub type Attributes<S> = Vec<Attribute<S>>;
 
 pub type Value<S> = (Kind, Attributes<S>);
-pub type Node<S> = tree::Node<Value<S>>;
+pub type Object<S> = tree::Node<Value<S>>;
 
 pub type Change<S> = tree::Change<Value<S>>;
 pub type Changeset<S> = tree::Changeset<Value<S>>;
 
-pub fn diff<S: PartialEq>(old: Node<S>, new: Node<S>) -> Changeset<S> {
-    fn comparator<S: PartialEq>(t: &Node<S>, u: &Node<S>) -> Option<tree::Difference> {
+pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
+    fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
         if t.value.0 != u.value.0 {
             Some(tree::Difference::Kind)
         } else if t.value.1 != u.value.1 {
@@ -39,50 +39,51 @@ pub fn diff<S: PartialEq>(old: Node<S>, new: Node<S>) -> Changeset<S> {
     tree::diff(vec![old], vec![new], comparator)
 }
 
-pub struct Object<S> {
-    node: Node<S>,
+pub trait Builder<S> {
+    fn add(self, object: Self) -> Self;
+
+    fn text(self, text: String) -> Self;
+    fn click(self, action: S) -> Self;
+    fn placeholder(self, text: String) -> Self;
+    fn change(self, messenger: fn(String) -> S) -> Self;
 }
 
-impl<S> Object<S> {
-    pub fn add(mut self, object: Self) -> Self {
-        self.node.children.push(object.node);
+impl<S> Builder<S> for Object<S> {
+    fn add(mut self, object: Self) -> Self {
+        self.children.push(object);
         self
     }
 
-    pub fn create(self) -> Node<S> {
-        self.node
-    }
-
-    pub fn text(mut self, text: String) -> Self {
-        self.node.value.1.push(Attribute::Text(text));
+    fn text(mut self, text: String) -> Self {
+        self.value.1.push(Attribute::Text(text));
         self
     }
-    pub fn click(mut self, action: S) -> Self {
-        self.node.value.1.push(Attribute::Click(action));
+    fn click(mut self, action: S) -> Self {
+        self.value.1.push(Attribute::Click(action));
         self
     }
-    pub fn placeholder(mut self, text: String) -> Self {
-        self.node.value.1.push(Attribute::Placeholder(text));
+    fn placeholder(mut self, text: String) -> Self {
+        self.value.1.push(Attribute::Placeholder(text));
         self
     }
-    pub fn change(mut self, messenger: fn(String) -> S) -> Self {
-        self.node.value.1.push(Attribute::Change(messenger));
+    fn change(mut self, messenger: fn(String) -> S) -> Self {
+        self.value.1.push(Attribute::Change(messenger));
         self
     }
 }
 
 pub fn stack<S>() -> Object<S> {
-    Object { node: node![(Kind::Stack, vec![])] }
+    node![(Kind::Stack, vec![])]
 }
 
 pub fn label<S>() -> Object<S> {
-    Object { node: node![(Kind::Label, vec![])] }
+    node![(Kind::Label, vec![])]
 }
 
 pub fn button<S>() -> Object<S> {
-    Object { node: node![(Kind::Button, vec![])] }
+    node![(Kind::Button, vec![])]
 }
 
 pub fn field<S>() -> Object<S> {
-    Object { node: node![(Kind::Field, vec![])] }
+    node![(Kind::Field, vec![])]
 }

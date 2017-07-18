@@ -14,16 +14,16 @@ struct Vertex<S> {
 
 type Tree<S> = Vec<Vertex<S>>;
 
-fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Node<S>) -> Vertex<S> {
-    let mut widget: Box<Widget<S>> = match node.value.0 {
+fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex<S> {
+    let (kind, attributes) = (node.value.0, node.value.1);
+    let mut widget: Box<Widget<S>> = match kind {
         dom::Kind::Label => Box::new(Label::new()),
         dom::Kind::Button => Box::new(Button::new(stream.clone())), 
         dom::Kind::Stack => Box::new(Stack::new()),
         dom::Kind::Field => Box::new(TextField::new(stream.clone())),
     };
 
-    let attrs = node.value.1;
-    widget.update(attrs);
+    widget.update(attributes);
 
     let mut children = vec![];
     for child in node.children.into_iter() {
@@ -42,14 +42,12 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Node<S>) -> Vertex<S
 
 use std::fmt::Debug;
 
-fn patch<S: Debug>(tree: &mut Tree<S>, change: dom::Change<S>) {
-    if change.0.is_empty() {
+fn patch<S: Debug>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
+    if path.is_empty() {
         return;
     }
 
-    let (mut path, op) = change;
     let location = path.remove(0);
-
     if path.is_empty() {
         let widget = &mut tree[location.index].widget;
 
@@ -64,7 +62,7 @@ fn patch<S: Debug>(tree: &mut Tree<S>, change: dom::Change<S>) {
 }
 
 pub type Update<M, S> = fn(M, S) -> M;
-pub type View<M, S> = fn(&M) -> dom::Node<S>;
+pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     where S: Clone + Send + 'static + PartialEq + Debug,
