@@ -63,19 +63,12 @@ fn patch<S: Debug>(tree: &mut Tree<S>, change: dom::Change<S>) {
     }
 }
 
-// Trait 'aliases' for Update and View
+pub type Update<M, S> = fn(M, S) -> M;
+pub type View<M, S> = fn(&M) -> dom::Node<S>;
 
-pub trait Update<M, S>: Fn(M, S) -> M {}
-impl<M, S, F: Fn(M, S) -> M> Update<M, S> for F {}
-
-pub trait View<M, S>: Fn(&M) -> dom::Node<S> {}
-impl<M, S, F: Fn(&M) -> dom::Node<S>> View<M, S> for F {}
-
-pub fn program<S, M, U, V>(model: M, update: U, view: V)
+pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     where S: Clone + Send + 'static + PartialEq + Debug,
-          M: Send + 'static + Debug,
-          U: Update<M, S> + Send + 'static,
-          V: View<M, S> + Send + 'static
+          M: Send + 'static + Debug
 {
     let app = super::Application::new(); // TODO: enforce `app` created first
 
