@@ -132,12 +132,6 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     let stream: Stream<S> = Stream::new();
     let (window, mut stack) = Window::new("cedar");
 
-    let button: Button<S> = Button::new(stream.clone());
-    // let button: Box<Widget<S>> = Box::new(button);
-
-    // button.add(&stack);
-    // stack.add(&button);
-
     let node = view(&model);
 
     let vertex = create(stream.clone(), node.clone());
@@ -147,12 +141,27 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 
     // Use `Option` to allow for move/mutation in FnMut `run`
     let mut model = Some(model);
-    // let mut node = Some(node);
+    let mut node = Some(node);
 
     app.run(move || if let Some(message) = stream.try_pop() {
-                println!("msg: {:?}", message);
+                // println!("msg: {:?}", message);
+
                 let m = update(model.take().unwrap(), message);
 
+                let new = view(&m);
+
+                // println!("node: {:?}", new);
+
+                let old = node.take().unwrap();
+                let changeset = dom::diff(old, new.clone());
+
+                // println!("diff: {:?}", changeset);
+
+                for change in changeset.into_iter() {
+                    patch(&mut tree, change);
+                }
+
+                node = Some(new);
                 model = Some(m);
             });
 }
