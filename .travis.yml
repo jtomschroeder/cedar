@@ -4,10 +4,6 @@ os: osx
 language: rust
 rust: stable
 
-branches:
-  except:
-  - dom
-
 notifications:
   email:
     on_success: never
