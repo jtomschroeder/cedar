@@ -7,6 +7,11 @@ use dom::Attributes;
 use super::id::Id;
 use super::widget::Widget;
 
+#[repr(u64)]
+enum NSTextAlignment {
+    Center = 2, // Note: 2 on macOS, 1 on iOS, tvOS, watchOS
+}
+
 pub struct Label {
     id: Id,
 }
@@ -24,6 +29,8 @@ impl Label {
             msg_send![label, setDrawsBackground: NO];
             msg_send![label, setEditable: NO];
             msg_send![label, setSelectable: NO];
+
+            msg_send![label, setAlignment: NSTextAlignment::Center];
 
             Label { id: label.into() }
         }

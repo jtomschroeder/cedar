@@ -1,4 +1,6 @@
 
+#![allow(non_upper_case_globals)]
+
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
 
@@ -18,6 +20,20 @@ enum UserInterfaceLayoutOrientation {
 #[repr(u64)]
 enum NSStackViewGravity {
     Top = 1,
+}
+
+// const NSLayoutPriorityRequired: f32 = 1000.0;
+// const NSLayoutPriorityDefaultHigh: f32 = 750.0;
+// const NSLayoutPriorityDragThatCanResizeWindow: f32 = 510.0;
+const NSLayoutPriorityWindowSizeStayPut: f32 = 500.0;
+// const NSLayoutPriorityDragThatCannotResizeWindow: f32 = 490.0;
+// const NSLayoutPriorityDefaultLow: f32 = 250.0;
+// const NSLayoutPriorityFittingSizeCompression: f32 = 50.0;
+
+#[repr(u32)]
+enum NSLayoutConstraintOrientation {
+    Horizontal = 0, 
+    // Vertical = 1,
 }
 
 use core_graphics::base::CGFloat;
@@ -80,6 +96,9 @@ impl Stack {
 
                 let insets = NSEdgeInsets::new(10., 10., 10., 10.);
                 msg_send![stack, setEdgeInsets: insets];
+
+                msg_send![stack, setHuggingPriority: NSLayoutPriorityWindowSizeStayPut
+                                     forOrientation: NSLayoutConstraintOrientation::Horizontal];
 
                 stack
             };
