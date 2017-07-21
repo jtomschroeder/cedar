@@ -5,11 +5,11 @@ use std::fmt::Debug;
 use super::{Window, Button, Label, Stack, TextField};
 use stream::Stream;
 
-use super::widget::NWidget;
+use super::widget::Widget;
 use atomic_box::AtomicBox;
 
 struct Vertex<S> {
-    widget: AtomicBox<NWidget<S>>,
+    widget: AtomicBox<Widget<S>>,
     children: Vec<Vertex<S>>,
 }
 
@@ -17,11 +17,11 @@ type Tree<S> = Vec<Vertex<S>>;
 
 fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex<S> {
     let (kind, attributes) = (node.value.0, node.value.1);
-    let mut widget: NWidget<S> = match kind {
-        dom::Kind::Label => NWidget::Label(Label::new()),
-        dom::Kind::Button => NWidget::Button(Button::new(stream.clone())), 
-        dom::Kind::Stack => NWidget::Stack(Stack::new()),
-        dom::Kind::Field => NWidget::Field(TextField::new(stream.clone())),
+    let mut widget: Widget<S> = match kind {
+        dom::Kind::Label => Widget::Label(Label::new()),
+        dom::Kind::Button => Widget::Button(Button::new(stream.clone())), 
+        dom::Kind::Stack => Widget::Stack(Stack::new()),
+        dom::Kind::Field => Widget::Field(TextField::new(stream.clone())),
     };
 
     widget.update(attributes);

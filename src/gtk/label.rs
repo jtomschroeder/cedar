@@ -1,7 +1,7 @@
 
 use gtk;
 
-use super::widget::Widget;
+use super::widget::Widgeted;
 
 pub struct Label {
     pub label: gtk::Label,
@@ -15,7 +15,7 @@ impl Label {
 
 use dom::Attributes;
 
-impl<S> Widget<S> for Label {
+impl<S> Widgeted<S> for Label {
     fn update(&mut self, attributes: Attributes<S>) {
         use dom::Attribute::*;
         for attr in attributes.into_iter() {

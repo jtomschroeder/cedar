@@ -1,5 +1,5 @@
 
-use super::widget::Widget;
+use super::widget::Widgeted;
 
 use stream::Stream;
 use dom::Attributes;
@@ -32,7 +32,7 @@ impl<S: Clone + 'static> Button<S> {
 }
 
 
-impl<S: Clone + 'static> Widget<S> for Button<S> {
+impl<S: Clone + 'static> Widgeted<S> for Button<S> {
     fn update(&mut self, attributes: Attributes<S>) {
         use dom::Attribute::*;
         for attr in attributes.into_iter() {

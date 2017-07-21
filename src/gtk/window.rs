@@ -1,5 +1,5 @@
 
-use super::widget::{Widget, NWidget};
+use super::widget::{Widgeted, Widget};
 
 use gtk;
 use gtk::prelude::*;
@@ -17,21 +17,21 @@ impl Stack {
         Stack { stack }
     }
 
-    pub fn add<S>(&self, widget: &NWidget<S>) {
+    pub fn add<S>(&self, widget: &Widget<S>) {
         match widget {
-            &NWidget::Button(ref button) => {
+            &Widget::Button(ref button) => {
                 self.stack.add(&button.button);
                 button.button.show();
             }
-            &NWidget::Stack(ref stack) => {
+            &Widget::Stack(ref stack) => {
                 self.stack.add(&stack.stack);
                 stack.stack.show();
             }
-            &NWidget::Label(ref label) => {
+            &Widget::Label(ref label) => {
                 self.stack.add(&label.label);
                 label.label.show();
             }
-            &NWidget::Field(ref field) => {
+            &Widget::Field(ref field) => {
                 self.stack.add(&field.entry);
                 field.entry.show();
             }
@@ -39,7 +39,7 @@ impl Stack {
     }
 }
 
-impl<S> Widget<S> for Stack {}
+impl<S> Widgeted<S> for Stack {}
 
 pub struct Window {
     _window: gtk::Window,

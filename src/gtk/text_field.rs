@@ -2,7 +2,7 @@
 use gtk;
 use gtk::prelude::*;
 
-use super::widget::Widget;
+use super::widget::Widgeted;
 use stream::Stream;
 use dom::Attributes;
 
@@ -35,7 +35,7 @@ impl<S: 'static> TextField<S> {
     }
 }
 
-impl<S: 'static> Widget<S> for TextField<S> {
+impl<S: 'static> Widgeted<S> for TextField<S> {
     fn update(&mut self, attributes: Attributes<S>) {
         use dom::Attribute::*;
         for attr in attributes.into_iter() {
