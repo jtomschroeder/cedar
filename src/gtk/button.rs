@@ -50,13 +50,12 @@ impl<S: 'static> Button<S> {
 
 use dom::Attributes;
 
-impl<S: 'static> Widget<S> for Button<S> {
+impl<S: Clone + 'static> Widget<S> for Button<S> {
     // fn add(&self, container: &gtk::Box) {
     //     container.add(&self.button);
     //     self.button.show();
     // }
 
-    fn update(&mut self, attrs: Attributes<S>) {}
 
     // fn update(&mut self, model: &M) {
     //     enum Attr {
@@ -76,4 +75,20 @@ impl<S: 'static> Widget<S> for Button<S> {
     //         }
     //     }
     // }
+
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+
+        for attr in attributes.into_iter() {
+            match attr {
+                Text(text) => self.button.set_label(&text),
+                Click(message) => {
+                    let stream = self.stream.clone();
+                    self.button
+                        .connect_clicked(move |_| stream.push(message.clone()));
+                }
+                _ => {}
+            }
+        }
+    }
 }

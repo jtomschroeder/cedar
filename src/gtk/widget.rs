@@ -30,7 +30,7 @@ pub enum NWidget<S> {
     Label(Label),
 }
 
-impl<S: 'static> NWidget<S> {
+impl<S: Clone + 'static> NWidget<S> {
     pub fn add(&self, widget: &NWidget<S>) {
         match self {
             &NWidget::Stack(ref stack) => stack.add(widget),

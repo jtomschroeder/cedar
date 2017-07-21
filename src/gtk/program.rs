@@ -101,7 +101,7 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
     }
 }
 
-fn patch<S: Debug + 'static>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
+fn patch<S: Clone + Debug + 'static>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
     if path.is_empty() {
         return;
     }
