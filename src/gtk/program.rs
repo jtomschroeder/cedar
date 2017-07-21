@@ -1,14 +1,11 @@
 
-use gtk;
-use gtk::prelude::*;
-
 use dom;
 use std::fmt::Debug;
 
 use super::{Window, Button, Label, Stack, TextField};
 use stream::Stream;
 
-use super::widget::{Widget, NWidget};
+use super::widget::NWidget;
 use atomic_box::AtomicBox;
 
 struct Vertex<S> {
@@ -25,7 +22,6 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
         dom::Kind::Button => NWidget::Button(Button::new(stream.clone())), 
         dom::Kind::Stack => NWidget::Stack(Stack::new()),
         dom::Kind::Field => NWidget::Field(TextField::new(stream.clone())),
-        k => panic!("Not yet implemented! {:?}", k),
     };
 
     widget.update(attributes);
@@ -72,7 +68,7 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     let app = super::Application::new(); // TODO: enforce `app` created first
 
     let stream: Stream<S> = Stream::new();
-    let (window, mut stack) = Window::new("cedar");
+    let (_, stack) = Window::new("cedar");
 
     let node = view(&model);
 

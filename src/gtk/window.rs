@@ -1,8 +1,5 @@
 
-use std::sync::Arc;
-
 use super::widget::{Widget, NWidget};
-use atomic_box::AtomicBox;
 
 use gtk;
 use gtk::prelude::*;

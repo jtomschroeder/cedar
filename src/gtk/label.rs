@@ -1,6 +1,5 @@
 
 use gtk;
-use gtk::prelude::*;
 
 use super::widget::Widget;
 

@@ -1,6 +1,4 @@
 
-use gtk;
-
 use dom::Attributes;
 use super::{TextField, Button, Label, Stack};
 

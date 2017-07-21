@@ -1,6 +1,4 @@
 
-use std::marker::PhantomData;
-
 use super::widget::Widget;
 
 use stream::Stream;
