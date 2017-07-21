@@ -11,59 +11,46 @@
 
 ### Usage
 
-Add this to `Cargo.toml`:
-
-```toml
-[dependencies]
-cedar = { git = "https://github.com/jtomschroeder/cedar" }
-```
-
-and this to the root of your crate:
-
-```rust
-extern crate cedar;
-```
+Add `cedar` to your project via *cargo*.
 
 #### Creating buttons & *reactive* text :rocket:
 
 ```rust
 extern crate cedar;
 
+use cedar::dom;
+use cedar::dom::Builder;
+
 type Model = i32;
 
+#[derive(PartialEq, Debug, Clone)]
 enum Message {
     Increment,
     Decrement,
 }
 
-fn update(model: &Model, message: Message) -> Model {
+fn update(model: Model, message: Message) -> Model {
     match message {
         Message::Increment => model + 1,
         Message::Decrement => model - 1,
     }
 }
 
-fn view() -> cedar::View<Model, Message> {
-    cedar::View::new()
-        .button(|button| {
-            button.text("+")
-                .click(|| Message::Increment)
-        })
-        .label(|label| label.text(Model::to_string))
-        .button(|button| {
-            button.text("-")
-                .click(|| Message::Decrement)
-        })
+fn view(model: &Model) -> dom::Object<Message> {
+    dom::stack()
+        .add(dom::button().text("+".into()).click(Message::Increment))
+        .add(dom::label().text(model.to_string()))
+        .add(dom::button().text("-".into()).click(Message::Decrement))
 }
 
 fn main() {
-    cedar::Program::new(0, update, view).run()
+    cedar::program(0, update, view)
 }
 ```
 
 ### Design
 
-A `cedar` application is composed of a *model*, *update*, and *view*.
+A `cedar` application is composed of a *model*, *update*, and *view*. **TODO: expand on this....**
 
 ### Credits
 
