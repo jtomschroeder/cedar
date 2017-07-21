@@ -70,7 +70,7 @@ use atomic_box::AtomicBox;
 // type Wdgt = Box<gtk::IsA<gtk::Widget>>;
 
 struct Vertex<S> {
-    widget: AtomicBox<Box<Widget<S>>>,
+    widget: AtomicBox<NWidget<S>>,
     children: Vec<Vertex<S>>,
 }
 
@@ -78,10 +78,10 @@ type Tree<S> = Vec<Vertex<S>>;
 
 fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex<S> {
     let (kind, attributes) = (node.value.0, node.value.1);
-    let mut widget: Box<Widget<S>> = match kind {
-        dom::Kind::Label => Box::new(Label::new()),
-        dom::Kind::Button => Box::new(Button::new(stream.clone())), 
-        dom::Kind::Stack => Box::new(Stack::new()),
+    let mut widget: NWidget<S> = match kind {
+        dom::Kind::Label => NWidget::Label(Label::new()),
+        dom::Kind::Button => NWidget::Button(Button::new(stream.clone())), 
+        dom::Kind::Stack => NWidget::Stack(Stack::new()),
         // dom::Kind::Field => Box::new(TextField::new(stream.clone())),
         k => panic!("Not yet implemented! {:?}", k),
     };
@@ -130,18 +130,18 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     let app = super::Application::new(); // TODO: enforce `app` created first
 
     let stream: Stream<S> = Stream::new();
-    let (window, mut stack): (Window<S>, Stack) = Window::new("cedar");
+    let (window, mut stack) = Window::new("cedar");
 
     let button: Button<S> = Button::new(stream.clone());
     let button: Box<Widget<S>> = Box::new(button);
 
     // button.add(&stack);
-    stack.add(&button);
+    // stack.add(&button);
 
     let node = view(&model);
 
     let vertex = create(stream.clone(), node.clone());
-    // stack.add(&vertex.widget);
+    stack.add(&vertex.widget);
 
     let mut tree = vec![vertex];
 

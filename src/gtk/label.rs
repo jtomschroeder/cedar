@@ -6,7 +6,7 @@ use super::widget::Widget;
 use property::Property;
 
 pub struct Label {
-    label: gtk::Label,
+    pub label: gtk::Label,
 }
 
 impl Label {

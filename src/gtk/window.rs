@@ -1,14 +1,14 @@
 
 use std::sync::Arc;
 
-use super::widget::Widget;
+use super::widget::{Widget, NWidget};
 use atomic_box::AtomicBox;
 
 use gtk;
 use gtk::prelude::*;
 
 pub struct Stack {
-    stack: gtk::Box,
+    pub stack: gtk::Box,
 }
 
 impl Stack {
@@ -25,6 +25,23 @@ impl Stack {
     //         .push(Attribute::Text(Box::new(attribute)));
     //     self
     // }
+
+    pub fn add<S>(&self, widget: &NWidget<S>) {
+        match widget {
+            &NWidget::Button(ref button) => {
+                self.stack.add(&button.button);
+                button.button.show();
+            }
+            &NWidget::Stack(ref stack) => {
+                self.stack.add(&stack.stack);
+                stack.stack.show();
+            }
+            &NWidget::Label(ref label) => {
+                self.stack.add(&label.label);
+                label.label.show();
+            }
+        }
+    }
 }
 
 impl<S> Widget<S> for Stack {
@@ -33,18 +50,18 @@ impl<S> Widget<S> for Stack {
     //     // self.label.show();
     // }
 
-    fn add(&self, widget: &Box<Widget<S>>) {
-        widget.add_in(self);
-    }
+    // fn add(&self, widget: &Box<Widget<S>>) {
+    //     widget.add_in(self);
+    // }
 }
 
-pub struct Window<M> {
+pub struct Window {
     // vbox: gtk::Box,
-    _window: gtk::Window,
-    views: Arc<Vec<AtomicBox<Box<Widget<M>>>>>,
+    _window: gtk::Window, 
+    // views: Arc<Vec<AtomicBox<Box<Widget<M>>>>>,
 }
 
-impl<M> Window<M> {
+impl Window {
     pub fn new(title: &str) -> (Self, Stack) {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
 
@@ -66,19 +83,19 @@ impl<M> Window<M> {
 
         (Window {
              // vbox: vbox,
-             _window: window,
-             views: Arc::new(Vec::new()),
+             _window: window, 
+            //  views: Arc::new(Vec::new()),
          },
          Stack::from(vbox))
     }
 
-    pub fn add<V: Widget<M> + 'static>(&mut self, view: V) {
-        // view.add(&self.vbox);
+    // pub fn add<V: Widget<M> + 'static>(&mut self, view: V) {
+    //     // view.add(&self.vbox);
 
-        if let Some(views) = Arc::get_mut(&mut self.views) {
-            views.push(AtomicBox::new(Box::new(view)));
-        }
-    }
+    //     if let Some(views) = Arc::get_mut(&mut self.views) {
+    //         views.push(AtomicBox::new(Box::new(view)));
+    //     }
+    // }
 
     // pub fn update(&mut self, model: &M) {
     //     if let Some(views) = Arc::get_mut(&mut self.views) {

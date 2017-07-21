@@ -14,7 +14,7 @@ use gtk::prelude::*;
 // }
 
 pub struct Button<S> {
-    button: gtk::Button,
+    pub button: gtk::Button,
     // attributes: Vec<Attribute<M>>,
     stream: Stream<S>, 
     // phantom: PhantomData<M>,
