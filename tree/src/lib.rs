@@ -162,4 +162,4 @@ pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
     changeset
 }
 
-fn patch() {}
+// fn patch() {}

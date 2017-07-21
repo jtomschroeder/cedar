@@ -37,8 +37,10 @@ pub mod gtk3;
 
 #[cfg(any(feature = "gtk3", not(target_os = "macos")))]
 pub mod backend {
-    pub use gtk3::View;
-    pub use gtk3::Program;
+    pub use gtk3::*;
+
+    // pub use gtk3::View;
+    // pub use gtk3::Program;
 }
 
 // --- common ---

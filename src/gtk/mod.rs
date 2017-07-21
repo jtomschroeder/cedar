@@ -10,7 +10,7 @@ mod text_field;
 
 mod widget;
 
-pub use self::program::Program;
+pub use self::program::program;
 pub use self::application::Application;
 pub use self::window::Window;
 pub use self::view::View;
