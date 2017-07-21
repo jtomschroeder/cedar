@@ -11,9 +11,6 @@ impl Application {
     }
 
     pub fn run<F: FnMut() + Send + 'static>(self, mut action: F) {
-        // use std::thread;
-        // thread::spawn(action);
-
         gtk::timeout_add(16, move || {
             action();
             gtk::Continue(true)

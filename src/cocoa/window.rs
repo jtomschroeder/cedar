@@ -42,7 +42,7 @@ impl NSEdgeInsets {
 }
 
 pub struct Window {
-    window: AtomicId,
+    _window: AtomicId,
 }
 
 pub struct Stack {
@@ -113,7 +113,7 @@ impl Window {
             let stack = Stack::new();
             msg_send![window.contentView(), addSubview:stack.id.clone()];
 
-            (Window { window: window.into() }, stack)
+            (Window { _window: window.into() }, stack)
         }
     }
 }
