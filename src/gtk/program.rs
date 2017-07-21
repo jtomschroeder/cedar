@@ -55,8 +55,70 @@
 //     }
 // }
 
+use gtk;
+use gtk::prelude::*;
+
 use dom;
 use std::fmt::Debug;
+
+use super::{Window, Button, Label, Stack};
+use stream::Stream;
+
+use super::widget::{Widget, NWidget};
+use atomic_box::AtomicBox;
+
+// type Wdgt = Box<gtk::IsA<gtk::Widget>>;
+
+struct Vertex<S> {
+    widget: AtomicBox<Box<Widget<S>>>,
+    children: Vec<Vertex<S>>,
+}
+
+type Tree<S> = Vec<Vertex<S>>;
+
+fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex<S> {
+    let (kind, attributes) = (node.value.0, node.value.1);
+    let mut widget: Box<Widget<S>> = match kind {
+        dom::Kind::Label => Box::new(Label::new()),
+        dom::Kind::Button => Box::new(Button::new(stream.clone())), 
+        dom::Kind::Stack => Box::new(Stack::new()),
+        // dom::Kind::Field => Box::new(TextField::new(stream.clone())),
+        k => panic!("Not yet implemented! {:?}", k),
+    };
+
+    widget.update(attributes);
+
+    let mut children = vec![];
+    for child in node.children.into_iter() {
+        let child = create(stream.clone(), child);
+        widget.add(&child.widget);
+        children.push(child);
+    }
+
+    Vertex {
+        widget: AtomicBox::new(widget),
+        children,
+    }
+}
+
+fn patch<S: Debug>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
+    if path.is_empty() {
+        return;
+    }
+
+    let location = path.remove(0);
+    if path.is_empty() {
+        let widget = &mut tree[location.index].widget;
+
+        use tree::Operation::*;
+        match op {
+            // Update((_, attrs)) => widget.update(attrs),
+            op => panic!("Not yet implemented! {:?}", op),
+        }
+    } else {
+        patch(&mut tree[location.index].children, (path, op));
+    }
+}
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -67,21 +129,30 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 {
     let app = super::Application::new(); // TODO: enforce `app` created first
 
-    // let stream = Stream::new();
+    let stream: Stream<S> = Stream::new();
+    let (window, mut stack): (Window<S>, Stack) = Window::new("cedar");
 
-    // let (_window, mut stack) = Window::new("cedar");
+    let button: Button<S> = Button::new(stream.clone());
+    let button: Box<Widget<S>> = Box::new(button);
 
-    // let node = view(&model);
+    // button.add(&stack);
+    stack.add(&button);
 
-    // let vertex = create(stream.clone(), node.clone());
+    let node = view(&model);
+
+    let vertex = create(stream.clone(), node.clone());
     // stack.add(&vertex.widget);
 
-    // let mut tree = vec![vertex];
+    let mut tree = vec![vertex];
 
-    // // Use `Option` to allow for move/mutation in FnMut `run`
-    // let mut model = Some(model);
+    // Use `Option` to allow for move/mutation in FnMut `run`
+    let mut model = Some(model);
     // let mut node = Some(node);
 
-    app.run(move || {})
+    app.run(move || if let Some(message) = stream.try_pop() {
+                println!("msg: {:?}", message);
+                let m = update(model.take().unwrap(), message);
 
+                model = Some(m);
+            });
 }

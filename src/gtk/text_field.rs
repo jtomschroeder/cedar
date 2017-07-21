@@ -27,22 +27,22 @@ impl<S: 'static> TextField<S> {
         let stream = self.stream.clone();
         self.entry
             .connect_event(move |entry, _| {
-                if let Some(ref text) = entry.get_text() {
-                    stream.push(delegate(text));
-                }
+                               if let Some(ref text) = entry.get_text() {
+                                   stream.push(delegate(text));
+                               }
 
-                gtk::Inhibit(false)
-            });
+                               gtk::Inhibit(false)
+                           });
 
         self
     }
 }
 
 impl<M, S: 'static> Widget<M> for TextField<S> {
-    fn add(&self, container: &gtk::Box) {
-        container.add(&self.entry);
-        self.entry.show();
-    }
+    // fn add(&self, container: &gtk::Box) {
+    //     container.add(&self.entry);
+    //     self.entry.show();
+    // }
 
-    fn update(&mut self, _: &M) {}
+    // fn update(&mut self, _: &M) {}
 }
