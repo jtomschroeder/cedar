@@ -19,6 +19,8 @@ pub trait Widget<S> {
 
     // fn add(&self, &Box<Widget<S>>) {}
     // fn add_in(&self, &Widget<S>) {}
+
+    // fn add<P: gtk::IsA<gtk::Widget>>(&self, widget: &P) {}
 }
 
 // #[derive(Debug)]
@@ -28,12 +30,11 @@ pub enum NWidget<S> {
     Label(Label),
 }
 
-impl<S> NWidget<S> {
+impl<S: 'static> NWidget<S> {
     pub fn add(&self, widget: &NWidget<S>) {
         match self {
-            &NWidget::Button(_) => panic!(""),
             &NWidget::Stack(ref stack) => stack.add(widget),
-            &NWidget::Label(_) => panic!(""),
+            _ => {}
         }
     }
 
@@ -47,5 +48,13 @@ impl<S> NWidget<S> {
     //     unimplemented!()
     // }
 
-    pub fn update(&mut self, _: Attributes<S>) {}
+    pub fn update(&mut self, attrs: Attributes<S>) {
+        let widget: &mut Widget<S> = match self {
+            &mut NWidget::Button(ref mut b) => b,
+            &mut NWidget::Stack(ref mut s) => s,
+            &mut NWidget::Label(ref mut l) => l,
+        };
+
+        widget.update(attrs);
+    }
 }

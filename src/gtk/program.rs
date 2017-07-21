@@ -101,7 +101,7 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
     }
 }
 
-fn patch<S: Debug>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
+fn patch<S: Debug + 'static>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
     if path.is_empty() {
         return;
     }
@@ -112,7 +112,7 @@ fn patch<S: Debug>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
 
         use tree::Operation::*;
         match op {
-            // Update((_, attrs)) => widget.update(attrs),
+            Update((_, attrs)) => widget.update(attrs),
             op => panic!("Not yet implemented! {:?}", op),
         }
     } else {
@@ -133,7 +133,7 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     let (window, mut stack) = Window::new("cedar");
 
     let button: Button<S> = Button::new(stream.clone());
-    let button: Box<Widget<S>> = Box::new(button);
+    // let button: Box<Widget<S>> = Box::new(button);
 
     // button.add(&stack);
     // stack.add(&button);

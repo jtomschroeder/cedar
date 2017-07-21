@@ -21,11 +21,23 @@ impl Label {
     // }
 }
 
+use dom::Attributes;
+
 impl<S> Widget<S> for Label {
     // fn add(&self, container: &gtk::Box) {
     //     container.add(&self.label);
     //     self.label.show();
     // }
+
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Text(text) => self.label.set_text(&text),
+                _ => {}
+            }
+        }
+    }
 
     // fn update(&mut self, model: &M) {
     //     enum Attr {
