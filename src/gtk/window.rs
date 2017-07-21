@@ -20,12 +20,6 @@ impl Stack {
         Stack { stack }
     }
 
-    // pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-    //     self.attributes
-    //         .push(Attribute::Text(Box::new(attribute)));
-    //     self
-    // }
-
     pub fn add<S>(&self, widget: &NWidget<S>) {
         match widget {
             &NWidget::Button(ref button) => {
@@ -40,25 +34,18 @@ impl Stack {
                 self.stack.add(&label.label);
                 label.label.show();
             }
+            &NWidget::Field(ref field) => {
+                self.stack.add(&field.entry);
+                field.entry.show();
+            }
         }
     }
 }
 
-impl<S> Widget<S> for Stack {
-    // fn add(&self, container: &gtk::Box) {
-    //     // container.add(&self.label);
-    //     // self.label.show();
-    // }
-
-    // fn add(&self, widget: &Box<Widget<S>>) {
-    //     widget.add_in(self);
-    // }
-}
+impl<S> Widget<S> for Stack {}
 
 pub struct Window {
-    // vbox: gtk::Box,
-    _window: gtk::Window, 
-    // views: Arc<Vec<AtomicBox<Box<Widget<M>>>>>,
+    _window: gtk::Window,
 }
 
 impl Window {
@@ -81,27 +68,6 @@ impl Window {
         window.show_all();
         // window.present();
 
-        (Window {
-             // vbox: vbox,
-             _window: window, 
-            //  views: Arc::new(Vec::new()),
-         },
-         Stack::from(vbox))
+        (Window { _window: window }, Stack::from(vbox))
     }
-
-    // pub fn add<V: Widget<M> + 'static>(&mut self, view: V) {
-    //     // view.add(&self.vbox);
-
-    //     if let Some(views) = Arc::get_mut(&mut self.views) {
-    //         views.push(AtomicBox::new(Box::new(view)));
-    //     }
-    // }
-
-    // pub fn update(&mut self, model: &M) {
-    //     if let Some(views) = Arc::get_mut(&mut self.views) {
-    //         for view in views.iter_mut() {
-    //             view.update(model);
-    //         }
-    //     }
-    // }
 }

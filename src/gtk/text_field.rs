@@ -4,9 +4,10 @@ use gtk::prelude::*;
 
 use super::widget::Widget;
 use stream::Stream;
+use dom::Attributes;
 
 pub struct TextField<S> {
-    entry: gtk::Entry,
+    pub entry: gtk::Entry,
     stream: Stream<S>,
 }
 
@@ -18,31 +19,52 @@ impl<S: 'static> TextField<S> {
         }
     }
 
-    pub fn placeholder(self, text: &str) -> Self {
-        self.entry.set_placeholder_text(text);
-        self
-    }
+    // pub fn placeholder(self, text: &str) -> Self {
+    //     self.entry.set_placeholder_text(text);
+    //     self
+    // }
 
-    pub fn change<F: Fn(&str) -> S + 'static>(self, delegate: F) -> Self {
-        let stream = self.stream.clone();
-        self.entry
-            .connect_event(move |entry, _| {
-                               if let Some(ref text) = entry.get_text() {
-                                   stream.push(delegate(text));
-                               }
+    // pub fn change<F: Fn(&str) -> S + 'static>(self, delegate: F) -> Self {
+    //     let stream = self.stream.clone();
+    //     self.entry
+    //         .connect_event(move |entry, _| {
+    //                            if let Some(ref text) = entry.get_text() {
+    //                                stream.push(delegate(text));
+    //                            }
 
-                               gtk::Inhibit(false)
-                           });
+    //                            gtk::Inhibit(false)
+    //                        });
 
-        self
-    }
+    //     self
+    // }
 }
 
-impl<M, S: 'static> Widget<M> for TextField<S> {
+impl<S: 'static> Widget<S> for TextField<S> {
     // fn add(&self, container: &gtk::Box) {
     //     container.add(&self.entry);
     //     self.entry.show();
     // }
 
     // fn update(&mut self, _: &M) {}
+
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Placeholder(text) => self.entry.set_placeholder_text(Some(text.as_str())),
+                Change(messenger) => {
+                    let stream = self.stream.clone();
+                    self.entry
+                        .connect_event(move |entry, _| {
+                                           if let Some(ref text) = entry.get_text() {
+                                               stream.push(messenger(text.clone()));
+                                           }
+
+                                           gtk::Inhibit(false)
+                                       });
+                }
+                _ => {}
+            }
+        }
+    }
 }

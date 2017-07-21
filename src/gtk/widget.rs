@@ -8,7 +8,7 @@ use gtk;
 // }
 
 use dom::Attributes;
-use super::{Window, Button, Label, Stack};
+use super::{TextField, Button, Label, Stack};
 
 pub trait Widget<S> {
     // fn id(&self) -> &Id;
@@ -28,6 +28,7 @@ pub enum NWidget<S> {
     Button(Button<S>),
     Stack(Stack),
     Label(Label),
+    Field(TextField<S>),
 }
 
 impl<S: Clone + 'static> NWidget<S> {
@@ -38,23 +39,16 @@ impl<S: Clone + 'static> NWidget<S> {
         }
     }
 
-    // pub fn widget<W: gtk::IsA<gtk::Widget>>(&self) -> &W {
-    //     match self {
-    //         &NWidget::Button(button) => return &button.button as &W,
-    //         &NWidget::Stack(_) => {}
-    //         &NWidget::Label(_) => {}
-    //     }
-
-    //     unimplemented!()
-    // }
-
-    pub fn update(&mut self, attrs: Attributes<S>) {
-        let widget: &mut Widget<S> = match self {
+    pub fn widget(&mut self) -> &mut Widget<S> {
+        match self {
             &mut NWidget::Button(ref mut b) => b,
             &mut NWidget::Stack(ref mut s) => s,
             &mut NWidget::Label(ref mut l) => l,
-        };
+            &mut NWidget::Field(ref mut f) => f,
+        }
+    }
 
-        widget.update(attrs);
+    pub fn update(&mut self, attrs: Attributes<S>) {
+        self.widget().update(attrs);
     }
 }
