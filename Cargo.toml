@@ -1,10 +1,10 @@
 [package]
 name = "cedar"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 description = "Reactive, functional library for creating GUI applications"
 
-documentation = "https://docs.rs/cedar"
+documentation = "https://docs.rs/crate/cedar"
 homepage = "https://github.com/jtomschroeder/cedar"
 repository = "https://github.com/jtomschroeder/cedar"
 
