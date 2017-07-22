@@ -1,8 +1,18 @@
-sudo: false
-os: osx
+
+sudo: true
+os:
+  - linux
+  - osx
 
 language: rust
 rust: stable
+
+before_install:
+  - |
+    if [ $TRAVIS_OS_NAME = linux ]; then 
+      sudo apt-get -qq update
+      sudo apt-get install -y libgtk-3-dev
+    fi
 
 notifications:
   email:
