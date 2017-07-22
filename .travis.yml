@@ -1,5 +1,8 @@
+
 sudo: false
-os: osx
+os:
+  - linux
+  - osx
 
 language: rust
 rust: stable

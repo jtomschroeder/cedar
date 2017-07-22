@@ -10,19 +10,16 @@ repository = "https://github.com/jtomschroeder/cedar"
 
 readme = "README.md"
 license = "MIT"
-keywords = ["gui"]
+keywords = ["frp", "gui"]
 
 [dependencies]
 crossbeam = "0.2.10"
 
-gtk = { version = "0.1.2", optional = true }
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = { version = "0.1.2" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.7"
 objc = "0.2"
 core-graphics = "0.6"
-
-[features]
-default = []
-
-gtk3 = ["gtk"]
+gtk = { version = "0.1.2", optional = true }
