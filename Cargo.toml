@@ -14,6 +14,7 @@ keywords = ["gui"]
 
 [dependencies]
 crossbeam = "0.2.10"
+tree = { path = "tree" }
 
 gtk = { version = "0.1.2", optional = true }
 

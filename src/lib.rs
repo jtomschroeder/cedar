@@ -1,14 +1,17 @@
 
 extern crate crossbeam;
 
+#[macro_use]
+extern crate tree;
+
 // --- macOS ---
 
+#[cfg(all(target_os = "macos", not(feature = "gtk3")))]
 #[macro_use]
-#[cfg(target_os = "macos")]
 extern crate objc;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "gtk3")))]
 extern crate cocoa;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "gtk3")))]
 extern crate core_graphics;
 
 #[cfg(all(target_os = "macos", not(feature = "gtk3")))]
@@ -16,10 +19,7 @@ extern crate core_graphics;
 mod cacao;
 
 #[cfg(all(target_os = "macos", not(feature = "gtk3")))]
-pub mod backend {
-    pub use cacao::View;
-    pub use cacao::Program;
-}
+pub use cacao::program;
 
 // --- gtk ---
 
@@ -28,21 +28,14 @@ extern crate gtk;
 
 #[cfg(any(feature = "gtk3", not(target_os = "macos")))]
 #[path = "gtk/mod.rs"]
-pub mod gtk3;
+mod gtk3;
 
 #[cfg(any(feature = "gtk3", not(target_os = "macos")))]
-pub mod backend {
-    pub use gtk3::View;
-    pub use gtk3::Program;
-}
+pub use gtk3::program;
 
 // --- common ---
 
-pub use backend::*;
-
-mod property;
 mod atomic_box;
 mod stream;
-mod update;
 
-pub use self::update::Update;
+pub mod dom;

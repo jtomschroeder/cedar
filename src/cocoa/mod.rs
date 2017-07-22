@@ -2,7 +2,6 @@
 mod program;
 mod application;
 mod window;
-mod view;
 
 mod button;
 mod label;
@@ -13,10 +12,10 @@ mod widget;
 mod action;
 mod delegate;
 
-pub use self::program::Program;
+pub use self::program::program;
+
 pub use self::application::Application;
-pub use self::window::Window;
-pub use self::view::View;
+pub use self::window::{Window, Stack};
 
 pub use self::button::Button;
 pub use self::label::Label;

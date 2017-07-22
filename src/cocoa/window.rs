@@ -1,4 +1,6 @@
 
+#![allow(non_upper_case_globals)]
+
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
 
@@ -7,11 +9,8 @@ use cocoa::appkit::{NSViewHeightSizable, NSViewWidthSizable};
 use cocoa::appkit::{NSTitledWindowMask, NSMiniaturizableWindowMask, NSResizableWindowMask,
                     NSClosableWindowMask};
 
-use std::sync::Arc;
-
-use super::id::AtomicId;
+use super::id::{Id, AtomicId};
 use super::widget::Widget;
-use atomic_box::AtomicBox;
 
 #[repr(u64)]
 enum UserInterfaceLayoutOrientation {
@@ -21,6 +20,20 @@ enum UserInterfaceLayoutOrientation {
 #[repr(u64)]
 enum NSStackViewGravity {
     Top = 1,
+}
+
+// const NSLayoutPriorityRequired: f32 = 1000.0;
+// const NSLayoutPriorityDefaultHigh: f32 = 750.0;
+// const NSLayoutPriorityDragThatCanResizeWindow: f32 = 510.0;
+const NSLayoutPriorityWindowSizeStayPut: f32 = 500.0;
+// const NSLayoutPriorityDragThatCannotResizeWindow: f32 = 490.0;
+// const NSLayoutPriorityDefaultLow: f32 = 250.0;
+// const NSLayoutPriorityFittingSizeCompression: f32 = 50.0;
+
+#[repr(u32)]
+enum NSLayoutConstraintOrientation {
+    Horizontal = 0, 
+    // Vertical = 1,
 }
 
 use core_graphics::base::CGFloat;
@@ -44,14 +57,59 @@ impl NSEdgeInsets {
     }
 }
 
-pub struct Window<M> {
-    window: AtomicId,
-    stack: AtomicId,
-    views: Arc<Vec<AtomicBox<Box<Widget<M>>>>>,
+pub struct Window {
+    _window: AtomicId,
 }
 
-impl<M> Window<M> {
-    pub fn new(title: &str) -> Self {
+pub struct Stack {
+    pub id: Id,
+}
+
+impl<S> Widget<S> for Stack {
+    fn id(&self) -> &Id {
+        &self.id
+    }
+
+    fn add(&mut self, widget: &Box<Widget<S>>) {
+        unsafe {
+            msg_send![*self.id, addView:**widget.id()
+                              inGravity:NSStackViewGravity::Top];
+        };
+    }
+}
+
+impl Stack {
+    pub fn new() -> Self {
+        unsafe {
+            let stack = {
+                let stack: id = msg_send![class("NSStackView"), alloc];
+                let stack: id = msg_send![stack, init];
+
+                // TODO: window.frame padded by 10.0 on each side?
+                let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
+                msg_send![stack, setFrame: rect];
+
+                msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
+
+                msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
+                msg_send![stack, setSpacing: 5.0];
+
+                let insets = NSEdgeInsets::new(10., 10., 10., 10.);
+                msg_send![stack, setEdgeInsets: insets];
+
+                msg_send![stack, setHuggingPriority: NSLayoutPriorityWindowSizeStayPut
+                                     forOrientation: NSLayoutConstraintOrientation::Horizontal];
+
+                stack
+            };
+
+            Stack { id: stack.into() }
+        }
+    }
+}
+
+impl Window {
+    pub fn new(title: &str) -> (Self, Stack) {
         unsafe {
             let style = NSResizableWindowMask as NSUInteger | NSTitledWindowMask as NSUInteger |
                         NSMiniaturizableWindowMask as NSUInteger |
@@ -71,57 +129,10 @@ impl<M> Window<M> {
 
             window.makeKeyAndOrderFront_(nil);
 
-            let stack = {
-                let stack: id = msg_send![class("NSStackView"), alloc];
-                let stack: id = msg_send![stack, init];
+            let stack = Stack::new();
+            msg_send![window.contentView(), addSubview:stack.id.clone()];
 
-                // window.frame padded by 10.0 on each side
-                let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
-                msg_send![stack, setFrame: rect];
-
-                msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
-
-                msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
-                msg_send![stack, setSpacing: 5.0];
-
-                let insets = NSEdgeInsets::new(10., 10., 10., 10.);
-                msg_send![stack, setEdgeInsets: insets];
-
-                use cocoa::appkit::NSView;
-                window.contentView().addSubview_(stack);
-
-                stack
-            };
-
-            Window {
-                window: window.into(),
-                stack: stack.into(),
-                views: Arc::new(Vec::new()),
-            }
-        }
-    }
-
-    pub fn add<V: Widget<M> + 'static>(&mut self, view: V) {
-        unsafe {
-            msg_send![self.stack.get(), addView:**view.id()
-                                      inGravity:NSStackViewGravity::Top];
-
-            msg_send![self.window.get(), layoutIfNeeded];
-
-            let frame: NSRect = msg_send![self.stack.get(), frame];
-            msg_send![self.window.get(), setContentSize:frame.size];
-        };
-
-        if let Some(views) = Arc::get_mut(&mut self.views) {
-            views.push(AtomicBox::new(Box::new(view)));
-        }
-    }
-
-    pub fn update(&mut self, model: &M) {
-        if let Some(views) = Arc::get_mut(&mut self.views) {
-            for view in views.iter_mut() {
-                view.update(model);
-            }
+            (Window { _window: window.into() }, stack)
         }
     }
 }

@@ -5,25 +5,20 @@ use super::id::Id;
 use super::widget::Widget;
 use super::action;
 
-use property::Property;
 use stream::Stream;
-
-enum Attribute<M> {
-    Text(Box<Property<M, String>>),
-}
+use dom::Attributes;
 
 #[repr(u64)]
 enum BezelStyle {
     Rounded = 1,
 }
 
-pub struct Button<M, S> {
+pub struct Button<S> {
     id: Id,
-    attributes: Vec<Attribute<M>>,
     stream: Stream<S>,
 }
 
-impl<M, S: 'static> Button<M, S> {
+impl<S: Clone + 'static> Button<S> {
     pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
@@ -33,7 +28,6 @@ impl<M, S: 'static> Button<M, S> {
 
             Button {
                 id: button.into(),
-                attributes: vec![],
                 stream: stream,
             }
         }
@@ -41,51 +35,35 @@ impl<M, S: 'static> Button<M, S> {
 
     fn set_text(&mut self, text: &str) {
         use cocoa::foundation::NSString;
-
         unsafe {
             let title = NSString::alloc(nil).init_str(text);
             msg_send![*self.id, setTitle: title];
         }
     }
 
-    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-        self.attributes.push(Attribute::Text(Box::new(attribute)));
-        self
-    }
-
-    pub fn click<F: Fn() -> S + 'static>(self, action: F) -> Self {
+    pub fn register_click(&mut self, message: S) {
         let stream = self.stream.clone();
-        let action = action::create(move || stream.push(action()));
+        let action = action::create(move || stream.push(message.clone()));
 
         unsafe {
             msg_send![*self.id, setAction: sel!(act)];
             msg_send![*self.id, setTarget: action];
         }
-
-        self
     }
 }
 
-impl<M, S: 'static> Widget<M> for Button<M, S> {
+impl<S: Clone + 'static> Widget<S> for Button<S> {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, model: &M) {
-        enum Attr {
-            Text(String),
-        }
-
-        let mut attrs: Vec<_> = self.attributes
-            .iter_mut()
-            .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
-            })
-            .collect();
-
-        for attr in attrs.drain(..) {
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
             match attr {
-                Attr::Text(s) => self.set_text(&s),
+                Text(text) => self.set_text(&text),
+                Click(message) => self.register_click(message),
+                _ => {}
             }
         }
     }

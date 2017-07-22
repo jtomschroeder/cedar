@@ -2,20 +2,21 @@
 use cocoa::base::{id, nil, class, NO};
 use cocoa::foundation::NSString;
 
+use dom::Attributes;
+
 use super::id::Id;
 use super::widget::Widget;
-use property::Property;
 
-enum Attribute<M> {
-    Text(Box<Property<M, String>>),
+#[repr(u64)]
+enum NSTextAlignment {
+    Center = 2, // Note: 2 on macOS, 1 on iOS, tvOS, watchOS
 }
 
-pub struct Label<M> {
+pub struct Label {
     id: Id,
-    attributes: Vec<Attribute<M>>,
 }
 
-impl<M> Label<M> {
+impl Label {
     pub fn new() -> Self {
         unsafe {
             let string = NSString::alloc(nil).init_str("");
@@ -29,10 +30,9 @@ impl<M> Label<M> {
             msg_send![label, setEditable: NO];
             msg_send![label, setSelectable: NO];
 
-            Label {
-                id: label.into(),
-                attributes: vec![],
-            }
+            msg_send![label, setAlignment: NSTextAlignment::Center];
+
+            Label { id: label.into() }
         }
     }
 
@@ -42,33 +42,19 @@ impl<M> Label<M> {
             msg_send![*self.id, setStringValue: string];
         }
     }
-
-    pub fn text<P: Property<M, String> + 'static>(mut self, attribute: P) -> Self {
-        self.attributes.push(Attribute::Text(Box::new(attribute)));
-        self
-    }
 }
 
-impl<M> Widget<M> for Label<M> {
+impl<S> Widget<S> for Label {
     fn id(&self) -> &Id {
         &self.id
     }
 
-    fn update(&mut self, model: &M) {
-        enum Attr {
-            Text(String),
-        }
-
-        let mut attrs: Vec<_> = self.attributes
-            .iter_mut()
-            .map(|attr| match attr {
-                &mut Attribute::Text(ref mut prop) => Attr::Text(prop.process(model)),
-            })
-            .collect();
-
-        for attr in attrs.drain(..) {
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
             match attr {
-                Attr::Text(s) => self.set_text(&s),
+                Text(text) => self.set_text(&text),
+                _ => {}
             }
         }
     }

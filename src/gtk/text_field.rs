@@ -2,11 +2,12 @@
 use gtk;
 use gtk::prelude::*;
 
-use super::widget::Widget;
+use super::widget::Widgeted;
 use stream::Stream;
+use dom::Attributes;
 
 pub struct TextField<S> {
-    entry: gtk::Entry,
+    pub entry: gtk::Entry,
     stream: Stream<S>,
 }
 
@@ -18,31 +19,31 @@ impl<S: 'static> TextField<S> {
         }
     }
 
-    pub fn placeholder(self, text: &str) -> Self {
-        self.entry.set_placeholder_text(text);
-        self
+    pub fn set_placeholder(&mut self, text: &str) {
+        self.entry.set_placeholder_text(Some(text));
     }
 
-    pub fn change<F: Fn(&str) -> S + 'static>(self, delegate: F) -> Self {
+    pub fn register_change(&mut self, delegate: fn(String) -> S) {
         let stream = self.stream.clone();
         self.entry
             .connect_event(move |entry, _| {
-                if let Some(ref text) = entry.get_text() {
-                    stream.push(delegate(text));
-                }
-
-                gtk::Inhibit(false)
-            });
-
-        self
+                               if let Some(ref text) = entry.get_text() {
+                                   stream.push(delegate(text.clone()));
+                               }
+                               gtk::Inhibit(false)
+                           });
     }
 }
 
-impl<M, S: 'static> Widget<M> for TextField<S> {
-    fn add(&self, container: &gtk::Box) {
-        container.add(&self.entry);
-        self.entry.show();
+impl<S: 'static> Widgeted<S> for TextField<S> {
+    fn update(&mut self, attributes: Attributes<S>) {
+        use dom::Attribute::*;
+        for attr in attributes.into_iter() {
+            match attr {
+                Placeholder(text) => self.set_placeholder(&text),
+                Change(messenger) => self.register_change(messenger),
+                _ => {}
+            }
+        }
     }
-
-    fn update(&mut self, _: &M) {}
 }
