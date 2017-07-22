@@ -26,12 +26,14 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
 
     widget.update(attributes);
 
-    let mut children = vec![];
-    for child in node.children.into_iter() {
-        let child = create(stream.clone(), child);
-        widget.add(&child.widget);
-        children.push(child);
-    }
+    let children = node.children
+        .into_iter()
+        .map(|child| {
+                 let child = create(stream.clone(), child);
+                 widget.add(&child.widget);
+                 child
+             })
+        .collect();
 
     Vertex {
         widget: AtomicBox::new(widget),

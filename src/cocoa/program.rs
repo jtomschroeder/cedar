@@ -1,5 +1,6 @@
 
 use dom;
+use std::fmt::Debug;
 
 use super::{Window, Label, Stack, Button, TextField};
 use super::widget::Widget;
@@ -25,12 +26,14 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
 
     widget.update(attributes);
 
-    let mut children = vec![];
-    for child in node.children.into_iter() {
-        let child = create(stream.clone(), child);
-        widget.add(&child.widget);
-        children.push(child);
-    }
+    let children = node.children
+        .into_iter()
+        .map(|child| {
+                 let child = create(stream.clone(), child);
+                 widget.add(&child.widget);
+                 child
+             })
+        .collect();
 
     Vertex {
         widget: AtomicBox::new(widget),
@@ -39,8 +42,6 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
 }
 
 // TODO: use `removeFromSuperview()` to 'delete' nodes
-
-use std::fmt::Debug;
 
 fn patch<S: Debug>(tree: &mut Tree<S>, (mut path, op): dom::Change<S>) {
     if path.is_empty() {
