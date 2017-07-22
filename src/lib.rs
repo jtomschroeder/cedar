@@ -1,9 +1,6 @@
 
 extern crate crossbeam;
 
-#[macro_use]
-extern crate tree;
-
 // --- macOS ---
 
 #[cfg(all(target_os = "macos", not(feature = "gtk3")))]
@@ -35,6 +32,8 @@ pub use gtk3::program;
 
 // --- common ---
 
+#[macro_use]
+mod tree;
 mod atomic_box;
 mod stream;
 

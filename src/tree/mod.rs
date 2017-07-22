@@ -8,14 +8,14 @@ pub struct Node<T> {
 #[macro_export]
 macro_rules! node {
     ($v:expr) => {
-        $crate::Node {
+        $crate::tree::Node {
             value: $v,
             children: vec![]
         }
     };
 
     ( $v:expr => $( $c:expr ),* ) => {{
-        $crate::Node {
+        $crate::tree::Node {
             value: $v,
             children: vec![ $( $c ),* ]
         }
@@ -24,7 +24,7 @@ macro_rules! node {
 
 pub type Path = Vec<Location>;
 
-#[derive(Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Location {
     pub depth: usize,
     pub index: usize,
@@ -39,7 +39,7 @@ impl fmt::Debug for Location {
 }
 
 impl Location {
-    fn new(depth: usize, index: usize) -> Self {
+    pub fn new(depth: usize, index: usize) -> Self {
         Location { depth, index }
     }
 }
@@ -91,8 +91,6 @@ fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
     }
 }
 
-use Operation::*;
-
 use std::collections::VecDeque;
 
 type Nodes<T> = Vec<Node<T>>;
@@ -105,6 +103,8 @@ pub enum Difference {
 pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
     where F: Fn(&Node<T>, &Node<T>) -> Option<Difference>
 {
+    use self::Operation::*;
+
     // -      if `old` doesn't exist: CREATE new
     // - else if `new` doesn't exist: DELETE old
     // - else if old.type != new.type: REPLACE old with new
@@ -162,4 +162,108 @@ pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
     changeset
 }
 
-// fn patch() {}
+#[cfg(test)]
+mod test {
+    use tree;
+
+    #[derive(PartialEq, Debug)]
+    enum Kind {
+        Stack,
+        Button,
+        Label,
+    }
+
+    #[derive(PartialEq, Debug)]
+    enum Attribute {
+        Text(String),
+    }
+
+    type Attributes = Vec<Attribute>;
+
+    type Value = (Kind, Attributes);
+    type Node = tree::Node<Value>;
+
+    fn comparator(t: &Node, u: &Node) -> Option<tree::Difference> {
+        if t.value.0 != u.value.0 {
+            Some(tree::Difference::Kind)
+        } else if t.value.1 != u.value.1 {
+            Some(tree::Difference::Value)
+        } else {
+            None
+        }
+    }
+
+    #[test]
+    fn objects() {
+        use self::Kind::*;
+        use self::Attribute::*;
+
+        use tree::Location;
+        use tree::Operation::*;
+
+        {
+            let t = node![(Stack, vec![])];
+            let u = node![(Stack, vec![])];
+
+            let changeset = tree::diff(vec![t], vec![u], comparator);
+            assert!(changeset.is_empty());
+        }
+
+        {
+            let t = node![(Stack, vec![])];
+            let u = node![(Button, vec![])];
+
+            let mut changeset = tree::diff(vec![t], vec![u], comparator);
+            assert_eq!(changeset.len(), 1);
+
+            let (location, operation) = changeset.remove(0);
+            assert_eq!(&location, &[Location::new(0, 0)]);
+
+            match operation {
+                Replace(node) => {
+                    let (kind, _) = node.value;
+                    assert_eq!(kind, Button);
+                }
+                _ => panic!("Wrong operation!"),
+            }
+        }
+
+        {
+            let t = node![(Label, vec![Text("".into())])];
+            let u = node![(Label, vec![Text("!".into())])];
+
+            let mut changeset = tree::diff(vec![t], vec![u], comparator);
+            assert_eq!(changeset.len(), 1);
+
+            let (location, operation) = changeset.remove(0);
+            assert_eq!(&location, &[Location::new(0, 0)]);
+
+            match operation {
+                Update((kind, attrs)) => {
+                    assert_eq!(kind, Label);
+                    assert_eq!(&attrs, &[Text("!".into())]);
+                }
+                _ => panic!("Wrong operation!"),
+            }
+        }
+
+        {
+            let u = node![(Stack, vec![]) 
+                        => node![(Button, vec![])]
+                         , node![(Label, vec![Text("!".into())])]
+                         , node![(Button, vec![])]
+                     ];
+
+            let mut changeset = tree::diff(vec![], vec![u], comparator);
+            assert_eq!(changeset.len(), 1);
+
+            let (location, operation) = changeset.remove(0);
+            assert_eq!(&location, &[Location::new(0, 0)]);
+
+            match operation {
+                Create(..) => {}
+                _ => panic!("Wrong operation!"),
+            }
+        }
+    }
+}
