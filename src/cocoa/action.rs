@@ -12,7 +12,8 @@ pub trait Actionable {
 }
 
 impl<F> Actionable for F
-    where F: FnMut()
+where
+    F: FnMut(),
 {
     fn act(&mut self) {
         self()
@@ -57,8 +58,10 @@ pub fn register() {
     }
 
     unsafe {
-        decl.add_method(sel!(initialize:),
-                        action_initialize as extern "C" fn(&mut Object, Sel, *mut Void));
+        decl.add_method(
+            sel!(initialize:),
+            action_initialize as extern "C" fn(&mut Object, Sel, *mut Void),
+        );
 
         decl.add_method(sel!(act), action_act as extern "C" fn(&mut Object, Sel));
         decl.add_method(sel!(dealloc), action_dealloc as extern "C" fn(&Object, Sel));

@@ -67,8 +67,9 @@ struct Zip<I, J> {
 }
 
 impl<I, J> Iterator for Zip<I, J>
-    where I: Iterator,
-          J: Iterator
+where
+    I: Iterator,
+    J: Iterator,
 {
     type Item = Pair<I::Item, J::Item>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -82,8 +83,9 @@ impl<I, J> Iterator for Zip<I, J>
 }
 
 fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
-    where I: IntoIterator,
-          J: IntoIterator
+where
+    I: IntoIterator,
+    J: IntoIterator,
 {
     Zip {
         i: i.into_iter(),
@@ -101,7 +103,8 @@ pub enum Difference {
 }
 
 pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
-    where F: Fn(&Node<T>, &Node<T>) -> Option<Difference>
+where
+    F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
 {
     use self::Operation::*;
 
@@ -248,7 +251,8 @@ mod test {
         }
 
         {
-            let u = node![(Stack, vec![]) 
+            let u =
+                node![(Stack, vec![]) 
                         => node![(Button, vec![])]
                          , node![(Label, vec![Text("!".into())])]
                          , node![(Button, vec![])]
