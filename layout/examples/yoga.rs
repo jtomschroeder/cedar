@@ -12,18 +12,19 @@ fn main() {
         YGNodeStyleSetPadding(root, YGEdge::YGEdgeAll, 20.);
 
         let image = YGNodeNew();
-        YGNodeStyleSetWidth(image, 80.);
-        YGNodeStyleSetMargin(image, YGEdge::YGEdgeEnd, 20.);
+        // YGNodeStyleSetWidth(image, 80.);
+        // YGNodeStyleSetMargin(image, YGEdge::YGEdgeEnd, 20.);
+        YGNodeStyleSetFlexGrow(image, 1.);
 
         let text = YGNodeNew();
-        YGNodeStyleSetHeight(text, 25.);
-        YGNodeStyleSetAlignSelf(text, YGAlign::YGAlignCenter);
+        // YGNodeStyleSetHeight(text, 25.);
+        // YGNodeStyleSetAlignSelf(text, YGAlign::YGAlignCenter);
         YGNodeStyleSetFlexGrow(text, 1.);
 
         YGNodeInsertChild(root, image, 0);
         YGNodeInsertChild(root, text, 1);
 
-        YGNodeCalculateLayout(root, 500., 400., YGDirection::YGDirectionLTR);
+        YGNodeCalculateLayout(root, 500., 400., YGDirection::YGDirectionInherit);
 
         println!("{}", YGNodeLayoutGetLeft(text));
         println!("{}", YGNodeLayoutGetTop(text));
