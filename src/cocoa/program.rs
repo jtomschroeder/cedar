@@ -75,7 +75,13 @@ fn create<S: Clone + 'static>(
         .map(|child| {
             let node = unsafe {
                 let node = YGNodeNew();
+
                 YGNodeStyleSetFlexGrow(node, 1.);
+
+                // TODO: define 'default' size for widget when creating layout node
+
+                // YGNodeStyleSetWidth(node, 50.);
+                // YGNodeStyleSetHeight(node, 50.);
 
                 YGNodeInsertChild(layout, node, 0);
                 node
