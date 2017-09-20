@@ -19,7 +19,7 @@ crossbeam = "0.2.10"
 gtk = { version = "0.1.2" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.7"
+cocoa = "0.9"
 objc = "0.2"
-core-graphics = "0.6"
+core-graphics = "0.9"
 gtk = { version = "0.1.2", optional = true }

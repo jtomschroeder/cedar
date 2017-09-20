@@ -26,8 +26,9 @@ impl<S: Clone + 'static> Button<S> {
 
     pub fn register_click(&mut self, message: S) {
         let stream = self.stream.clone();
-        self.button
-            .connect_clicked(move |_| stream.push(message.clone()));
+        self.button.connect_clicked(
+            move |_| stream.push(message.clone()),
+        );
     }
 }
 
