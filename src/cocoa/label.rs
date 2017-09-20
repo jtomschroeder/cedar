@@ -22,7 +22,11 @@ impl Label {
             let string = NSString::alloc(nil).init_str("");
 
             let label: id = msg_send![class("NSTextField"), alloc];
-            let label: id = msg_send![label, init];
+            // let label: id = msg_send![label, init];
+
+            use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
+            let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
+            let button: id = msg_send![label, initWithFrame: rect];
 
             msg_send![label, setStringValue: string];
             msg_send![label, setBezeled: NO];

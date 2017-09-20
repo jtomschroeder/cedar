@@ -71,10 +71,7 @@ impl<S> Widget<S> for Stack {
     }
 
     fn add(&mut self, widget: &Box<Widget<S>>) {
-        unsafe {
-            msg_send![*self.id, addView:**widget.id()
-                              inGravity:NSStackViewGravity::Top];
-        };
+        unsafe { msg_send![*self.id, addSubview:**widget.id()] };
     }
 }
 
@@ -82,23 +79,24 @@ impl Stack {
     pub fn new() -> Self {
         unsafe {
             let stack = {
-                let stack: id = msg_send![class("NSStackView"), alloc];
-                let stack: id = msg_send![stack, init];
+                let stack: id = msg_send![class("NSView"), alloc];
+
+                let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(500., 500.));
+                let stack: id = msg_send![stack, initWithFrame:rect];
 
                 // TODO: window.frame padded by 10.0 on each side?
-                let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
-                msg_send![stack, setFrame: rect];
+                // msg_send![stack, setFrame: rect];
 
-                msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
+                // msg_send![stack, setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
 
-                msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
-                msg_send![stack, setSpacing: 5.0];
+                // msg_send![stack, setOrientation: UserInterfaceLayoutOrientation::Vertical];
+                // msg_send![stack, setSpacing: 5.0];
 
-                let insets = NSEdgeInsets::new(10., 10., 10., 10.);
-                msg_send![stack, setEdgeInsets: insets];
+                // let insets = NSEdgeInsets::new(10., 10., 10., 10.);
+                // msg_send![stack, setEdgeInsets: insets];
 
-                msg_send![stack, setHuggingPriority: NSLayoutPriorityWindowSizeStayPut
-                                     forOrientation: NSLayoutConstraintOrientation::Horizontal];
+                // msg_send![stack, setHuggingPriority: NSLayoutPriorityWindowSizeStayPut
+                //                      forOrientation: NSLayoutConstraintOrientation::Horizontal];
 
                 stack
             };
@@ -129,7 +127,7 @@ impl Window {
         unsafe {
             let style = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
                 NSClosableWindowMask;
-            let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
+            let rect = NSRect::new(NSPoint::new(500., 500.), NSSize::new(500., 500.));
             let window = NSWindow::alloc(nil)
                 .initWithContentRect_styleMask_backing_defer_(
                     rect,

@@ -22,9 +22,19 @@ impl<S: Clone + 'static> Button<S> {
     pub fn new(stream: Stream<S>) -> Self {
         unsafe {
             let button: id = msg_send![class("NSButton"), alloc];
-            let button: id = msg_send![button, init];
+            // let button: id = msg_send![button, init];
+
+            use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
+            let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
+            let button: id = msg_send![button, initWithFrame: rect];
 
             msg_send![button, setBezelStyle: BezelStyle::Rounded];
+
+            // let title = unsafe {
+            //     use cocoa::foundation::NSString;
+            //     NSString::alloc(nil).init_str("")
+            // };
+            // msg_send![button, initWithTitle: title target: nil action: nil];
 
             Button {
                 id: button.into(),
