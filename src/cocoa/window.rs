@@ -12,7 +12,7 @@ use super::id::{Id, AtomicId};
 use super::widget::Widget;
 
 pub struct Window {
-    _window: AtomicId,
+    window: AtomicId,
 }
 
 pub struct Container {
@@ -36,6 +36,10 @@ impl Container {
         let view = unsafe { NSView::alloc(nil).initWithFrame_(frame).autorelease() };
 
         Container { id: view.into() }
+    }
+
+    pub fn frame(&self) -> NSRect {
+        unsafe { NSView::frame(*self.id) }
     }
 }
 
@@ -68,8 +72,12 @@ impl Window {
         };
 
         (
-            Window { _window: window.into() },
+            Window { window: window.into() },
             Container { id: unsafe { window.contentView() }.into() },
         )
+    }
+
+    pub fn frame(&self) -> NSRect {
+        unsafe { NSWindow::frame(self.window.load()) }
     }
 }

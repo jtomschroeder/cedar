@@ -1,6 +1,6 @@
 
 use std;
-use std::sync::atomic::AtomicPtr;
+use std::sync::atomic::{AtomicPtr, Ordering};
 
 use objc;
 use cocoa::base::id;
@@ -38,6 +38,10 @@ pub struct AtomicId(AtomicPtr<objc::runtime::Object>);
 impl AtomicId {
     pub fn new(id: id) -> Self {
         AtomicId(AtomicPtr::new(id))
+    }
+
+    pub fn load(&self) -> id {
+        self.0.load(Ordering::Relaxed)
     }
 
     pub fn get(&mut self) -> id {

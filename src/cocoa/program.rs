@@ -135,7 +135,7 @@ where
 
     // TODO: allow custom app name
 
-    let (_window, mut content_view) = Window::new("cedar");
+    let (window, mut content_view) = Window::new("cedar");
 
     let node = view(&model);
 
@@ -164,8 +164,27 @@ where
         let mut node = node;
 
         loop {
-            // trigger layout of `tree` and update widgets
-            tree[0].layout(500., 400.);
+            {
+                let root = &mut tree[0];
+
+                let frame = window.frame();
+
+                // TODO: trigger event on `stream` with new window size
+
+                unsafe {
+                    YGNodeStyleSetWidth(
+                        root.layout.load(Ordering::Relaxed),
+                        frame.size.width as f32,
+                    );
+                    YGNodeStyleSetHeight(
+                        root.layout.load(Ordering::Relaxed),
+                        frame.size.height as f32,
+                    );
+                }
+
+                // trigger layout of `tree` and update widgets
+                root.layout(500., 400.);
+            }
 
             let message = stream.pop();
 
