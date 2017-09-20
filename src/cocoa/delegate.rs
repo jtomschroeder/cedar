@@ -12,7 +12,8 @@ pub trait Delegatable {
 }
 
 impl<F> Delegatable for F
-    where F: FnMut(&str)
+where
+    F: FnMut(&str),
 {
     fn delegate(&mut self, text: &str) {
         self(text)
@@ -28,7 +29,8 @@ impl Delegate {
 }
 
 pub fn register<F>(class: &str, mut f: F)
-    where F: FnMut(&mut ClassDecl)
+where
+    F: FnMut(&mut ClassDecl),
 {
     let superclass = Class::get("NSObject").expect("NSObject");
 
@@ -51,13 +53,17 @@ pub fn register<F>(class: &str, mut f: F)
     }
 
     unsafe {
-        decl.add_method(sel!(initialize:),
-                        delegate_initialize as extern "C" fn(&mut Object, Sel, *mut Void));
+        decl.add_method(
+            sel!(initialize:),
+            delegate_initialize as extern "C" fn(&mut Object, Sel, *mut Void),
+        );
 
         f(&mut decl);
 
-        decl.add_method(sel!(dealloc),
-                        delegate_dealloc as extern "C" fn(&Object, Sel));
+        decl.add_method(
+            sel!(dealloc),
+            delegate_dealloc as extern "C" fn(&Object, Sel),
+        );
     }
 
     decl.register();
@@ -84,8 +90,10 @@ pub fn create<F: FnMut(&str) + 'static>(delegate: F) -> id {
         }
 
         unsafe {
-            decl.add_method(sel!(controlTextDidChange:),
-                            delegate_act as extern "C" fn(&mut Object, Sel, id))
+            decl.add_method(
+                sel!(controlTextDidChange:),
+                delegate_act as extern "C" fn(&mut Object, Sel, id),
+            )
         };
     });
 

@@ -29,10 +29,10 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
     let children = node.children
         .into_iter()
         .map(|child| {
-                 let child = create(stream.clone(), child);
-                 widget.add(&child.widget);
-                 child
-             })
+            let child = create(stream.clone(), child);
+            widget.add(&child.widget);
+            child
+        })
         .collect();
 
     Vertex {
@@ -66,8 +66,9 @@ pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-    where S: Clone + Send + 'static + PartialEq + Debug,
-          M: Send + 'static + Debug
+where
+    S: Clone + Send + 'static + PartialEq + Debug,
+    M: Send + 'static + Debug,
 {
     let app = super::Application::new(); // TODO: enforce `app` created first
 
@@ -87,27 +88,27 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
     let mut node = Some(node);
 
     app.run(move || loop {
-                let message = stream.pop();
+        let message = stream.pop();
 
-                // println!("msg: {:?}", message);
+        // println!("msg: {:?}", message);
 
-                let m = update(model.take().unwrap(), message);
+        let m = update(model.take().unwrap(), message);
 
-                let new = view(&m);
+        let new = view(&m);
 
-                // println!("node: {:?}", new);
+        // println!("node: {:?}", new);
 
-                let old = node.take().unwrap();
-                let changeset = dom::diff(old, new.clone());
+        let old = node.take().unwrap();
+        let changeset = dom::diff(old, new.clone());
 
-                // println!("diff: {:?}", changeset);
+        // println!("diff: {:?}", changeset);
 
-                for change in changeset.into_iter() {
-                    patch(&mut tree, change);
-                }
+        for change in changeset.into_iter() {
+            patch(&mut tree, change);
+        }
 
-                node = Some(new);
-                model = Some(m);
-            })
+        node = Some(new);
+        model = Some(m);
+    })
 
 }

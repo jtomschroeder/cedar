@@ -25,13 +25,12 @@ impl<S: 'static> TextField<S> {
 
     pub fn register_change(&mut self, delegate: fn(String) -> S) {
         let stream = self.stream.clone();
-        self.entry
-            .connect_event(move |entry, _| {
-                               if let Some(ref text) = entry.get_text() {
-                                   stream.push(delegate(text.clone()));
-                               }
-                               gtk::Inhibit(false)
-                           });
+        self.entry.connect_event(move |entry, _| {
+            if let Some(ref text) = entry.get_text() {
+                stream.push(delegate(text.clone()));
+            }
+            gtk::Inhibit(false)
+        });
     }
 }
 

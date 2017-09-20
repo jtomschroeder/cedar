@@ -55,9 +55,9 @@ impl Window {
         window.set_default_size(350, 70);
 
         window.connect_delete_event(|_, _| {
-                                        gtk::main_quit();
-                                        Inhibit(false)
-                                    });
+            gtk::main_quit();
+            Inhibit(false)
+        });
 
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 20);
         window.add(&vbox);

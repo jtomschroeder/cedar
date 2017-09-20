@@ -2,7 +2,7 @@
 #![allow(non_upper_case_globals)]
 
 use cocoa::base::{id, nil, class, NO};
-use cocoa::foundation::{NSUInteger, NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
+use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
 
 use cocoa::appkit::{NSWindow, NSBackingStoreBuffered};
 use cocoa::appkit::{NSViewHeightSizable, NSViewWidthSizable};
@@ -32,7 +32,7 @@ const NSLayoutPriorityWindowSizeStayPut: f32 = 500.0;
 
 #[repr(u32)]
 enum NSLayoutConstraintOrientation {
-    Horizontal = 0, 
+    Horizontal = 0,
     // Vertical = 1,
 }
 
@@ -111,15 +111,16 @@ impl Stack {
 impl Window {
     pub fn new(title: &str) -> (Self, Stack) {
         unsafe {
-            let style = NSResizableWindowMask as NSUInteger | NSTitledWindowMask as NSUInteger |
-                        NSMiniaturizableWindowMask as NSUInteger |
-                        NSClosableWindowMask as NSUInteger;
+            let style = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
+                NSClosableWindowMask;
             let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(0., 0.));
             let window = NSWindow::alloc(nil)
-                .initWithContentRect_styleMask_backing_defer_(rect,
-                                                              style,
-                                                              NSBackingStoreBuffered,
-                                                              NO)
+                .initWithContentRect_styleMask_backing_defer_(
+                    rect,
+                    style,
+                    NSBackingStoreBuffered,
+                    NO,
+                )
                 .autorelease();
             window.cascadeTopLeftFromPoint_(NSPoint::new(0., 0.));
             window.center();
