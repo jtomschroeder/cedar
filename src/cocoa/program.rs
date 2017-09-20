@@ -21,6 +21,42 @@ struct Vertex<S> {
 
 type Tree<S> = Vec<Vertex<S>>;
 
+impl<S> Vertex<S> {
+    fn layout(&mut self, width: f32, height: f32) {
+        unsafe {
+            let node = self.layout.load(Ordering::Relaxed);
+            YGNodeCalculateLayout(node, width, height, YGDirection::YGDirectionInherit);
+        }
+
+        // traverse children and set size
+        self.resize();
+    }
+
+    fn resize(&mut self) {
+        unsafe {
+            let node = self.layout.load(Ordering::Relaxed);
+
+            let left = YGNodeLayoutGetLeft(node);
+            let top = YGNodeLayoutGetTop(node);
+            let right = YGNodeLayoutGetRight(node);
+            let bottom = YGNodeLayoutGetBottom(node);
+            let width = YGNodeLayoutGetWidth(node);
+            let height = YGNodeLayoutGetHeight(node);
+
+            self.widget.layout(
+                top as f64,
+                left as f64,
+                width as f64,
+                height as f64,
+            );
+        }
+
+        for v in &mut self.children {
+            v.resize();
+        }
+    }
+}
+
 fn create<S: Clone + 'static>(
     stream: Stream<S>,
     node: dom::Object<S>,
@@ -41,11 +77,9 @@ fn create<S: Clone + 'static>(
         .map(|child| {
             let node = unsafe {
                 let node = YGNodeNew();
-                // YGNodeStyleSetHeight(node, 60.);
-                // YGNodeStyleSetWidth(node, 80.);
                 YGNodeStyleSetFlexGrow(node, 1.);
 
-                YGNodeInsertChild(layout, node, YGNodeGetChildCount(layout));
+                YGNodeInsertChild(layout, node, 0);
                 node
             };
 
@@ -126,43 +160,7 @@ where
         let mut node = node;
 
         loop {
-            unsafe {
-                let root = tree[0].layout.load(Ordering::Relaxed);
-                YGNodeCalculateLayout(root, 500., 400., YGDirection::YGDirectionInherit);
-
-                let node = tree[0].children[0].layout.load(Ordering::Relaxed);
-
-                println!("left: {}", YGNodeLayoutGetLeft(node));
-                println!("top: {}", YGNodeLayoutGetTop(node));
-                println!("right: {}", YGNodeLayoutGetRight(node));
-                println!("bottom: {}", YGNodeLayoutGetBottom(node));
-                println!("width: {}", YGNodeLayoutGetWidth(node));
-                println!("height: {}", YGNodeLayoutGetHeight(node));
-
-                println!("");
-
-                let node = tree[0].children[1].layout.load(Ordering::Relaxed);
-
-                println!("left: {}", YGNodeLayoutGetLeft(node));
-                println!("top: {}", YGNodeLayoutGetTop(node));
-                println!("right: {}", YGNodeLayoutGetRight(node));
-                println!("bottom: {}", YGNodeLayoutGetBottom(node));
-                println!("width: {}", YGNodeLayoutGetWidth(node));
-                println!("height: {}", YGNodeLayoutGetHeight(node));
-
-                println!("");
-
-                let node = tree[0].children[2].layout.load(Ordering::Relaxed);
-
-                println!("left: {}", YGNodeLayoutGetLeft(node));
-                println!("top: {}", YGNodeLayoutGetTop(node));
-                println!("right: {}", YGNodeLayoutGetRight(node));
-                println!("bottom: {}", YGNodeLayoutGetBottom(node));
-                println!("width: {}", YGNodeLayoutGetWidth(node));
-                println!("height: {}", YGNodeLayoutGetHeight(node));
-
-                println!("");
-            }
+            tree[0].layout(500., 400.);
 
             let message = stream.pop();
 

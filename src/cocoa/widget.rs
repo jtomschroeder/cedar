@@ -14,4 +14,17 @@ pub trait Widget<S> {
 
     // TODO: set size
     // TODO: set position
+
+    fn layout(&mut self, top: f64, left: f64, width: f64, height: f64) {
+        use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
+        // let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
+        // let button: id = msg_send![button, initWithFrame: rect];
+
+        let widget = self.id();
+
+        println!("Setting frame!");
+
+        let rect = NSRect::new(NSPoint::new(left, top), NSSize::new(width, height));
+        unsafe { msg_send![**widget, setFrame: rect] };
+    }
 }
