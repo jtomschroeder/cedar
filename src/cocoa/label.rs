@@ -19,16 +19,15 @@ pub struct Label {
 impl Label {
     pub fn new() -> Self {
         unsafe {
-            let string = NSString::alloc(nil).init_str("");
-
             let label: id = msg_send![class("NSTextField"), alloc];
-            // let label: id = msg_send![label, init];
 
-            use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
+            use cocoa::foundation::{NSRect, NSPoint, NSSize};
             let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
-            let button: id = msg_send![label, initWithFrame: rect];
+            let label: id = msg_send![label, initWithFrame: rect];
 
+            let string = NSString::alloc(nil).init_str("");
             msg_send![label, setStringValue: string];
+
             msg_send![label, setBezeled: NO];
             msg_send![label, setDrawsBackground: NO];
             msg_send![label, setEditable: NO];

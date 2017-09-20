@@ -2,7 +2,7 @@
 use dom;
 use std::fmt::Debug;
 
-use super::{Window, Label, Stack, Button, TextField};
+use super::{Window, Label, Container, Button, TextField};
 use super::widget::Widget;
 
 use stream::Stream;
@@ -10,8 +10,6 @@ use atomic_box::AtomicBox;
 
 use layout::yoga::*;
 use std::sync::atomic::{AtomicPtr, Ordering};
-
-// TODO: add Yoga Node into vertex
 
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
@@ -28,7 +26,6 @@ impl<S> Vertex<S> {
             YGNodeCalculateLayout(node, width, height, YGDirection::YGDirectionInherit);
         }
 
-        // traverse children and set size
         self.resize();
     }
 
@@ -38,19 +35,20 @@ impl<S> Vertex<S> {
 
             let left = YGNodeLayoutGetLeft(node);
             let top = YGNodeLayoutGetTop(node);
-            let right = YGNodeLayoutGetRight(node);
-            let bottom = YGNodeLayoutGetBottom(node);
+            // let right = YGNodeLayoutGetRight(node);
+            // let bottom = YGNodeLayoutGetBottom(node);
             let width = YGNodeLayoutGetWidth(node);
             let height = YGNodeLayoutGetHeight(node);
 
             self.widget.layout(
-                top as f64,
                 left as f64,
+                top as f64,
                 width as f64,
                 height as f64,
             );
         }
 
+        // resize children
         for v in &mut self.children {
             v.resize();
         }
@@ -66,7 +64,7 @@ fn create<S: Clone + 'static>(
     let mut widget: Box<Widget<S>> = match kind {
         dom::Kind::Label => Box::new(Label::new()),
         dom::Kind::Button => Box::new(Button::new(stream.clone())),
-        dom::Kind::Stack => Box::new(Stack::new()),
+        dom::Kind::Stack => Box::new(Container::new()), // TODO: set flex direction to 'column' for stacking
         dom::Kind::Field => Box::new(TextField::new(stream.clone())),
     };
 
@@ -138,14 +136,14 @@ where
     let root = unsafe {
         let root = YGNodeNew();
 
-        // Should match window size
+        // TODO: Should match window/content-view frame size!
         YGNodeStyleSetWidth(root, 500.);
         YGNodeStyleSetHeight(root, 400.);
 
         // Stack => Column Direction
         YGNodeStyleSetFlexDirection(root, YGFlexDirection::YGFlexDirectionColumn);
 
-        YGNodeStyleSetPadding(root, YGEdge::YGEdgeAll, 20.);
+        // YGNodeStyleSetPadding(root, YGEdge::YGEdgeAll, 20.);
 
         root
     };
@@ -160,6 +158,7 @@ where
         let mut node = node;
 
         loop {
+            // trigger layout of `tree` and update widgets
             tree[0].layout(500., 400.);
 
             let message = stream.pop();
@@ -180,8 +179,6 @@ where
             for change in changeset.into_iter() {
                 patch(&mut tree, change);
             }
-
-            // TODO: trigger layout of `tree` and update widgets
         }
     })
 }

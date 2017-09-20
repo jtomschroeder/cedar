@@ -12,19 +12,12 @@ pub trait Widget<S> {
 
     fn add(&mut self, &Box<Widget<S>>) {}
 
-    // TODO: set size
-    // TODO: set position
-
-    fn layout(&mut self, top: f64, left: f64, width: f64, height: f64) {
-        use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
-        // let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
-        // let button: id = msg_send![button, initWithFrame: rect];
-
-        let widget = self.id();
-
-        println!("Setting frame!");
+    fn layout(&mut self, left: f64, top: f64, width: f64, height: f64) {
+        use cocoa::foundation::{NSRect, NSPoint, NSSize};
 
         let rect = NSRect::new(NSPoint::new(left, top), NSSize::new(width, height));
+
+        let widget = self.id();
         unsafe { msg_send![**widget, setFrame: rect] };
     }
 }
