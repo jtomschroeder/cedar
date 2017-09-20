@@ -74,6 +74,8 @@ where
 
     let stream = Stream::new();
 
+    // TODO: allow custom app name
+
     let (_window, mut stack) = Window::new("cedar");
 
     let node = view(&model);
@@ -83,32 +85,29 @@ where
 
     let mut tree = vec![vertex];
 
-    // Use `Option` to allow for move/mutation in FnMut `run`
-    let mut model = Some(model);
-    let mut node = Some(node);
+    app.run(move || {
+        let mut model = model;
+        let mut node = node;
 
-    app.run(move || loop {
-        let message = stream.pop();
+        loop {
+            let message = stream.pop();
 
-        // println!("msg: {:?}", message);
+            // println!("msg: {:?}", message);
 
-        let m = update(model.take().unwrap(), message);
+            model = update(model, message);
 
-        let new = view(&m);
+            let old = node;
+            node = view(&model);
 
-        // println!("node: {:?}", new);
+            // println!("node: {:?}", new);
 
-        let old = node.take().unwrap();
-        let changeset = dom::diff(old, new.clone());
+            let changeset = dom::diff(old, node.clone());
 
-        // println!("diff: {:?}", changeset);
+            // println!("diff: {:?}", changeset);
 
-        for change in changeset.into_iter() {
-            patch(&mut tree, change);
+            for change in changeset.into_iter() {
+                patch(&mut tree, change);
+            }
         }
-
-        node = Some(new);
-        model = Some(m);
     })
-
 }

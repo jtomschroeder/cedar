@@ -5,6 +5,7 @@ use objc::declare::ClassDecl;
 use cocoa::base::{id, class};
 
 use std;
+
 type Void = std::os::raw::c_void;
 
 pub trait Actionable {
@@ -85,14 +86,4 @@ pub fn create<F: FnMut() + 'static>(action: F) -> id {
 
         act
     }
-}
-
-pub fn spawn<F: FnMut() + Send + 'static>(action: F) {
-    let action = create(action);
-
-    unsafe {
-        use cocoa::base::nil;
-        msg_send![action, performSelectorInBackground:sel!(act)
-                                           withObject:nil]
-    };
 }

@@ -1,4 +1,6 @@
 
+use std;
+
 use cocoa::appkit;
 use cocoa::base::{selector, nil, YES};
 use cocoa::foundation::{NSProcessInfo, NSString};
@@ -46,13 +48,13 @@ impl Application {
         }
     }
 
-    pub fn run<F: FnMut() + Send + 'static>(mut self, action: F) {
-        use cocoa::appkit::NSRunningApplication;
+    pub fn run<F: FnOnce() + Send + 'static>(mut self, action: F) {
 
-        use super::action;
-        action::spawn(action);
+        std::thread::spawn(action);
 
         unsafe {
+            use cocoa::appkit::NSRunningApplication;
+
             // Set `app` to 'running' and run!
             let app = NSRunningApplication::currentApplication(nil);
             app.activateWithOptions_(appkit::NSApplicationActivateIgnoringOtherApps);
