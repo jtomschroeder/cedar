@@ -97,7 +97,7 @@ where
 
     // TODO: allow custom app name
 
-    let (_window, mut stack) = Window::new("cedar");
+    let (_window, mut content_view) = Window::new("cedar");
 
     let node = view(&model);
 
@@ -117,7 +117,7 @@ where
     };
 
     let vertex = create(stream.clone(), node.clone(), root);
-    stack.add(&vertex.widget);
+    content_view.add(&vertex.widget);
 
     let mut tree = vec![vertex];
 

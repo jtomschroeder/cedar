@@ -108,8 +108,24 @@ impl Stack {
     }
 }
 
+pub struct View {
+    pub id: Id,
+}
+
+impl<S> Widget<S> for View {
+    fn id(&self) -> &Id {
+        &self.id
+    }
+
+    fn add(&mut self, widget: &Box<Widget<S>>) {
+        unsafe {
+            msg_send![*self.id, addSubview:**widget.id()];
+        };
+    }
+}
+
 impl Window {
-    pub fn new(title: &str) -> (Self, Stack) {
+    pub fn new(title: &str) -> (Self, View) {
         unsafe {
             let style = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
                 NSClosableWindowMask;
@@ -130,10 +146,12 @@ impl Window {
 
             window.makeKeyAndOrderFront_(nil);
 
-            let stack = Stack::new();
-            msg_send![window.contentView(), addSubview:stack.id.clone()];
+            // let stack = Stack::new();
+            // msg_send![window.contentView(), addSubview:stack.id.clone()];
 
-            (Window { _window: window.into() }, stack)
+            let view = View { id: window.contentView().into() };
+
+            (Window { _window: window.into() }, view)
         }
     }
 }
