@@ -1,7 +1,7 @@
 
 #![allow(non_upper_case_globals)]
 
-use cocoa::base::{id, nil, class, NO};
+use cocoa::base::{nil, NO};
 use cocoa::foundation::{NSRect, NSPoint, NSSize, NSAutoreleasePool, NSString};
 
 use cocoa::appkit::{NSWindow, NSView, NSBackingStoreBuffered};
@@ -41,11 +41,12 @@ impl Container {
 
 impl Window {
     pub fn new(title: &str) -> (Self, Container) {
-        unsafe {
-            let style = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
-                NSClosableWindowMask;
+        let style = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
+            NSClosableWindowMask;
 
-            let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(500., 500.));
+        let rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(500., 500.));
+
+        let window = unsafe {
             let window = NSWindow::alloc(nil)
                 .initWithContentRect_styleMask_backing_defer_(
                     rect,
@@ -63,10 +64,12 @@ impl Window {
 
             window.makeKeyAndOrderFront_(nil);
 
-            (
-                Window { _window: window.into() },
-                Container { id: window.contentView().into() },
-            )
-        }
+            window
+        };
+
+        (
+            Window { _window: window.into() },
+            Container { id: unsafe { window.contentView() }.into() },
+        )
     }
 }

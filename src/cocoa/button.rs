@@ -1,5 +1,7 @@
 
-use cocoa::base::{id, nil, class};
+use cocoa::base::nil;
+use cocoa::foundation::{NSRect, NSPoint, NSSize, NSString, NSAutoreleasePool};
+use cocoa::appkit::{NSButton, NSBezelStyle};
 
 use super::id::Id;
 use super::widget::Widget;
@@ -8,11 +10,6 @@ use super::action;
 use stream::Stream;
 use dom::Attributes;
 
-#[repr(u64)]
-enum BezelStyle {
-    Rounded = 1,
-}
-
 pub struct Button<S> {
     id: Id,
     stream: Stream<S>,
@@ -20,27 +17,22 @@ pub struct Button<S> {
 
 impl<S: Clone + 'static> Button<S> {
     pub fn new(stream: Stream<S>) -> Self {
-        unsafe {
-            let button: id = msg_send![class("NSButton"), alloc];
+        let frame = NSRect::new(NSPoint::new(0., 0.), NSSize::new(100., 100.));
 
-            use cocoa::foundation::{NSRect, NSPoint, NSSize};
-            let rect = NSRect::new(NSPoint::new(100., 100.), NSSize::new(100., 100.));
-            let button: id = msg_send![button, initWithFrame: rect];
+        let button = unsafe { NSButton::alloc(nil).initWithFrame_(frame).autorelease() };
 
-            msg_send![button, setBezelStyle: BezelStyle::Rounded];
+        unsafe { button.setBezelStyle_(NSBezelStyle::NSRoundedBezelStyle) };
 
-            Button {
-                id: button.into(),
-                stream: stream,
-            }
+        Button {
+            id: button.into(),
+            stream: stream,
         }
     }
 
     fn set_text(&mut self, text: &str) {
-        use cocoa::foundation::NSString;
         unsafe {
             let title = NSString::alloc(nil).init_str(text);
-            msg_send![*self.id, setTitle: title];
+            NSButton::setTitle_(*self.id, title);
         }
     }
 
