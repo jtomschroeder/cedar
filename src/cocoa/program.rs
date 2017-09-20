@@ -8,6 +8,8 @@ use super::widget::Widget;
 use stream::Stream;
 use atomic_box::AtomicBox;
 
+// TODO: add Yoga Node into vertex
+
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
     children: Vec<Vertex<S>>,
@@ -108,6 +110,8 @@ where
             for change in changeset.into_iter() {
                 patch(&mut tree, change);
             }
+
+            // TODO: trigger layout of `tree` and update widgets
         }
     })
 }

@@ -19,6 +19,25 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
+// TODO: create macro language a la JSX in React for defining DOM
+
+// <stack>
+// <button></button>
+// <label></button>
+// <button></button>
+// </stack>
+
+// or a lisp?
+// (stack [(button), (label), (button)])
+
+// or a la elm?
+// view model =
+//   div []
+//     [ button [ onClick Decrement ] [ text "-" ]
+//     , div [] [ text (toString model) ]
+//     , button [ onClick Increment ] [ text "+" ]
+//     ]
+
 fn view(model: &Model) -> dom::Object<Message> {
     dom::stack()
         .add(dom::button().text("+".into()).click(Message::Increment))
