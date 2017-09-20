@@ -8,20 +8,28 @@ use super::widget::Widget;
 use stream::Stream;
 use atomic_box::AtomicBox;
 
+use layout::yoga::*;
+use std::sync::atomic::{AtomicPtr, Ordering};
+
 // TODO: add Yoga Node into vertex
 
 struct Vertex<S> {
     widget: AtomicBox<Box<Widget<S>>>,
     children: Vec<Vertex<S>>,
+    layout: AtomicPtr<YGNode>,
 }
 
 type Tree<S> = Vec<Vertex<S>>;
 
-fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex<S> {
+fn create<S: Clone + 'static>(
+    stream: Stream<S>,
+    node: dom::Object<S>,
+    layout: YGNodeRef,
+) -> Vertex<S> {
     let (kind, attributes) = (node.value.0, node.value.1);
     let mut widget: Box<Widget<S>> = match kind {
         dom::Kind::Label => Box::new(Label::new()),
-        dom::Kind::Button => Box::new(Button::new(stream.clone())), 
+        dom::Kind::Button => Box::new(Button::new(stream.clone())),
         dom::Kind::Stack => Box::new(Stack::new()),
         dom::Kind::Field => Box::new(TextField::new(stream.clone())),
     };
@@ -31,7 +39,17 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
     let children = node.children
         .into_iter()
         .map(|child| {
-            let child = create(stream.clone(), child);
+            let node = unsafe {
+                let node = YGNodeNew();
+                // YGNodeStyleSetHeight(node, 60.);
+                // YGNodeStyleSetWidth(node, 80.);
+                YGNodeStyleSetFlexGrow(node, 1.);
+
+                YGNodeInsertChild(layout, node, YGNodeGetChildCount(layout));
+                node
+            };
+
+            let child = create(stream.clone(), child, node);
             widget.add(&child.widget);
             child
         })
@@ -40,6 +58,7 @@ fn create<S: Clone + 'static>(stream: Stream<S>, node: dom::Object<S>) -> Vertex
     Vertex {
         widget: AtomicBox::new(widget),
         children,
+        layout: AtomicPtr::new(layout),
     }
 }
 
@@ -82,7 +101,22 @@ where
 
     let node = view(&model);
 
-    let vertex = create(stream.clone(), node.clone());
+    let root = unsafe {
+        let root = YGNodeNew();
+
+        // Should match window size
+        YGNodeStyleSetWidth(root, 500.);
+        YGNodeStyleSetHeight(root, 400.);
+
+        // Stack => Column Direction
+        YGNodeStyleSetFlexDirection(root, YGFlexDirection::YGFlexDirectionColumn);
+
+        YGNodeStyleSetPadding(root, YGEdge::YGEdgeAll, 20.);
+
+        root
+    };
+
+    let vertex = create(stream.clone(), node.clone(), root);
     stack.add(&vertex.widget);
 
     let mut tree = vec![vertex];
@@ -92,6 +126,44 @@ where
         let mut node = node;
 
         loop {
+            unsafe {
+                let root = tree[0].layout.load(Ordering::Relaxed);
+                YGNodeCalculateLayout(root, 500., 400., YGDirection::YGDirectionInherit);
+
+                let node = tree[0].children[0].layout.load(Ordering::Relaxed);
+
+                println!("left: {}", YGNodeLayoutGetLeft(node));
+                println!("top: {}", YGNodeLayoutGetTop(node));
+                println!("right: {}", YGNodeLayoutGetRight(node));
+                println!("bottom: {}", YGNodeLayoutGetBottom(node));
+                println!("width: {}", YGNodeLayoutGetWidth(node));
+                println!("height: {}", YGNodeLayoutGetHeight(node));
+
+                println!("");
+
+                let node = tree[0].children[1].layout.load(Ordering::Relaxed);
+
+                println!("left: {}", YGNodeLayoutGetLeft(node));
+                println!("top: {}", YGNodeLayoutGetTop(node));
+                println!("right: {}", YGNodeLayoutGetRight(node));
+                println!("bottom: {}", YGNodeLayoutGetBottom(node));
+                println!("width: {}", YGNodeLayoutGetWidth(node));
+                println!("height: {}", YGNodeLayoutGetHeight(node));
+
+                println!("");
+
+                let node = tree[0].children[2].layout.load(Ordering::Relaxed);
+
+                println!("left: {}", YGNodeLayoutGetLeft(node));
+                println!("top: {}", YGNodeLayoutGetTop(node));
+                println!("right: {}", YGNodeLayoutGetRight(node));
+                println!("bottom: {}", YGNodeLayoutGetBottom(node));
+                println!("width: {}", YGNodeLayoutGetWidth(node));
+                println!("height: {}", YGNodeLayoutGetHeight(node));
+
+                println!("");
+            }
+
             let message = stream.pop();
 
             // println!("msg: {:?}", message);

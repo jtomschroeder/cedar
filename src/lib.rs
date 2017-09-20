@@ -1,6 +1,8 @@
 
 extern crate crossbeam;
 
+extern crate layout;
+
 // --- macOS ---
 
 #[cfg(all(target_os = "macos", not(feature = "gtk")))]
