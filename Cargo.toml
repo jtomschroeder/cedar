@@ -15,6 +15,8 @@ keywords = ["frp", "gui"]
 [dependencies]
 crossbeam = "0.2.10"
 
+layout = { path = "layout" }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.1.2" }
 

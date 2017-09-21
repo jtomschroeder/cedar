@@ -39,6 +39,10 @@ fn update(model: Model, message: Message) -> Model {
 //     ]
 
 fn view(model: &Model) -> dom::Object<Message> {
+    // dom::button().text("+".into()).click(Message::Increment)
+
+    // dom::stack().add(dom::button().text("+".into()).click(Message::Increment))
+
     dom::stack()
         .add(dom::button().text("+".into()).click(Message::Increment))
         .add(dom::label().text(model.to_string()))
