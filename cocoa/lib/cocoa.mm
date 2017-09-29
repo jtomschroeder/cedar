@@ -1,6 +1,20 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface WindowDelegate : NSObject <NSWindowDelegate>
+@end
+
+@implementation WindowDelegate
+
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frame {
+    printf("Resized Window!: %f %f\n", frame.width, frame.height);
+    fflush(stdout);
+
+    return frame;
+}
+
+@end
+
 extern "C" void run() {
     @autoreleasepool {
         printf("TESTING!\n");
@@ -34,6 +48,8 @@ extern "C" void run() {
                                                   styleMask:styleMask
                                                     backing:NSBackingStoreBuffered
                                                       defer:NO];
+
+        window.delegate = [[WindowDelegate alloc] init];
 
         [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
         [window center];
