@@ -23,9 +23,9 @@ extern "C" void run() {
             [app_menu_item setSubmenu:app_menu];
         }
 
-        NSRect frame = NSMakeRect(0, 0, 500, 500);
-        NSUInteger styleMask = NSResizableWindowMask | NSTitledWindowMask |
-                               NSMiniaturizableWindowMask | NSClosableWindowMask;
+        auto frame = NSMakeRect(0, 0, 500, 500);
+        auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
+                         NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
 
         auto window = [[NSWindow alloc] initWithContentRect:frame
                                                   styleMask:styleMask
