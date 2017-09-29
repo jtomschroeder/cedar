@@ -1,8 +1,46 @@
 
-#include <cstdio>
+#import <Cocoa/Cocoa.h>
 
 extern "C" void run() {
     @autoreleasepool {
-        printf("HEY!\n");
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+        // build menu for window
+        {
+            auto menubar = [NSMenu new];
+
+            auto app_menu_item = [NSMenuItem new];
+            [menubar addItem:app_menu_item];
+
+            [NSApp setMainMenu:menubar];
+
+            auto app_menu = [NSMenu new];
+            auto quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit"
+                                                        action:@selector(terminate:)
+                                                 keyEquivalent:@"q"];
+            [app_menu addItem:quit_item];
+            [app_menu_item setSubmenu:app_menu];
+        }
+
+        NSRect frame = NSMakeRect(0, 0, 500, 500);
+        NSUInteger styleMask = NSResizableWindowMask | NSTitledWindowMask |
+                               NSMiniaturizableWindowMask | NSClosableWindowMask;
+
+        auto window = [[NSWindow alloc] initWithContentRect:frame
+                                                  styleMask:styleMask
+                                                    backing:NSBackingStoreBuffered
+                                                      defer:NO];
+
+        [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
+        [window center];
+        [window setTitle:@"** cedar **"];
+        [window makeKeyAndOrderFront:nil];
+
+        // Bring window to front
+        auto app = [NSRunningApplication currentApplication];
+        [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+
+        [NSApp run];
     }
 }
