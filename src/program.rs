@@ -1,5 +1,11 @@
 
+use std::str;
 use std::fmt::Debug;
+use std::process::{Command, Stdio};
+
+use std::io::BufReader;
+use std::io::prelude::*;
+
 use dom;
 
 pub type Update<M, S> = fn(M, S) -> M;
@@ -15,10 +21,30 @@ where
     println!("model: {:?}", model);
     println!("view: {:?}", view);
 
-    use std::process::Command;
+    // TODO: use `spawn` and listen to stdin/stdout
+    // - implement 'quit' event (or just exit when process terminates)
+
     let output = Command::new("./cocoa/target/release/cocoa")
-        .output()
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
         .expect("failed to execute process");
 
-    println!("output: {:?}", output.stdout);
+    println!("WAITING");
+
+    // let stdout = BufReader::new(output.stdout.unwrap());
+    // for line in stdout.lines() {
+    //     println!("{:?}", line);
+    // }
+
+    let mut buffer = vec![0; 1024];
+    let mut stdout = output.stdout.unwrap();
+    loop {
+        match stdout.read(&mut buffer) {
+            Ok(0) | Err(_) => break,
+            Ok(len) => {
+                println!("{:?}", str::from_utf8(&buffer[..len]));
+            }
+        }
+    }
 }

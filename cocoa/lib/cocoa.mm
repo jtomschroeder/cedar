@@ -3,6 +3,9 @@
 
 extern "C" void run() {
     @autoreleasepool {
+        printf("TESTING!\n");
+        fflush(stdout);
+
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
