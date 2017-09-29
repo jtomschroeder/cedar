@@ -17,11 +17,11 @@ crossbeam = "0.2.10"
 
 layout = { path = "layout" }
 
-[target.'cfg(target_os = "linux")'.dependencies]
-gtk = { version = "0.1.2" }
+# [target.'cfg(target_os = "linux")'.dependencies]
+# gtk = { version = "0.1.2" }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.9"
-objc = "0.2"
-core-graphics = "0.9"
-gtk = { version = "0.1.2", optional = true }
+# [target.'cfg(target_os = "macos")'.dependencies]
+# cocoa = "0.9"
+# objc = "0.2"
+# core-graphics = "0.9"
+# gtk = { version = "0.1.2", optional = true }
