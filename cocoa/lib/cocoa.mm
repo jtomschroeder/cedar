@@ -6,11 +6,11 @@
 
 @implementation WindowDelegate
 
-- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frame {
-    printf("Resized Window!: %f %f\n", frame.width, frame.height);
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)size {
+    printf("Resized Window!: %f %f\n", size.width, size.height);
     fflush(stdout);
 
-    return frame;
+    return size;
 }
 
 @end

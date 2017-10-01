@@ -11,18 +11,33 @@ use dom;
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
+pub fn create<S: Clone + Debug + 'static>(node: dom::Object<S>) {
+    let (kind, attributes) = node.value;
+
+    println!("create: {:?} with {:?}", kind, attributes);
+
+    for child in node.children.into_iter() {
+        create(child);
+    }
+}
+
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq + Debug,
     M: Send + 'static + Debug,
 {
-    let view = view(&model);
+    let dom = view(&model);
 
-    println!("model: {:?}", model);
-    println!("view: {:?}", view);
+    // println!("model: {:?}", model);
+    // println!("view: {:?}", dom);
+
+    create(dom);
 
     // TODO: use `spawn` and listen to stdin/stdout
     // - implement 'quit' event (or just exit when process terminates)
+
+    // TODO: remove hard-coded path to UI subprocess exe
+    // - `fork` is another option - only *nix compatible, though.
 
     let output = Command::new("./cocoa/target/release/cocoa")
         .stdin(Stdio::piped())
@@ -30,7 +45,7 @@ where
         .spawn()
         .expect("failed to execute process");
 
-    println!("WAITING");
+    // println!("WAITING");
 
     // let stdout = BufReader::new(output.stdout.unwrap());
     // for line in stdout.lines() {

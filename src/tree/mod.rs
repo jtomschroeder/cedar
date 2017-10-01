@@ -1,4 +1,7 @@
 
+use std::fmt;
+use std::collections::VecDeque;
+
 #[derive(Clone, Debug)]
 pub struct Node<T> {
     pub value: T,
@@ -29,8 +32,6 @@ pub struct Location {
     pub depth: usize,
     pub index: usize,
 }
-
-use std::fmt;
 
 impl fmt::Debug for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -92,8 +93,6 @@ where
         j: j.into_iter(),
     }
 }
-
-use std::collections::VecDeque;
 
 type Nodes<T> = Vec<Node<T>>;
 
