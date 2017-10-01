@@ -140,8 +140,8 @@ where
         .spawn()
         .expect("failed to execute process");
 
-    let node = dom.clone();
-    let patch = dom::build(node);
+    // Create changeset: Create @ 'root'
+    let patch = vec![(vec![0], tree::Operation::Create)];
 
     let events = convert(&dom, patch);
 

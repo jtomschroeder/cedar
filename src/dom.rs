@@ -50,12 +50,8 @@ pub enum Attribute<S> {
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
 
-pub fn build<S: PartialEq>(object: Object<S>) -> Changeset {
-    tree::diff(&[], &[object])
-}
-
 pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset {
-    tree::diff(&[old], &[new])
+    tree::diff(old, new)
 }
 
 pub trait Builder<S> {

@@ -65,7 +65,7 @@ pub enum Difference {
     Value,
 }
 
-pub fn diff<V: Vertex>(old: &[V], new: &[V]) -> Changeset {
+pub fn diff<V: Vertex>(old: V, new: V) -> Changeset {
     use self::Operation::*;
 
     // -      if `old` doesn't exist: CREATE new
@@ -76,6 +76,9 @@ pub fn diff<V: Vertex>(old: &[V], new: &[V]) -> Changeset {
     // Breadth-First Traversal!
 
     let mut changeset = vec![];
+
+    let old: &[V] = &[old];
+    let new: &[V] = &[new];
 
     let mut queue = VecDeque::new();
     queue.push_back((old, new, vec![]));
@@ -97,9 +100,7 @@ pub fn diff<V: Vertex>(old: &[V], new: &[V]) -> Changeset {
                     // else (if t == u)                     => diff children
 
                     match t.compare(&u) {
-                        Some(Difference::Kind) => {
-                            changeset.push((path.clone(), Replace));
-                        }
+                        Some(Difference::Kind) => changeset.push((path, Replace)),
                         cmp => {
                             if let Some(Difference::Value) = cmp {
                                 changeset.push((path.clone(), Update));
