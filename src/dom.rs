@@ -6,6 +6,21 @@ use tree;
 //     click: S,
 // }
 
+pub type Attributes<S> = Vec<Attribute<S>>;
+pub type Value<S> = (Kind, Attributes<S>);
+
+#[derive(Clone, Debug)]
+pub struct Object<S> {
+    pub value: Value<S>,
+    pub children: Vec<Object<S>>,
+}
+
+impl<T> tree::Vertex for Object<T> {
+    fn children(&self) -> &[Self] {
+        &self.children
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Kind {
     Stack,
@@ -22,11 +37,7 @@ pub enum Attribute<S> {
     Change(fn(String) -> S),
 }
 
-pub type Attributes<S> = Vec<Attribute<S>>;
-
-pub type Value<S> = (Kind, Attributes<S>);
-pub type Object<S> = tree::Node<Value<S>>;
-// pub type Tree<S> = tree::Tree<Value<S>>;
+// pub type Object<S> = Node<Value<S>>;
 
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
@@ -83,28 +94,28 @@ impl<S> Builder<S> for Object<S> {
 }
 
 pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
-    tree::Node {
+    Object {
         value: (Kind::Stack, vec![]),
         children: objects,
     }
 }
 
 pub fn label<S>() -> Object<S> {
-    tree::Node {
+    Object {
         value: (Kind::Label, vec![]),
         children: vec![],
     }
 }
 
 pub fn button<S>() -> Object<S> {
-    tree::Node {
+    Object {
         value: (Kind::Button, vec![]),
         children: vec![],
     }
 }
 
 pub fn field<S>() -> Object<S> {
-    tree::Node {
+    Object {
         value: (Kind::Field, vec![]),
         children: vec![],
     }

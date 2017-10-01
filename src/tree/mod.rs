@@ -1,22 +1,10 @@
 
 use std::collections::VecDeque;
 
-#[derive(Clone, Debug)]
-pub struct Node<T> {
-    pub value: T,
-    pub children: Vec<Node<T>>,
-}
-
 pub trait Vertex {
     fn children(&self) -> &[Self]
     where
         Self: Sized;
-}
-
-impl<T> Vertex for Node<T> {
-    fn children(&self) -> &[Self] {
-        &self.children
-    }
 }
 
 pub type Path = Vec<usize>;
@@ -70,8 +58,6 @@ where
     }
 }
 
-// type Nodes<T> = Vec<Node<T>>;
-
 pub enum Difference {
     Kind,
     Value,
@@ -104,9 +90,8 @@ where
             path.push(n);
 
             match pair {
-                Pair::Left(_) => {
-                    changeset.push((path.clone(), Delete));
-                }
+                Pair::Left(_) => changeset.push((path, Delete)),
+                Pair::Right(_) => changeset.push((path, Create)),
 
                 Pair::Both(t, u) => {
                     //       if t.type != u.type            => replace u with t
@@ -126,120 +111,9 @@ where
                         }
                     }
                 }
-
-                Pair::Right(_) => {
-                    changeset.push((path.clone(), Create));
-                }
             }
         }
     }
 
     changeset
-}
-
-#[cfg(test)]
-mod test {
-    use tree;
-
-    #[derive(PartialEq, Debug)]
-    enum Kind {
-        Stack,
-        Button,
-        Label,
-    }
-
-    #[derive(PartialEq, Debug)]
-    enum Attribute {
-        Text(String),
-    }
-
-    type Attributes = Vec<Attribute>;
-
-    type Value = (Kind, Attributes);
-    type Node = tree::Node<Value>;
-
-    fn comparator(t: &Node, u: &Node) -> Option<tree::Difference> {
-        if t.value.0 != u.value.0 {
-            Some(tree::Difference::Kind)
-        } else if t.value.1 != u.value.1 {
-            Some(tree::Difference::Value)
-        } else {
-            None
-        }
-    }
-
-    #[test]
-    fn objects() {
-        use self::Kind::*;
-        use self::Attribute::*;
-
-        use tree::Location;
-        use tree::Operation::*;
-
-        {
-            let t = node![(Stack, vec![])];
-            let u = node![(Stack, vec![])];
-
-            let changeset = tree::diff(vec![t], vec![u], comparator);
-            assert!(changeset.is_empty());
-        }
-
-        {
-            let t = node![(Stack, vec![])];
-            let u = node![(Button, vec![])];
-
-            let mut changeset = tree::diff(vec![t], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Replace(node) => {
-                    let (kind, _) = node.value;
-                    assert_eq!(kind, Button);
-                }
-                _ => panic!("Wrong operation!"),
-            }
-        }
-
-        {
-            let t = node![(Label, vec![Text("".into())])];
-            let u = node![(Label, vec![Text("!".into())])];
-
-            let mut changeset = tree::diff(vec![t], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Update((kind, attrs)) => {
-                    assert_eq!(kind, Label);
-                    assert_eq!(&attrs, &[Text("!".into())]);
-                }
-                _ => panic!("Wrong operation!"),
-            }
-        }
-
-        {
-            let u =
-                node![(Stack, vec![]) 
-                        => node![(Button, vec![])]
-                         , node![(Label, vec![Text("!".into())])]
-                         , node![(Button, vec![])]
-                     ];
-
-            let mut changeset = tree::diff(vec![], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Create(..) => {}
-                _ => panic!("Wrong operation!"),
-            }
-        }
-    }
 }
