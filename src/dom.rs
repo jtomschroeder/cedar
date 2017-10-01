@@ -56,7 +56,7 @@ pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
 pub trait Builder<S> {
     fn add(self, object: Self) -> Self;
 
-    fn text(self, text: String) -> Self;
+    fn text<T: Into<String>>(self, text: T) -> Self;
     fn click(self, action: S) -> Self;
     fn placeholder(self, text: String) -> Self;
     fn change(self, messenger: fn(String) -> S) -> Self;
@@ -68,8 +68,8 @@ impl<S> Builder<S> for Object<S> {
         self
     }
 
-    fn text(mut self, text: String) -> Self {
-        self.value.1.push(Attribute::Text(text));
+    fn text<T: Into<String>>(mut self, text: T) -> Self {
+        self.value.1.push(Attribute::Text(text.into()));
         self
     }
     fn click(mut self, action: S) -> Self {
@@ -86,8 +86,11 @@ impl<S> Builder<S> for Object<S> {
     }
 }
 
-pub fn stack<S>() -> Object<S> {
-    node![(Kind::Stack, vec![])]
+pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
+    tree::Node {
+        value: (Kind::Stack, vec![]),
+        children: objects,
+    }
 }
 
 pub fn label<S>() -> Object<S> {

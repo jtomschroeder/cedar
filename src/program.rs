@@ -1,8 +1,7 @@
 
 use std::str;
 use std::fmt::Debug;
-use std::process::{Command, Stdio, ChildStdin};
-use std::collections::VecDeque;
+use std::process::{Command, Stdio};
 
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -142,7 +141,7 @@ where
 
     let mut stdin = output.stdin.unwrap();
     for event in events.into_iter() {
-        writeln!(stdin, "{}", json::to_string(&event).unwrap());
+        writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
     }
 
     let stdout = BufReader::new(output.stdout.unwrap());
@@ -156,13 +155,13 @@ where
 
         let path: Vec<usize> = split.map(|s| s.parse().unwrap()).collect();
 
-        println!("from renderer: {:?} :: {:?}", command, path);
+        // println!("from renderer: {:?} :: {:?}", command, path);
 
         let message = match command {
             "click" => {
                 let nodes = &[dom.clone()];
                 let node = find(&path, nodes);
-                println!("{:?}", node);
+                // println!("{:?}", node);
 
                 let node = match node {
                     Some(node) => node,
@@ -191,7 +190,7 @@ where
         };
 
 
-        println!("message: {:?}", message);
+        // println!("message: {:?}", message);
 
         model = update(model, message);
 
@@ -208,7 +207,7 @@ where
         // let mut stdin = output.stdin.unwrap();
         for event in events.into_iter() {
             // println!("event: {:?}", event);
-            writeln!(stdin, "{}", json::to_string(&event).unwrap());
+            writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
         }
     }
 }

@@ -38,20 +38,12 @@ fn update(model: Model, message: Message) -> Model {
 //     , button [ onClick Increment ] [ text "+" ]
 //     ]
 
-// stack([...])
-// flow([...])
-// - names a la shoes
-// - pass list of objects
-
 fn view(model: &Model) -> dom::Object<Message> {
-    // dom::button().text("+".into()).click(Message::Increment)
-
-    // dom::stack().add(dom::button().text("+".into()).click(Message::Increment))
-
-    dom::stack()
-        .add(dom::button().text("+".into()).click(Message::Increment))
-        .add(dom::label().text(model.to_string()))
-        .add(dom::button().text("-".into()).click(Message::Decrement))
+    dom::stack(vec![
+        dom::button().text("+").click(Message::Increment),
+        dom::label().text(model.to_string()),
+        dom::button().text("-").click(Message::Decrement),
+    ])
 }
 
 fn main() {

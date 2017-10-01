@@ -132,9 +132,9 @@ where
                 }
 
                 Pair::Both(t, u) => {
-                    // if t.type != u.type => replace u with t
-                    // else if t != u (properties changes) => update and diff children
-                    // else (if t == u) diff children
+                    //       if t.type != u.type            => replace u with t
+                    // else  if t != u (properties changes) => update and diff children
+                    // else (if t == u)                     => diff children
 
                     match comparator(&t, &u) {
                         Some(Difference::Kind) => {
