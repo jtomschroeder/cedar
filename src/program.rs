@@ -23,8 +23,8 @@ type Identifier = String;
 #[derive(Serialize, Deserialize, Debug)]
 enum Event {
     Create(Identifier, String), // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
-    Update, // ID -> Attribute
-    Remove, // ID
+    Update(Identifier, String, String), // ID -> Attribute
+    Remove(Identifier), // ID
 }
 
 /// Convert 'changeset' to list of events to send to UI 'rendering' process
@@ -65,6 +65,30 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
     for (path, op) in set.into_iter() {
         match op {
             tree::Operation::Create(node) => expand(path, node, &mut events),
+            tree::Operation::Update((_, attrs)) => {
+                // TODO!
+                // println!("update: {:?}", attrs);
+
+                // Create string representation of path (e.g. 0.0.1.3)
+                let id = if path.is_empty() {
+                    String::new()
+                } else if path.len() == 1 {
+                    path[0].to_string()
+                } else {
+                    (&path[1..]).iter().fold(path[0].to_string(), |id, n| {
+                        id + &format!(".{}", n)
+                    })
+                };
+
+                for attr in attrs {
+                    match attr {
+                        dom::Attribute::Text(txt) => {
+                            events.push(Event::Update(id.clone(), "Text".into(), txt))
+                        }
+                        _ => {}
+                    }
+                }
+            }
             _ => unimplemented!(),
         }
     }
@@ -177,7 +201,14 @@ where
         // println!("node: {:?}", new);
 
         let changeset = dom::diff(old, dom.clone());
-        println!("changeset: {:?}", changeset);
+        // println!("changeset: {:?}", changeset);
 
+        let events = convert(changeset);
+
+        // let mut stdin = output.stdin.unwrap();
+        for event in events.into_iter() {
+            // println!("event: {:?}", event);
+            writeln!(stdin, "{}", json::to_string(&event).unwrap());
+        }
     }
 }

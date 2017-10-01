@@ -98,37 +98,51 @@ extern "C" void run() {
 
                 // std::cout << "received: " << event["Create"][0] << std::endl;
 
-                auto ident = event["Create"][0];
-                auto widget = event["Create"][1];
+                if (event.count("Create")) {
+                    auto ident = event["Create"][0];
+                    auto widget = event["Create"][1];
 
-                if (widget == "Button") {
-                    auto frame = NSMakeRect(0, 0, 100, 100);
-                    auto button = [[NSButton alloc] initWithFrame:frame];
-                    button.bezelStyle = NSRoundedBezelStyle;
+                    if (widget == "Button") {
+                        auto frame = NSMakeRect(0, 0, 100, 100);
+                        auto button = [[NSButton alloc] initWithFrame:frame];
+                        button.bezelStyle = NSRoundedBezelStyle;
 
-                    auto action = [[Action alloc] initWithID:ident];
-                    [button setAction:@selector(click:)];
-                    [button setTarget:action];
+                        auto action = [[Action alloc] initWithID:ident];
+                        [button setAction:@selector(click:)];
+                        [button setTarget:action];
 
-                    widgets[ident] = button;
+                        widgets[ident] = button;
 
-                    [window.contentView addSubview:button];
-                } else if (widget == "Label") {
-                    auto frame = NSMakeRect(100, 100, 100, 100);
-                    auto label = [[NSTextField alloc] initWithFrame:frame];
+                        [window.contentView addSubview:button];
+                    } else if (widget == "Label") {
+                        auto frame = NSMakeRect(100, 100, 100, 100);
+                        auto label = [[NSTextField alloc] initWithFrame:frame];
 
-                    [label setStringValue:@"***"];
+                        [label setStringValue:@"***"];
 
-                    [label setBezeled:NO];
-                    [label setDrawsBackground:NO];
-                    [label setEditable:NO];
-                    [label setSelectable:NO];
+                        [label setBezeled:NO];
+                        [label setDrawsBackground:NO];
+                        [label setEditable:NO];
+                        [label setSelectable:NO];
 
-                    [label setAlignment:NSTextAlignmentCenter];
+                        [label setAlignment:NSTextAlignmentCenter];
 
-                    widgets[ident] = label;
+                        widgets[ident] = label;
 
-                    [window.contentView addSubview:label];
+                        [window.contentView addSubview:label];
+                    }
+                } else if (event.count("Update")) {
+                    // std::cerr << "received: " << event["Update"] << std::endl;
+
+                    auto &update = event["Update"];
+                    auto ident = update[0];
+                    auto attribute = update[1];
+                    std::string value = update[2];
+
+                    if (attribute == "Text") {
+                        [widgets[ident]
+                            setStringValue:[NSString stringWithUTF8String:value.c_str()]];
+                    }
                 }
             }
         }).detach();
