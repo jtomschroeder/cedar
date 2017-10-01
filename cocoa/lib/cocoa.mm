@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <unordered_map>
 
 #include <json/json.hpp>
 
@@ -67,15 +68,25 @@ extern "C" void run() {
 
         std::thread([&] {
 
+            std::unordered_map<std::string, NSView *> widgets;
+
             std::string line;
             while (std::getline(std::cin, line)) {
                 // std::cout << "received: " << line << std::endl;
+
                 auto event = json::parse(line.c_str());
-                auto widget = event["Create"];
+
+                // std::cout << "received: " << event["Create"][0] << std::endl;
+
+                auto path = event["Create"][0];
+                auto widget = event["Create"][1];
+
                 if (widget == "Button") {
                     auto frame = NSMakeRect(0, 0, 100, 100);
                     auto button = [[NSButton alloc] initWithFrame:frame];
                     button.bezelStyle = NSRoundedBezelStyle;
+
+                    widgets[path] = button;
 
                     [window.contentView addSubview:button];
                 } else if (widget == "Label") {
@@ -90,6 +101,8 @@ extern "C" void run() {
                     [label setSelectable:NO];
 
                     [label setAlignment:NSTextAlignmentCenter];
+
+                    widgets[path] = label;
 
                     [window.contentView addSubview:label];
                 }

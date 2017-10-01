@@ -15,9 +15,14 @@ use tree;
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
+// TODO: investigate using Godel numbering of lists to encode 'path' of widget as usize ID
+// - might be easier than allocating vectors for each child
+
+type Identifier = String;
+
 #[derive(Serialize, Deserialize, Debug)]
 enum Event {
-    Create(String), // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
+    Create(Identifier, String), // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
     Update, // ID -> Attribute
     Remove, // ID
 }
@@ -26,26 +31,40 @@ enum Event {
 fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
     let mut events = vec![];
 
-    fn expand<S>(location: tree::Location, node: dom::Object<S>, events: &mut Vec<Event>) {
-        // TODO: use breadth-first traversal here (using queue) - use location!
+    fn expand<S>(path: tree::Path, node: dom::Object<S>, events: &mut Vec<Event>) {
+        // TODO: use breadth-first traversal here (using queue) - use path!
 
         let (kind, _) = node.value;
 
+        // Create string representation of path (e.g. 0.0.1.3)
+        let id = if path.is_empty() {
+            String::new()
+        } else if path.len() == 1 {
+            path[0].to_string()
+        } else {
+            (&path[1..]).iter().fold(path[0].to_string(), |id, n| {
+                id + &format!(".{}", n)
+            })
+        };
+
         match kind {
-            dom::Kind::Label => events.push(Event::Create("Label".into())),
-            dom::Kind::Button => events.push(Event::Create("Button".into())),
-            dom::Kind::Field => events.push(Event::Create("Field".into())),
+            dom::Kind::Label => events.push(Event::Create(id, "Label".into())),
+            dom::Kind::Button => events.push(Event::Create(id, "Button".into())),
+            dom::Kind::Field => events.push(Event::Create(id, "Field".into())),
             _ => {}
         }
 
-        for child in node.children.into_iter() {
-            expand(location.clone(), child, events);
+        for (n, child) in node.children.into_iter().enumerate() {
+            let mut path = path.clone();
+            path.push(n);
+
+            expand(path.clone(), child, events);
         }
     }
 
-    for (location, op) in set.into_iter() {
+    for (path, op) in set.into_iter() {
         match op {
-            tree::Operation::Create(node) => expand(location, node, &mut events),
+            tree::Operation::Create(node) => expand(path, node, &mut events),
             _ => unimplemented!(),
         }
     }
