@@ -2,6 +2,7 @@
 use std::str;
 use std::fmt::Debug;
 use std::process::{Command, Stdio, ChildStdin};
+use std::collections::VecDeque;
 
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -15,31 +16,47 @@ pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
 #[derive(Serialize, Deserialize, Debug)]
 enum Event {
-    Create(String), // TODO: Attributes (e.g. Text), Location (i.e. 'frame')
-    Update,
-    Remove,
+    Create(String), // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
+    Update, // ID -> Attribute
+    Remove, // ID
 }
 
-pub fn create<S: Clone + Debug + 'static>(stdin: &mut ChildStdin, node: dom::Object<S>) {
-    let (kind, attributes) = node.value;
+// pub fn create<S: Clone + Debug + 'static>(stdin: &mut ChildStdin, node: dom::Object<S>) {
+//     // let (kind, _) = node.value;
 
-    // println!("create: {:?} with {:?}", kind, attributes);
+//     // println!("create: {:?} with {:?}", kind, attributes);
 
-    let event = match kind {
-        dom::Kind::Label => Some(Event::Create("Label".into())),
-        dom::Kind::Button => Some(Event::Create("Button".into())),
-        dom::Kind::Field => Some(Event::Create("TextField".into())),
-        _ => None,
-    };
+//     // let event = match kind {
+//     //     dom::Kind::Label => Some(Event::Create("Label".into())),
+//     //     dom::Kind::Button => Some(Event::Create("Button".into())),
+//     //     dom::Kind::Field => Some(Event::Create("Field".into())),
+//     //     _ => None,
+//     // };
 
-    if let Some(event) = event {
-        writeln!(stdin, "{}", json::to_string(&event).unwrap());
-    }
+//     // if let Some(event) = event {
+//     //     writeln!(stdin, "{}", json::to_string(&event).unwrap());
+//     // }
 
-    for child in node.children.into_iter() {
-        create(stdin, child);
-    }
-}
+//     // for child in node.children.into_iter() {
+//     //     create(stdin, child, path.clone());
+//     // }
+
+//     // let path = vec![0];
+
+//     let mut queue = VecDeque::from(vec![(node, vec![0])]); // (node, path)
+
+//     while let Some((node, path)) = queue.pop_front() {
+//         let (kind, _) = node.value;
+
+//         let event = match kind {
+//             dom::Kind::Label => Some(Event::Create("Label".into())),
+//             dom::Kind::Button => Some(Event::Create("Button".into())),
+//             dom::Kind::Field => Some(Event::Create("Field".into())),
+//             _ => None,
+//         };
+
+//     }
+// }
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -65,8 +82,15 @@ where
 
     // println!("WAITING");
 
-    let mut stdin = output.stdin.unwrap();
-    create(&mut stdin, dom);
+    let patch = dom::build(dom);
+    println!("patch: {:?}", patch);
+
+    // TODO!
+    // - update shadom DOM
+    // - send patch to UI process
+
+    // let mut stdin = output.stdin.unwrap();
+    // create(&mut stdin, dom);
 
     // writeln!(stdin, "ACTION");
 

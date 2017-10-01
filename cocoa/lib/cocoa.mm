@@ -25,9 +25,6 @@ using json = nlohmann::json;
 
 extern "C" void run() {
     @autoreleasepool {
-        // printf("TESTING!\n");
-        // fflush(stdout);
-
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
@@ -69,14 +66,6 @@ extern "C" void run() {
         [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
         std::thread([&] {
-
-            // {
-            //     auto frame = NSMakeRect(0, 0, 100, 100);
-            //     auto button = [[NSButton alloc] initWithFrame:frame];
-            //     button.bezelStyle = NSRoundedBezelStyle;
-
-            //     [window.contentView addSubview:button];
-            // }
 
             std::string line;
             while (std::getline(std::cin, line)) {

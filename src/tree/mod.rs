@@ -25,25 +25,25 @@ macro_rules! node {
     }};
 }
 
-pub type Path = Vec<Location>;
+pub type Path = Vec<usize>;
 
-#[derive(PartialEq, Clone)]
-pub struct Location {
-    pub depth: usize,
-    pub index: usize,
-}
+// #[derive(PartialEq, Clone)]
+// pub struct Location {
+//     pub depth: usize,
+//     pub index: usize,
+// }
 
-impl fmt::Debug for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Location({}:{})", self.depth, self.index)
-    }
-}
+// impl fmt::Debug for Location {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(f, "Location({}:{})", self.depth, self.index)
+//     }
+// }
 
-impl Location {
-    pub fn new(depth: usize, index: usize) -> Self {
-        Location { depth, index }
-    }
-}
+// impl Location {
+//     pub fn new(depth: usize, index: usize) -> Self {
+//         Location { depth, index }
+//     }
+// }
 
 #[derive(Debug)]
 pub enum Operation<T> {
@@ -117,18 +117,14 @@ where
     let mut changeset = vec![];
 
     let mut queue = VecDeque::new();
+    queue.push_back((old, new, vec![]));
 
-    // TODO: is `level`/`depth` necessary? - implied by index of path?
-
-    queue.push_back((old, new, 0, vec![]));
-
-    while let Some((old, new, level, path)) = queue.pop_front() {
+    while let Some((old, new, path)) = queue.pop_front() {
         for (n, pair) in zip(old, new).enumerate() {
 
             // Add current location to path
-            let location = Location::new(level, n);
             let mut path = path.clone();
-            path.push(location.clone());
+            path.push(n);
 
             match pair {
                 Pair::Left(_) => {
@@ -149,7 +145,7 @@ where
                                 changeset.push((path.clone(), Update(u.value)));
                             }
 
-                            queue.push_back((t.children, u.children, level + 1, path));
+                            queue.push_back((t.children, u.children, path));
                         }
                     }
                 }

@@ -25,17 +25,21 @@ pub type Object<S> = tree::Node<Value<S>>;
 pub type Change<S> = tree::Change<Value<S>>;
 pub type Changeset<S> = tree::Changeset<Value<S>>;
 
-pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
-    fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
-        if t.value.0 != u.value.0 {
-            Some(tree::Difference::Kind)
-        } else if t.value.1 != u.value.1 {
-            Some(tree::Difference::Value)
-        } else {
-            None
-        }
+fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
+    if t.value.0 != u.value.0 {
+        Some(tree::Difference::Kind)
+    } else if t.value.1 != u.value.1 {
+        Some(tree::Difference::Value)
+    } else {
+        None
     }
+}
 
+pub fn build<S: PartialEq>(object: Object<S>) -> Changeset<S> {
+    tree::diff(vec![], vec![object], comparator)
+}
+
+pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
     tree::diff(vec![old], vec![new], comparator)
 }
 
