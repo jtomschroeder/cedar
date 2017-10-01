@@ -65,7 +65,7 @@ pub enum Difference {
     Value,
 }
 
-pub fn diff<V: Vertex>(old: V, new: V) -> Changeset {
+pub fn diff<V: Vertex>(old: &V, new: &V) -> Changeset {
     use self::Operation::*;
 
     // -      if `old` doesn't exist: CREATE new
@@ -77,11 +77,20 @@ pub fn diff<V: Vertex>(old: V, new: V) -> Changeset {
 
     let mut changeset = vec![];
 
-    let old: &[V] = &[old];
-    let new: &[V] = &[new];
-
+    let path = vec![0];
     let mut queue = VecDeque::new();
-    queue.push_back((old, new, vec![]));
+
+    // TODO: this code is same as below... (DRY)
+    match old.compare(&new) {
+        Some(Difference::Kind) => changeset.push((path, Replace)),
+        cmp => {
+            if let Some(Difference::Value) = cmp {
+                changeset.push((path.clone(), Update));
+            }
+
+            queue.push_back((old.children(), new.children(), path));
+        }
+    }
 
     while let Some((old, new, path)) = queue.pop_front() {
         for (n, pair) in zip(old, new).enumerate() {

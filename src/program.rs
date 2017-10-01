@@ -57,7 +57,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             let mut path = path.clone();
             path.push(n);
 
-            expand(path.clone(), child, events);
+            expand(path, child, events);
         }
     }
 
@@ -210,7 +210,7 @@ where
 
         // println!("node: {:?}", new);
 
-        let changeset = dom::diff(old, dom.clone());
+        let changeset = dom::diff(&old, &dom);
         // println!("changeset: {:?}", changeset);
 
         let events = convert(&dom, changeset);
