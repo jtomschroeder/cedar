@@ -25,7 +25,7 @@ macro_rules! node {
     }};
 }
 
-pub type Path = Vec<usize>;
+pub type Location = Vec<usize>;
 
 // #[derive(PartialEq, Clone)]
 // pub struct Location {
@@ -53,7 +53,7 @@ pub enum Operation<T> {
     Replace(Node<T>),
 }
 
-pub type Change<T> = (Path, Operation<T>);
+pub type Change<T> = (Location, Operation<T>);
 pub type Changeset<T> = Vec<Change<T>>;
 
 enum Pair<T, U> {

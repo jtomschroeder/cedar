@@ -10,6 +10,7 @@ use std::io::prelude::*;
 use serde_json as json;
 
 use dom;
+use tree;
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -21,42 +22,36 @@ enum Event {
     Remove, // ID
 }
 
-// pub fn create<S: Clone + Debug + 'static>(stdin: &mut ChildStdin, node: dom::Object<S>) {
-//     // let (kind, _) = node.value;
+/// Convert 'changeset' to list of events to send to UI 'rendering' process
+fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
+    let mut events = vec![];
 
-//     // println!("create: {:?} with {:?}", kind, attributes);
+    fn expand<S>(location: tree::Location, node: dom::Object<S>, events: &mut Vec<Event>) {
+        // TODO: use breadth-first traversal here (using queue) - use location!
 
-//     // let event = match kind {
-//     //     dom::Kind::Label => Some(Event::Create("Label".into())),
-//     //     dom::Kind::Button => Some(Event::Create("Button".into())),
-//     //     dom::Kind::Field => Some(Event::Create("Field".into())),
-//     //     _ => None,
-//     // };
+        let (kind, _) = node.value;
 
-//     // if let Some(event) = event {
-//     //     writeln!(stdin, "{}", json::to_string(&event).unwrap());
-//     // }
+        match kind {
+            dom::Kind::Label => events.push(Event::Create("Label".into())),
+            dom::Kind::Button => events.push(Event::Create("Button".into())),
+            dom::Kind::Field => events.push(Event::Create("Field".into())),
+            _ => {}
+        }
 
-//     // for child in node.children.into_iter() {
-//     //     create(stdin, child, path.clone());
-//     // }
+        for child in node.children.into_iter() {
+            expand(location.clone(), child, events);
+        }
+    }
 
-//     // let path = vec![0];
+    for (location, op) in set.into_iter() {
+        match op {
+            tree::Operation::Create(node) => expand(location, node, &mut events),
+            _ => unimplemented!(),
+        }
+    }
 
-//     let mut queue = VecDeque::from(vec![(node, vec![0])]); // (node, path)
-
-//     while let Some((node, path)) = queue.pop_front() {
-//         let (kind, _) = node.value;
-
-//         let event = match kind {
-//             dom::Kind::Label => Some(Event::Create("Label".into())),
-//             dom::Kind::Button => Some(Event::Create("Button".into())),
-//             dom::Kind::Field => Some(Event::Create("Field".into())),
-//             _ => None,
-//         };
-
-//     }
-// }
+    events
+}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -80,33 +75,16 @@ where
         .spawn()
         .expect("failed to execute process");
 
-    // println!("WAITING");
-
     let patch = dom::build(dom);
-    println!("patch: {:?}", patch);
+    let events = convert(patch);
 
-    // TODO!
-    // - update shadom DOM
-    // - send patch to UI process
-
-    // let mut stdin = output.stdin.unwrap();
-    // create(&mut stdin, dom);
-
-    // writeln!(stdin, "ACTION");
+    let mut stdin = output.stdin.unwrap();
+    for event in events.into_iter() {
+        writeln!(stdin, "{}", json::to_string(&event).unwrap());
+    }
 
     let stdout = BufReader::new(output.stdout.unwrap());
     for line in stdout.lines() {
         println!("{:?}", line);
     }
-
-    // let mut buffer = vec![0; 1024];
-    // let mut stdout = output.stdout.unwrap();
-    // loop {
-    //     match stdout.read(&mut buffer) {
-    //         Ok(0) | Err(_) => break,
-    //         Ok(len) => {
-    //             println!("{:?}", str::from_utf8(&buffer[..len]));
-    //         }
-    //     }
-    // }
 }
