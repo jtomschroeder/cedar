@@ -1,6 +1,11 @@
 
 use tree;
 
+// #[derive(Clone, Debug)]
+// pub struct Tree<T> {
+//     pub children: Vec<Node<T>>,
+// }
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Kind {
     Stack,

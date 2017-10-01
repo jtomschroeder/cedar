@@ -72,12 +72,30 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
     events
 }
 
+fn find<'s, S>(path: &[usize], nodes: &'s [dom::Object<S>]) -> Option<&'s dom::Object<S>> {
+    if path.is_empty() {
+        None
+    } else if path.len() == 1 {
+        Some(&nodes[path[0]])
+    } else {
+        for node in nodes {
+            let obj = find(&path[1..], &node.children);
+            if obj.is_some() {
+                return obj;
+            }
+        }
+        None
+    }
+}
+
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq + Debug,
     M: Send + 'static + Debug,
 {
     let dom = view(&model);
+
+    // let tree = tree::Tree { children: vec![dom] };
 
     // println!("model: {:?}", model);
     // println!("view: {:?}", dom);
@@ -94,7 +112,8 @@ where
         .spawn()
         .expect("failed to execute process");
 
-    let patch = dom::build(dom);
+    let node = dom.clone();
+    let patch = dom::build(node);
     let events = convert(patch);
 
     let mut stdin = output.stdin.unwrap();
@@ -104,6 +123,27 @@ where
 
     let stdout = BufReader::new(output.stdout.unwrap());
     for line in stdout.lines() {
-        println!("{:?}", line);
+        // println!("from renderer: {:?}", line);
+
+        let line = line.unwrap();
+
+        let mut split = line.split(".");
+        let command = split.next().unwrap();
+
+        let path: Vec<usize> = split.map(|s| s.parse().unwrap()).collect();
+
+        println!("from renderer: {:?} :: {:?}", command, path);
+
+        let event = match command {
+            "click" => {
+                let nodes = &[dom.clone()];
+                let node = find(&path, nodes);
+                println!("{:?}", node);
+
+                // node.attributes
+            }
+
+            _ => continue,
+        };
     }
 }

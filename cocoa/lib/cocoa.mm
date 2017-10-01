@@ -39,7 +39,7 @@ using json = nlohmann::json;
 }
 
 - (void)click:(id)sender {
-    std::cout << "click: " << self->identifier << std::endl;
+    std::cout << "click." << self->identifier << std::endl;
 }
 
 @end
