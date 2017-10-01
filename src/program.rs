@@ -35,6 +35,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
 
         let (ref kind, _) = node.value;
 
+        // TODO: this code is duplicated below (DRY)
         // Create string representation of path (e.g. 0.0.1.3)
         let id = if path.is_empty() {
             String::new()
