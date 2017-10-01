@@ -7,69 +7,69 @@ pub struct Tree<T> {
     pub root: Vec<Node<T>>,
 }
 
-// impl<T> Tree<T> {
-//     pub fn diff<F>(self, other: Self, comparator: F) -> Changeset
-//     where
-//         F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
-//     {
-//         let old = self.root;
-//         let new = other.root;
+impl<T> Tree<T> {
+    pub fn diff<F>(self, other: Self, comparator: F) -> Changeset
+    where
+        F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
+    {
+        let old = self.root;
+        let new = other.root;
 
-//         use self::Operation::*;
+        use self::Operation::*;
 
-//         // -      if `old` doesn't exist: CREATE new
-//         // - else if `new` doesn't exist: DELETE old
-//         // - else if old.type != new.type: REPLACE old with new
-//         // - else    UPDATE properties and check children
+        // -      if `old` doesn't exist: CREATE new
+        // - else if `new` doesn't exist: DELETE old
+        // - else if old.type != new.type: REPLACE old with new
+        // - else    UPDATE properties and check children
 
-//         // Breadth-First Traversal!
+        // Breadth-First Traversal!
 
-//         let mut changeset = vec![];
+        let mut changeset = vec![];
 
-//         let mut queue = VecDeque::new();
-//         queue.push_back((old, new, vec![]));
+        let mut queue = VecDeque::new();
+        queue.push_back((old, new, vec![]));
 
-//         while let Some((old, new, path)) = queue.pop_front() {
-//             for (n, pair) in zip(old, new).enumerate() {
+        while let Some((old, new, path)) = queue.pop_front() {
+            for (n, pair) in zip(old, new).enumerate() {
 
-//                 // Add current location to path
-//                 let mut path = path.clone();
-//                 path.push(n);
+                // Add current location to path
+                let mut path = path.clone();
+                path.push(n);
 
-//                 match pair {
-//                     Pair::Left(_) => {
-//                         changeset.push((path.clone(), Delete));
-//                     }
+                match pair {
+                    Pair::Left(_) => {
+                        changeset.push((path.clone(), Delete));
+                    }
 
-//                     Pair::Both(t, u) => {
-//                         //       if t.type != u.type            => replace u with t
-//                         // else  if t != u (properties changes) => update and diff children
-//                         // else (if t == u)                     => diff children
+                    Pair::Both(t, u) => {
+                        //       if t.type != u.type            => replace u with t
+                        // else  if t != u (properties changes) => update and diff children
+                        // else (if t == u)                     => diff children
 
-//                         match comparator(&t, &u) {
-//                             Some(Difference::Kind) => {
-//                                 changeset.push((path.clone(), Replace(u)));
-//                             }
-//                             cmp => {
-//                                 if let Some(Difference::Value) = cmp {
-//                                     changeset.push((path.clone(), Update(u.value)));
-//                                 }
+                        match comparator(&t, &u) {
+                            Some(Difference::Kind) => {
+                                changeset.push((path.clone(), Replace));
+                            }
+                            cmp => {
+                                if let Some(Difference::Value) = cmp {
+                                    changeset.push((path.clone(), Update));
+                                }
 
-//                                 queue.push_back((t.children, u.children, path));
-//                             }
-//                         }
-//                     }
+                                queue.push_back((t.children, u.children, path));
+                            }
+                        }
+                    }
 
-//                     Pair::Right(u) => {
-//                         changeset.push((path.clone(), Create(u)));
-//                     }
-//                 }
-//             }
-//         }
+                    Pair::Right(u) => {
+                        changeset.push((path.clone(), Create));
+                    }
+                }
+            }
+        }
 
-//         changeset
-//     }
-// }
+        changeset
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct Node<T> {
@@ -152,7 +152,7 @@ pub enum Difference {
     Value,
 }
 
-pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset
+pub fn diff<T, F>(old: &[Node<T>], new: &[Node<T>], comparator: F) -> Changeset
 where
     F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
 {
@@ -196,7 +196,7 @@ where
                                 changeset.push((path.clone(), Update));
                             }
 
-                            queue.push_back((t.children, u.children, path));
+                            queue.push_back((&t.children, &u.children, path));
                         }
                     }
                 }

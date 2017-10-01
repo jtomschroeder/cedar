@@ -26,6 +26,7 @@ pub type Attributes<S> = Vec<Attribute<S>>;
 
 pub type Value<S> = (Kind, Attributes<S>);
 pub type Object<S> = tree::Node<Value<S>>;
+// pub type Tree<S> = tree::Tree<Value<S>>;
 
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
@@ -41,11 +42,11 @@ fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Differ
 }
 
 pub fn build<S: PartialEq>(object: Object<S>) -> Changeset {
-    tree::diff(vec![], vec![object], comparator)
+    tree::diff(&[], &[object], comparator)
 }
 
 pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset {
-    tree::diff(vec![old], vec![new], comparator)
+    tree::diff(&[old], &[new], comparator)
 }
 
 pub trait Builder<S> {
