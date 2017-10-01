@@ -6,15 +6,35 @@ use std::process::{Command, Stdio};
 use std::io::BufReader;
 use std::io::prelude::*;
 
+use serde_json as json;
+
 use dom;
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
+#[derive(Serialize, Deserialize, Debug)]
+enum Event {
+    Create(String), // TODO: Attributes (e.g. Text), Location (i.e. 'frame')
+    Update,
+    Remove,
+}
+
 pub fn create<S: Clone + Debug + 'static>(node: dom::Object<S>) {
     let (kind, attributes) = node.value;
 
-    println!("create: {:?} with {:?}", kind, attributes);
+    // println!("create: {:?} with {:?}", kind, attributes);
+
+    let event = match kind {
+        dom::Kind::Label => Some(Event::Create("Label".into())),
+        dom::Kind::Button => Some(Event::Create("Button".into())),
+        dom::Kind::Field => Some(Event::Create("TextField".into())),
+        _ => None,
+    };
+
+    if let Some(event) = event {
+        println!("{}", json::to_string(&event).unwrap());
+    }
 
     for child in node.children.into_iter() {
         create(child);

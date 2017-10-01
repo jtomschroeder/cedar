@@ -6,7 +6,7 @@ fn main() {
         .cpp(true)
         .flag("-std=c++14")
         .file("lib/cocoa.mm")
-        // .include("??")
+        .include("ext")
         .compile("libcedar-cocoa.a");
 
     println!("cargo:rustc-link-lib=framework=Cocoa");

@@ -5,6 +5,10 @@
 #include <string>
 #include <thread>
 
+#include <json/json.hpp>
+
+using json = nlohmann::json;
+
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
 
@@ -21,15 +25,8 @@
 
 extern "C" void run() {
     @autoreleasepool {
-        printf("TESTING!\n");
-        fflush(stdout);
-
-        std::thread([] {
-            std::string line;
-            while (std::getline(std::cin, line)) {
-                std::cout << "received: " << line << std::endl;
-            }
-        }).detach();
+        // printf("TESTING!\n");
+        // fflush(stdout);
 
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -70,6 +67,22 @@ extern "C" void run() {
         // Bring window to front
         auto app = [NSRunningApplication currentApplication];
         [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+
+        std::thread([&] {
+
+            {
+                auto frame = NSMakeRect(0, 0, 100, 100);
+                auto button = [[NSButton alloc] initWithFrame:frame];
+                button.bezelStyle = NSRoundedBezelStyle;
+
+                [window.contentView addSubview:button];
+            }
+
+            std::string line;
+            while (std::getline(std::cin, line)) {
+                std::cout << "received: " << line << std::endl;
+            }
+        }).detach();
 
         [NSApp run];
     }
