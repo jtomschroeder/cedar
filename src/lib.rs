@@ -36,7 +36,6 @@ extern crate layout;
 
 #[macro_use]
 mod tree;
-mod atomic_box;
 mod stream;
 mod program;
 
