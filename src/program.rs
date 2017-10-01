@@ -1,7 +1,7 @@
 
 use std::str;
 use std::fmt::Debug;
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, ChildStdin};
 
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -20,7 +20,7 @@ enum Event {
     Remove,
 }
 
-pub fn create<S: Clone + Debug + 'static>(node: dom::Object<S>) {
+pub fn create<S: Clone + Debug + 'static>(stdin: &mut ChildStdin, node: dom::Object<S>) {
     let (kind, attributes) = node.value;
 
     // println!("create: {:?} with {:?}", kind, attributes);
@@ -33,11 +33,11 @@ pub fn create<S: Clone + Debug + 'static>(node: dom::Object<S>) {
     };
 
     if let Some(event) = event {
-        println!("{}", json::to_string(&event).unwrap());
+        writeln!(stdin, "{}", json::to_string(&event).unwrap());
     }
 
     for child in node.children.into_iter() {
-        create(child);
+        create(stdin, child);
     }
 }
 
@@ -50,8 +50,6 @@ where
 
     // println!("model: {:?}", model);
     // println!("view: {:?}", dom);
-
-    create(dom);
 
     // TODO: use `spawn` and listen to stdin/stdout
     // - implement 'quit' event (or just exit when process terminates)
@@ -68,7 +66,9 @@ where
     // println!("WAITING");
 
     let mut stdin = output.stdin.unwrap();
-    writeln!(stdin, "ACTION");
+    create(&mut stdin, dom);
+
+    // writeln!(stdin, "ACTION");
 
     let stdout = BufReader::new(output.stdout.unwrap());
     for line in stdout.lines() {

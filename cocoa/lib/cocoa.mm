@@ -70,17 +70,40 @@ extern "C" void run() {
 
         std::thread([&] {
 
-            {
-                auto frame = NSMakeRect(0, 0, 100, 100);
-                auto button = [[NSButton alloc] initWithFrame:frame];
-                button.bezelStyle = NSRoundedBezelStyle;
+            // {
+            //     auto frame = NSMakeRect(0, 0, 100, 100);
+            //     auto button = [[NSButton alloc] initWithFrame:frame];
+            //     button.bezelStyle = NSRoundedBezelStyle;
 
-                [window.contentView addSubview:button];
-            }
+            //     [window.contentView addSubview:button];
+            // }
 
             std::string line;
             while (std::getline(std::cin, line)) {
-                std::cout << "received: " << line << std::endl;
+                // std::cout << "received: " << line << std::endl;
+                auto event = json::parse(line.c_str());
+                auto widget = event["Create"];
+                if (widget == "Button") {
+                    auto frame = NSMakeRect(0, 0, 100, 100);
+                    auto button = [[NSButton alloc] initWithFrame:frame];
+                    button.bezelStyle = NSRoundedBezelStyle;
+
+                    [window.contentView addSubview:button];
+                } else if (widget == "Label") {
+                    auto frame = NSMakeRect(100, 100, 100, 100);
+                    auto label = [[NSTextField alloc] initWithFrame:frame];
+
+                    [label setStringValue:@"***"];
+
+                    [label setBezeled:NO];
+                    [label setDrawsBackground:NO];
+                    [label setEditable:NO];
+                    [label setSelectable:NO];
+
+                    [label setAlignment:NSTextAlignmentCenter];
+
+                    [window.contentView addSubview:label];
+                }
             }
         }).detach();
 
