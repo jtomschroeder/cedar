@@ -5,6 +5,8 @@ pub trait Vertex {
     fn children(&self) -> &[Self]
     where
         Self: Sized;
+
+    fn compare(&self, other: &Self) -> Option<Difference>;
 }
 
 pub type Path = Vec<usize>;
@@ -63,11 +65,7 @@ pub enum Difference {
     Value,
 }
 
-pub fn diff<V, F>(old: &[V], new: &[V], comparator: F) -> Changeset
-where
-    V: Vertex,
-    F: Fn(&V, &V) -> Option<Difference>,
-{
+pub fn diff<V: Vertex>(old: &[V], new: &[V]) -> Changeset {
     use self::Operation::*;
 
     // -      if `old` doesn't exist: CREATE new
@@ -98,7 +96,7 @@ where
                     // else  if t != u (properties changes) => update and diff children
                     // else (if t == u)                     => diff children
 
-                    match comparator(&t, &u) {
+                    match t.compare(&u) {
                         Some(Difference::Kind) => {
                             changeset.push((path.clone(), Replace));
                         }

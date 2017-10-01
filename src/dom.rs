@@ -15,9 +15,19 @@ pub struct Object<S> {
     pub children: Vec<Object<S>>,
 }
 
-impl<T> tree::Vertex for Object<T> {
+impl<T: PartialEq> tree::Vertex for Object<T> {
     fn children(&self) -> &[Self] {
         &self.children
+    }
+
+    fn compare(&self, other: &Self) -> Option<tree::Difference> {
+        if self.value.0 != other.value.0 {
+            Some(tree::Difference::Kind)
+        } else if self.value.1 != other.value.1 {
+            Some(tree::Difference::Value)
+        } else {
+            None
+        }
     }
 }
 
@@ -37,27 +47,15 @@ pub enum Attribute<S> {
     Change(fn(String) -> S),
 }
 
-// pub type Object<S> = Node<Value<S>>;
-
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
 
-fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
-    if t.value.0 != u.value.0 {
-        Some(tree::Difference::Kind)
-    } else if t.value.1 != u.value.1 {
-        Some(tree::Difference::Value)
-    } else {
-        None
-    }
-}
-
 pub fn build<S: PartialEq>(object: Object<S>) -> Changeset {
-    tree::diff(&[], &[object], comparator)
+    tree::diff(&[], &[object])
 }
 
 pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset {
-    tree::diff(&[old], &[new], comparator)
+    tree::diff(&[old], &[new])
 }
 
 pub trait Builder<S> {
