@@ -1,11 +1,6 @@
 
 use tree;
 
-// #[derive(Clone, Debug)]
-// pub struct Tree<T> {
-//     pub children: Vec<Node<T>>,
-// }
-
 // pub struct Button<S> {
 //     text: String,
 //     click: S,
@@ -32,8 +27,8 @@ pub type Attributes<S> = Vec<Attribute<S>>;
 pub type Value<S> = (Kind, Attributes<S>);
 pub type Object<S> = tree::Node<Value<S>>;
 
-pub type Change<S> = tree::Change<Value<S>>;
-pub type Changeset<S> = tree::Changeset<Value<S>>;
+pub type Change = tree::Change;
+pub type Changeset = tree::Changeset;
 
 fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
     if t.value.0 != u.value.0 {
@@ -45,11 +40,11 @@ fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Differ
     }
 }
 
-pub fn build<S: PartialEq>(object: Object<S>) -> Changeset<S> {
+pub fn build<S: PartialEq>(object: Object<S>) -> Changeset {
     tree::diff(vec![], vec![object], comparator)
 }
 
-pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
+pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset {
     tree::diff(vec![old], vec![new], comparator)
 }
 

@@ -27,13 +27,13 @@ enum Event {
 }
 
 /// Convert 'changeset' to list of events to send to UI 'rendering' process
-fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
+fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     let mut events = vec![];
 
-    fn expand<S>(path: tree::Path, node: dom::Object<S>, events: &mut Vec<Event>) {
+    fn expand<S>(path: tree::Path, node: &dom::Object<S>, events: &mut Vec<Event>) {
         // TODO: use breadth-first traversal here (using queue) - use path!
 
-        let (kind, _) = node.value;
+        let (ref kind, _) = node.value;
 
         // Create string representation of path (e.g. 0.0.1.3)
         let id = if path.is_empty() {
@@ -47,13 +47,13 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
         };
 
         match kind {
-            dom::Kind::Label => events.push(Event::Create(id, "Label".into())),
-            dom::Kind::Button => events.push(Event::Create(id, "Button".into())),
-            dom::Kind::Field => events.push(Event::Create(id, "Field".into())),
+            &dom::Kind::Label => events.push(Event::Create(id, "Label".into())),
+            &dom::Kind::Button => events.push(Event::Create(id, "Button".into())),
+            &dom::Kind::Field => events.push(Event::Create(id, "Field".into())),
             _ => {}
         }
 
-        for (n, child) in node.children.into_iter().enumerate() {
+        for (n, child) in node.children.iter().enumerate() {
             let mut path = path.clone();
             path.push(n);
 
@@ -61,10 +61,17 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
         }
     }
 
+
     for (path, op) in set.into_iter() {
+        let dom = dom.clone();
+        let nodes = vec![dom];
+        let node = find(&path, &nodes).unwrap();
+
         match op {
-            tree::Operation::Create(node) => expand(path, node, &mut events),
-            tree::Operation::Update((_, attrs)) => {
+            tree::Operation::Create => expand(path, node, &mut events),
+            tree::Operation::Update => {
+
+                let (_, ref attrs) = node.value;
 
                 // Create string representation of path (e.g. 0.0.1.3)
                 let id = if path.is_empty() {
@@ -79,8 +86,8 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
 
                 for attr in attrs {
                     match attr {
-                        dom::Attribute::Text(txt) => {
-                            events.push(Event::Update(id.clone(), "Text".into(), txt))
+                        &dom::Attribute::Text(ref txt) => {
+                            events.push(Event::Update(id.clone(), "Text".into(), txt.clone()))
                         }
                         _ => {}
                     }
@@ -135,7 +142,8 @@ where
 
     let node = dom.clone();
     let patch = dom::build(node);
-    let events = convert(patch);
+
+    let events = convert(&dom, patch);
 
     let mut stdin = output.stdin.unwrap();
     for event in events.into_iter() {
@@ -205,7 +213,7 @@ where
         let changeset = dom::diff(old, dom.clone());
         // println!("changeset: {:?}", changeset);
 
-        let events = convert(changeset);
+        let events = convert(&dom, changeset);
 
         // let mut stdin = output.stdin.unwrap();
         for event in events.into_iter() {
