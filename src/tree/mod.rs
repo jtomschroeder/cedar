@@ -1,75 +1,5 @@
 
-use std::fmt;
 use std::collections::VecDeque;
-
-#[derive(Clone, Debug)]
-pub struct Tree<T> {
-    pub root: Vec<Node<T>>,
-}
-
-impl<T> Tree<T> {
-    pub fn diff<F>(self, other: Self, comparator: F) -> Changeset
-    where
-        F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
-    {
-        let old = self.root;
-        let new = other.root;
-
-        use self::Operation::*;
-
-        // -      if `old` doesn't exist: CREATE new
-        // - else if `new` doesn't exist: DELETE old
-        // - else if old.type != new.type: REPLACE old with new
-        // - else    UPDATE properties and check children
-
-        // Breadth-First Traversal!
-
-        let mut changeset = vec![];
-
-        let mut queue = VecDeque::new();
-        queue.push_back((old, new, vec![]));
-
-        while let Some((old, new, path)) = queue.pop_front() {
-            for (n, pair) in zip(old, new).enumerate() {
-
-                // Add current location to path
-                let mut path = path.clone();
-                path.push(n);
-
-                match pair {
-                    Pair::Left(_) => {
-                        changeset.push((path.clone(), Delete));
-                    }
-
-                    Pair::Both(t, u) => {
-                        //       if t.type != u.type            => replace u with t
-                        // else  if t != u (properties changes) => update and diff children
-                        // else (if t == u)                     => diff children
-
-                        match comparator(&t, &u) {
-                            Some(Difference::Kind) => {
-                                changeset.push((path.clone(), Replace));
-                            }
-                            cmp => {
-                                if let Some(Difference::Value) = cmp {
-                                    changeset.push((path.clone(), Update));
-                                }
-
-                                queue.push_back((t.children, u.children, path));
-                            }
-                        }
-                    }
-
-                    Pair::Right(u) => {
-                        changeset.push((path.clone(), Create));
-                    }
-                }
-            }
-        }
-
-        changeset
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct Node<T> {
@@ -77,21 +7,16 @@ pub struct Node<T> {
     pub children: Vec<Node<T>>,
 }
 
-#[macro_export]
-macro_rules! node {
-    ($v:expr) => {
-        $crate::tree::Node {
-            value: $v,
-            children: vec![]
-        }
-    };
+pub trait Vertex {
+    fn children(&self) -> &[Self]
+    where
+        Self: Sized;
+}
 
-    ( $v:expr => $( $c:expr ),* ) => {{
-        $crate::tree::Node {
-            value: $v,
-            children: vec![ $( $c ),* ]
-        }
-    }};
+impl<T> Vertex for Node<T> {
+    fn children(&self) -> &[Self] {
+        &self.children
+    }
 }
 
 pub type Path = Vec<usize>;
@@ -145,16 +70,17 @@ where
     }
 }
 
-type Nodes<T> = Vec<Node<T>>;
+// type Nodes<T> = Vec<Node<T>>;
 
 pub enum Difference {
     Kind,
     Value,
 }
 
-pub fn diff<T, F>(old: &[Node<T>], new: &[Node<T>], comparator: F) -> Changeset
+pub fn diff<V, F>(old: &[V], new: &[V], comparator: F) -> Changeset
 where
-    F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
+    V: Vertex,
+    F: Fn(&V, &V) -> Option<Difference>,
 {
     use self::Operation::*;
 
@@ -196,12 +122,12 @@ where
                                 changeset.push((path.clone(), Update));
                             }
 
-                            queue.push_back((&t.children, &u.children, path));
+                            queue.push_back((t.children(), u.children(), path));
                         }
                     }
                 }
 
-                Pair::Right(u) => {
+                Pair::Right(_) => {
                     changeset.push((path.clone(), Create));
                 }
             }

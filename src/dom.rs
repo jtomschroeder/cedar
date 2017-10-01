@@ -90,13 +90,22 @@ pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
 }
 
 pub fn label<S>() -> Object<S> {
-    node![(Kind::Label, vec![])]
+    tree::Node {
+        value: (Kind::Label, vec![]),
+        children: vec![],
+    }
 }
 
 pub fn button<S>() -> Object<S> {
-    node![(Kind::Button, vec![])]
+    tree::Node {
+        value: (Kind::Button, vec![]),
+        children: vec![],
+    }
 }
 
 pub fn field<S>() -> Object<S> {
-    node![(Kind::Field, vec![])]
+    tree::Node {
+        value: (Kind::Field, vec![]),
+        children: vec![],
+    }
 }
