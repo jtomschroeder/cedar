@@ -65,8 +65,6 @@ fn convert<T>(set: dom::Changeset<T>) -> Vec<Event> {
         match op {
             tree::Operation::Create(node) => expand(path, node, &mut events),
             tree::Operation::Update((_, attrs)) => {
-                // TODO!
-                // println!("update: {:?}", attrs);
 
                 // Create string representation of path (e.g. 0.0.1.3)
                 let id = if path.is_empty() {
@@ -159,6 +157,8 @@ where
 
         let message = match command {
             "click" => {
+                // TODO: move 'find' logic into tree/dom module
+
                 let nodes = &[dom.clone()];
                 let node = find(&path, nodes);
                 // println!("{:?}", node);
@@ -167,6 +167,9 @@ where
                     Some(node) => node,
                     _ => continue,
                 };
+
+                // TODO: refactor this!
+                // - possibly make attributes members of struct instead of vector?
 
                 let mut message = None;
                 let (_, ref attrs) = node.value;
