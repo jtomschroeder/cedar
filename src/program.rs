@@ -88,12 +88,12 @@ fn find<'s, S>(path: &[usize], nodes: &'s [dom::Object<S>]) -> Option<&'s dom::O
     }
 }
 
-pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
+pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq + Debug,
     M: Send + 'static + Debug,
 {
-    let dom = view(&model);
+    let mut dom = view(&model);
 
     // let tree = tree::Tree { children: vec![dom] };
 
@@ -134,16 +134,50 @@ where
 
         println!("from renderer: {:?} :: {:?}", command, path);
 
-        let event = match command {
+        let message = match command {
             "click" => {
                 let nodes = &[dom.clone()];
                 let node = find(&path, nodes);
                 println!("{:?}", node);
 
-                // node.attributes
+                let node = match node {
+                    Some(node) => node,
+                    _ => continue,
+                };
+
+                let mut message = None;
+                let (_, ref attrs) = node.value;
+                for attr in attrs {
+                    match attr {
+                        &dom::Attribute::Click(ref e) => {
+                            message = Some(e.clone());
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+
+                match message {
+                    Some(message) => message,
+                    _ => continue,
+                }
             }
 
             _ => continue,
         };
+
+
+        println!("message: {:?}", message);
+
+        model = update(model, message);
+
+        let old = dom;
+        dom = view(&model);
+
+        // println!("node: {:?}", new);
+
+        let changeset = dom::diff(old, dom.clone());
+        println!("changeset: {:?}", changeset);
+
     }
 }

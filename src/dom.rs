@@ -6,6 +6,11 @@ use tree;
 //     pub children: Vec<Node<T>>,
 // }
 
+// pub struct Button<S> {
+//     text: String,
+//     click: S,
+// }
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Kind {
     Stack,
