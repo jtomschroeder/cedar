@@ -47,19 +47,22 @@ where
 
     // println!("WAITING");
 
-    // let stdout = BufReader::new(output.stdout.unwrap());
-    // for line in stdout.lines() {
-    //     println!("{:?}", line);
-    // }
+    let mut stdin = output.stdin.unwrap();
+    writeln!(stdin, "ACTION");
 
-    let mut buffer = vec![0; 1024];
-    let mut stdout = output.stdout.unwrap();
-    loop {
-        match stdout.read(&mut buffer) {
-            Ok(0) | Err(_) => break,
-            Ok(len) => {
-                println!("{:?}", str::from_utf8(&buffer[..len]));
-            }
-        }
+    let stdout = BufReader::new(output.stdout.unwrap());
+    for line in stdout.lines() {
+        println!("{:?}", line);
     }
+
+    // let mut buffer = vec![0; 1024];
+    // let mut stdout = output.stdout.unwrap();
+    // loop {
+    //     match stdout.read(&mut buffer) {
+    //         Ok(0) | Err(_) => break,
+    //         Ok(len) => {
+    //             println!("{:?}", str::from_utf8(&buffer[..len]));
+    //         }
+    //     }
+    // }
 }

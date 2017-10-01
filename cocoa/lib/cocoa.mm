@@ -1,6 +1,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include <iostream>
+#include <string>
+#include <thread>
+
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
 
@@ -19,6 +23,13 @@ extern "C" void run() {
     @autoreleasepool {
         printf("TESTING!\n");
         fflush(stdout);
+
+        std::thread([] {
+            std::string line;
+            while (std::getline(std::cin, line)) {
+                std::cout << "received: " << line << std::endl;
+            }
+        }).detach();
 
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
