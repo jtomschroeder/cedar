@@ -24,6 +24,26 @@ using json = nlohmann::json;
 
 @end
 
+@interface Action : NSObject {
+    std::string identifier;
+}
+@end
+
+@implementation Action
+
+- (id)initWithID:(std::string)ident {
+    if (self = [super init]) {
+        self->identifier = ident;
+    }
+    return self;
+}
+
+- (void)click:(id)sender {
+    std::cout << "click: " << self->identifier << std::endl;
+}
+
+@end
+
 extern "C" void run() {
     @autoreleasepool {
         [NSApplication sharedApplication];
@@ -78,7 +98,7 @@ extern "C" void run() {
 
                 // std::cout << "received: " << event["Create"][0] << std::endl;
 
-                auto path = event["Create"][0];
+                auto ident = event["Create"][0];
                 auto widget = event["Create"][1];
 
                 if (widget == "Button") {
@@ -86,7 +106,11 @@ extern "C" void run() {
                     auto button = [[NSButton alloc] initWithFrame:frame];
                     button.bezelStyle = NSRoundedBezelStyle;
 
-                    widgets[path] = button;
+                    auto action = [[Action alloc] initWithID:ident];
+                    [button setAction:@selector(click:)];
+                    [button setTarget:action];
+
+                    widgets[ident] = button;
 
                     [window.contentView addSubview:button];
                 } else if (widget == "Label") {
@@ -102,7 +126,7 @@ extern "C" void run() {
 
                     [label setAlignment:NSTextAlignmentCenter];
 
-                    widgets[path] = label;
+                    widgets[ident] = label;
 
                     [window.contentView addSubview:label];
                 }
