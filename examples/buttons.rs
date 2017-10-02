@@ -40,9 +40,9 @@ fn update(model: Model, message: Message) -> Model {
 
 fn view(model: &Model) -> dom::Object<Message> {
     dom::stack(vec![
-        dom::button().text("+").click(Message::Increment),
+        dom::button().text("+".into()).click(Message::Increment),
         dom::label().text(model.to_string()),
-        dom::button().text("-").click(Message::Decrement),
+        dom::button().text("-".into()).click(Message::Decrement),
     ])
 }
 

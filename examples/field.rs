@@ -18,12 +18,12 @@ fn update(_: Model, message: Message) -> Model {
 }
 
 fn view(model: &Model) -> dom::Object<Message> {
-    use cedar::dom;
-    dom::stack()
-        .add(dom::field()
-                 .placeholder("Text to reverse!".into())
-                 .change(Message::NewContent))
-        .add(dom::label().text(model.chars().rev().collect()))
+    dom::stack(vec![
+        dom::field()
+            .placeholder("Text to reverse!".into())
+            .change(Message::NewContent),
+        dom::label().text(model.chars().rev().collect()),
+    ])
 }
 
 fn main() {

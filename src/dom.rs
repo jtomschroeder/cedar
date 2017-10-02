@@ -55,21 +55,14 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
 }
 
 pub trait Builder<S> {
-    fn add(self, object: Self) -> Self;
-
-    fn text<T: Into<String>>(self, text: T) -> Self;
+    fn text(self, text: String) -> Self;
     fn click(self, action: S) -> Self;
     fn placeholder(self, text: String) -> Self;
     fn change(self, messenger: fn(String) -> S) -> Self;
 }
 
 impl<S> Builder<S> for Object<S> {
-    fn add(mut self, object: Self) -> Self {
-        self.children.push(object);
-        self
-    }
-
-    fn text<T: Into<String>>(mut self, text: T) -> Self {
+    fn text(mut self, text: String) -> Self {
         self.value.1.push(Attribute::Text(text.into()));
         self
     }

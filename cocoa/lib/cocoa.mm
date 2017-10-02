@@ -39,6 +39,7 @@ using json = nlohmann::json;
 }
 
 - (void)click:(id)sender {
+    // TODO: formalize as JSON
     std::cout << "click." << self->identifier << std::endl;
 }
 
@@ -92,11 +93,11 @@ extern "C" void run() {
 
             std::string line;
             while (std::getline(std::cin, line)) {
-                // std::cout << "received: " << line << std::endl;
+                // std::cerr << "received: " << line << std::endl;
 
                 auto event = json::parse(line.c_str());
 
-                // std::cout << "received: " << event["Create"][0] << std::endl;
+                // std::cerr << "received: " << event["Create"][0] << std::endl;
 
                 if (event.count("Create")) {
                     auto ident = event["Create"][0];
@@ -140,8 +141,8 @@ extern "C" void run() {
                     std::string value = update[2];
 
                     if (attribute == "Text") {
-                        [widgets[ident]
-                            setStringValue:[NSString stringWithUTF8String:value.c_str()]];
+                        auto widget = widgets[ident];
+                        [widget setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                     }
                 }
             }
