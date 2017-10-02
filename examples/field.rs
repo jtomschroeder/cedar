@@ -1,9 +1,6 @@
 
 extern crate cedar;
 
-use cedar::dom;
-use cedar::dom::Builder;
-
 type Model = String;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -16,6 +13,8 @@ fn update(_: Model, message: Message) -> Model {
         Message::NewContent(content) => content,
     }
 }
+
+use cedar::dom;
 
 fn view(model: &Model) -> dom::Object<Message> {
     dom::stack(vec![

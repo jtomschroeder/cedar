@@ -6,8 +6,8 @@ use tree;
 //     click: S,
 // }
 
-pub type Attributes<S> = Vec<Attribute<S>>;
 pub type Value<S> = (Kind, Attributes<S>);
+pub type Attributes<S> = Vec<Attribute<S>>;
 
 #[derive(Clone, Debug)]
 pub struct Object<S> {
@@ -54,27 +54,21 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
     tree::diff(old, new)
 }
 
-pub trait Builder<S> {
-    fn text(self, text: String) -> Self;
-    fn click(self, action: S) -> Self;
-    fn placeholder(self, text: String) -> Self;
-    fn change(self, messenger: fn(String) -> S) -> Self;
-}
-
-impl<S> Builder<S> for Object<S> {
-    fn text(mut self, text: String) -> Self {
+/// 'Builder' methods for Object
+impl<S> Object<S> {
+    pub fn text(mut self, text: String) -> Self {
         self.value.1.push(Attribute::Text(text.into()));
         self
     }
-    fn click(mut self, action: S) -> Self {
+    pub fn click(mut self, action: S) -> Self {
         self.value.1.push(Attribute::Click(action));
         self
     }
-    fn placeholder(mut self, text: String) -> Self {
+    pub fn placeholder(mut self, text: String) -> Self {
         self.value.1.push(Attribute::Placeholder(text));
         self
     }
-    fn change(mut self, messenger: fn(String) -> S) -> Self {
+    pub fn change(mut self, messenger: fn(String) -> S) -> Self {
         self.value.1.push(Attribute::Change(messenger));
         self
     }

@@ -1,9 +1,6 @@
 
 extern crate cedar;
 
-use cedar::dom;
-use cedar::dom::Builder;
-
 type Model = i32;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -37,6 +34,8 @@ fn update(model: Model, message: Message) -> Model {
 //     , div [] [ text (toString model) ]
 //     , button [ onClick Increment ] [ text "+" ]
 //     ]
+
+use cedar::dom;
 
 fn view(model: &Model) -> dom::Object<Message> {
     dom::stack(vec![
