@@ -74,7 +74,15 @@ impl<S> Object<S> {
         self
     }
     pub fn click(mut self, action: S) -> Self {
-        self.attributes.push(Attribute::Click(action));
+        // sel  f.attributes.push(Attribute::Click(action));
+
+        match self.widget {
+            Widget::Button(ref mut button) => {
+                button.click = Some(action);
+            }
+            _ => {}
+        }
+
         self
     }
     pub fn placeholder(mut self, text: String) -> Self {

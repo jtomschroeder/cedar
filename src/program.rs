@@ -185,37 +185,19 @@ where
                 // TODO: move 'find' logic into tree/dom module
 
                 let nodes = &[dom.clone()];
-                let node = find(path.raw(), nodes);
-                // println!("{:?}", node);
-
-                let node = match node {
-                    Some(node) => node,
-                    _ => continue,
-                };
-
-                // TODO: refactor this!
-                // - possibly make attributes members of struct instead of vector?
-
-                let mut message = None;
-                for attr in &node.attributes {
-                    match attr {
-                        &dom::Attribute::Click(ref e) => {
-                            message = Some(e.clone());
-                            break;
-                        }
-                        _ => {}
-                    }
-                }
-
-                match message {
-                    Some(message) => message,
-                    _ => continue,
-                }
+                find(path.raw(), nodes).and_then(|node| match node.widget {
+                    dom::Widget::Button(ref button) => button.click.clone(),
+                    _ => None,
+                })
             }
 
-            _ => continue,
+            _ => None,
         };
 
+        let message = match message {
+            Some(m) => m,
+            _ => continue,
+        };
 
         // println!("message: {:?}", message);
 
