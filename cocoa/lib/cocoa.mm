@@ -68,8 +68,8 @@ extern "C" void run() {
         }
 
         auto frame = NSMakeRect(0, 0, 500, 500);
-        auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
-                         NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
+        auto styleMask = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
+                         NSClosableWindowMask;
 
         auto window = [[NSWindow alloc] initWithContentRect:frame
                                                   styleMask:styleMask
