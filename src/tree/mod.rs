@@ -44,21 +44,18 @@ impl Path {
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Create string representation of path (e.g. 0.0.1.3)
-
-        if self.path.is_empty() {
-            write!(f, "")
-        } else if self.path.len() == 1 {
-            write!(f, "{}", self.path[0])
-        } else {
-            let id = (&self.path[1..]).iter().fold(
-                self.path[0].to_string(),
-                |id, n| id + &format!(".{}", n),
-            );
-            write!(f, "{}", id)
+        match &self.path {
+            p if p.is_empty() => write!(f, ""),
+            p if p.len() == 1 => write!(f, "{}", p[0]),
+            p => {
+                let id = (&p[1..]).iter().fold(p[0].to_string(), |id, n| {
+                    id + &format!(".{}", n)
+                });
+                write!(f, "{}", id)
+            }
         }
     }
 }
-
 
 #[derive(Debug)]
 pub enum Operation {

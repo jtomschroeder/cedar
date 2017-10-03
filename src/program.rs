@@ -90,7 +90,6 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
         }
     }
 
-
     for (path, op) in set.into_iter() {
         let dom = dom.clone();
         let nodes = vec![dom];
