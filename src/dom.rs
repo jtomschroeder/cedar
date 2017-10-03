@@ -8,10 +8,15 @@ pub struct Button<S> {
 }
 
 #[derive(PartialEq, Clone, Debug)]
+pub struct Label {
+    pub text: String,
+}
+
+#[derive(PartialEq, Clone, Debug)]
 pub enum Widget<S> {
     Stack,
     Button(Button<S>),
-    Label,
+    Label(Label),
     Field,
 }
 
@@ -34,12 +39,15 @@ impl<T: PartialEq> tree::Vertex for Object<T> {
     }
 
     fn compare(&self, other: &Self) -> Option<tree::Difference> {
-        if self.kind != other.kind {
-            Some(tree::Difference::Kind)
-        } else if self.attributes != other.attributes {
-            Some(tree::Difference::Value)
-        } else {
+        if self.widget == other.widget {
             None
+        } else {
+            match (&self.widget, &other.widget) {
+                (&Widget::Button(_), &Widget::Button(_)) |
+                (&Widget::Label(_), &Widget::Label(_)) => Some(tree::Difference::Value),
+
+                _ => Some(tree::Difference::Kind),
+            }
         }
     }
 }
@@ -69,26 +77,21 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
 
 /// 'Builder' methods for Object
 impl<S> Object<S> {
-    pub fn text(mut self, text: String) -> Self {
-        self.attributes.push(Attribute::Text(text.into()));
-        self
-    }
     pub fn click(mut self, action: S) -> Self {
-        // sel  f.attributes.push(Attribute::Click(action));
-
         match self.widget {
             Widget::Button(ref mut button) => {
                 button.click = Some(action);
             }
             _ => {}
         }
-
         self
     }
+
     pub fn placeholder(mut self, text: String) -> Self {
         self.attributes.push(Attribute::Placeholder(text));
         self
     }
+
     pub fn change(mut self, messenger: fn(String) -> S) -> Self {
         self.attributes.push(Attribute::Change(messenger));
         self
@@ -106,12 +109,12 @@ pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
     }
 }
 
-pub fn label<S>() -> Object<S> {
+pub fn label<S>(text: String) -> Object<S> {
     Object {
         kind: Kind::Label,
         attributes: vec![],
 
-        widget: Widget::Label,
+        widget: Widget::Label(Label { text }),
 
         children: vec![],
     }

@@ -40,7 +40,7 @@ use cedar::dom;
 fn view(model: &Model) -> dom::Object<Message> {
     dom::stack(vec![
         dom::button("+".into()).click(Message::Increment),
-        dom::label().text(model.to_string()),
+        dom::label(model.to_string()),
         dom::button("-".into()).click(Message::Decrement),
     ])
 }

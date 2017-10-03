@@ -43,24 +43,12 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
 
         let id = path.to_string();
 
-        // Get 'text' attribute in `attrs`
-        let mut text = None;
-        for attr in &node.attributes {
-            match attr {
-                &dom::Attribute::Text(ref t) => {
-                    text = Some(t.clone());
-                    break;
-                }
-                _ => {}
-            }
-        }
-
         match node.widget {
-            dom::Widget::Label => {
+            dom::Widget::Label(ref label) => {
                 events.push(Event::Create {
                     id,
                     kind: "Label".into(),
-                    text: text.unwrap(),
+                    text: label.text.clone(),
                 })
             }
 
@@ -100,13 +88,21 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             tree::Operation::Create => expand(path, node, &mut events),
             tree::Operation::Update => {
                 let id = path.to_string();
-                for attr in &node.attributes {
-                    match attr {
-                        &dom::Attribute::Text(ref txt) => {
-                            events.push(Event::Update(id.clone(), "Text".into(), txt.clone()))
-                        }
-                        _ => {}
+                // for attr in &node.attributes {
+                //     match attr {
+                //         &dom::Attribute::Text(ref txt) => {
+                //             events.push(Event::Update(id.clone(), "Text".into(), txt.clone()))
+                //         }
+                //         _ => {}
+                //     }
+                // }
+
+                match node.widget {
+                    dom::Widget::Label(ref label) => {
+                        events.push(Event::Update(id, "Text".into(), label.text.clone()))
                     }
+
+                    _ => unimplemented!(),
                 }
             }
 
