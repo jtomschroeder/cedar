@@ -1,10 +1,19 @@
 
 use tree;
 
-// pub struct Button<S> {
-//     text: String,
-//     click: S,
-// }
+#[derive(PartialEq, Clone, Debug)]
+pub struct Button<S> {
+    pub text: String,
+    pub click: Option<S>,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum Widget<S> {
+    Stack,
+    Button(Button<S>),
+    Label,
+    Field,
+}
 
 // pub type Value<S> = (Kind, Attributes<S>);
 pub type Attributes<S> = Vec<Attribute<S>>;
@@ -13,6 +22,8 @@ pub type Attributes<S> = Vec<Attribute<S>>;
 pub struct Object<S> {
     pub kind: Kind,
     pub attributes: Attributes<S>,
+
+    pub widget: Widget<S>,
 
     pub children: Vec<Object<S>>,
 }
@@ -80,6 +91,9 @@ pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
     Object {
         kind: Kind::Stack,
         attributes: vec![],
+
+        widget: Widget::Stack,
+
         children: objects,
     }
 }
@@ -88,14 +102,20 @@ pub fn label<S>() -> Object<S> {
     Object {
         kind: Kind::Label,
         attributes: vec![],
+
+        widget: Widget::Label,
+
         children: vec![],
     }
 }
 
-pub fn button<S>() -> Object<S> {
+pub fn button<S>(text: String) -> Object<S> {
     Object {
         kind: Kind::Button,
         attributes: vec![],
+
+        widget: Widget::Button(Button { text, click: None }),
+
         children: vec![],
     }
 }
@@ -104,6 +124,9 @@ pub fn field<S>() -> Object<S> {
     Object {
         kind: Kind::Field,
         attributes: vec![],
+
+        widget: Widget::Field,
+
         children: vec![],
     }
 }

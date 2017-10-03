@@ -55,8 +55,8 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             }
         }
 
-        match node.kind {
-            dom::Kind::Label => {
+        match node.widget {
+            dom::Widget::Label => {
                 events.push(Event::Create {
                     id,
                     kind: "Label".into(),
@@ -64,21 +64,22 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
                 })
             }
 
-            dom::Kind::Button => {
+            dom::Widget::Button(ref button) => {
                 events.push(Event::Create {
                     id,
                     kind: "Button".into(),
-                    text: text.unwrap(),
+                    text: button.text.clone(),
                 })
             }
 
-            dom::Kind::Field => {
+            dom::Widget::Field => {
                 events.push(Event::Create {
                     id,
                     kind: "Field".into(),
                     text: "".into(),
                 })
             }
+
             _ => {}
         }
 
@@ -93,7 +94,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     for (path, op) in set.into_iter() {
         let dom = dom.clone();
         let nodes = vec![dom];
-        let node = find(path.raw(), &nodes).unwrap();
+        let node = find(path.raw(), &nodes).expect("path in nodes");
 
         match op {
             tree::Operation::Create => expand(path, node, &mut events),

@@ -7,4 +7,4 @@ dep:
 
 run:
 	(cd cocoa && cargo build --release)
-	cargo run --release --example buttons
+	RUST_BACKTRACE=1 cargo run --release --example buttons
