@@ -1,7 +1,9 @@
 
 mod zipper;
 
+use std::fmt;
 use std::collections::VecDeque;
+
 use self::zipper::{zip, Pair};
 
 pub trait Vertex {
@@ -12,7 +14,51 @@ pub trait Vertex {
     fn compare(&self, other: &Self) -> Option<Difference>;
 }
 
-pub type Path = Vec<usize>;
+#[derive(Clone, Debug)]
+pub struct Path {
+    path: Vec<usize>,
+}
+
+impl Path {
+    pub fn new() -> Self {
+        Path { path: vec![0] }
+    }
+
+    pub fn from_vec(path: Vec<usize>) -> Self {
+        Path { path }
+    }
+
+    pub fn push(&mut self, element: usize) {
+        self.path.push(element)
+    }
+
+    pub fn len(&self) -> usize {
+        self.path.len()
+    }
+
+    pub fn raw(&self) -> &[usize] {
+        &self.path
+    }
+}
+
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Create string representation of path (e.g. 0.0.1.3)
+
+        if self.path.is_empty() {
+            write!(f, "")
+        } else if self.path.len() == 1 {
+            write!(f, "{}", self.path[0])
+        } else {
+            let id = (&self.path[1..]).iter().fold(
+                self.path[0].to_string(),
+                |id, n| id + &format!(".{}", n),
+            );
+            write!(f, "{}", id)
+        }
+    }
+}
+
 
 #[derive(Debug)]
 pub enum Operation {
@@ -42,7 +88,7 @@ pub fn diff<V: Vertex>(old: &V, new: &V) -> Changeset {
 
     let mut changeset = vec![];
 
-    let path = vec![0];
+    let path = Path::new();
     let mut queue = VecDeque::new();
 
     // TODO: this code is same as below... (DRY)

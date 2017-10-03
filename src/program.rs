@@ -43,17 +43,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
 
         let (ref kind, ref attrs) = node.value;
 
-        // TODO: this code is duplicated below (DRY)
-        // Create string representation of path (e.g. 0.0.1.3)
-        let id = if path.is_empty() {
-            String::new()
-        } else if path.len() == 1 {
-            path[0].to_string()
-        } else {
-            (&path[1..]).iter().fold(path[0].to_string(), |id, n| {
-                id + &format!(".{}", n)
-            })
-        };
+        let id = path.to_string();
 
         // Get 'text' attribute in `attrs`
         let mut text = None;
@@ -104,7 +94,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     for (path, op) in set.into_iter() {
         let dom = dom.clone();
         let nodes = vec![dom];
-        let node = find(&path, &nodes).unwrap();
+        let node = find(path.raw(), &nodes).unwrap();
 
         match op {
             tree::Operation::Create => expand(path, node, &mut events),
@@ -112,16 +102,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
 
                 let (_, ref attrs) = node.value;
 
-                // Create string representation of path (e.g. 0.0.1.3)
-                let id = if path.is_empty() {
-                    String::new()
-                } else if path.len() == 1 {
-                    path[0].to_string()
-                } else {
-                    (&path[1..]).iter().fold(path[0].to_string(), |id, n| {
-                        id + &format!(".{}", n)
-                    })
-                };
+                let id = path.to_string();
 
                 for attr in attrs {
                     match attr {
@@ -132,6 +113,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
                     }
                 }
             }
+
             _ => unimplemented!(),
         }
     }
@@ -140,7 +122,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
 }
 
 fn find<'s, S>(path: &[usize], nodes: &'s [dom::Object<S>]) -> Option<&'s dom::Object<S>> {
-    if path.is_empty() {
+    if path.len() == 0 {
         None
     } else if path.len() == 1 {
         Some(&nodes[path[0]])
@@ -180,7 +162,7 @@ where
         .expect("failed to execute process");
 
     // Create changeset: Create @ 'root'
-    let patch = vec![(vec![0], tree::Operation::Create)];
+    let patch = vec![(tree::Path::new(), tree::Operation::Create)];
 
     let events = convert(&dom, patch);
 
@@ -198,7 +180,7 @@ where
         let mut split = line.split(".");
         let command = split.next().unwrap();
 
-        let path: Vec<usize> = split.map(|s| s.parse().unwrap()).collect();
+        let path = tree::Path::from_vec(split.map(|s| s.parse().unwrap()).collect());
 
         // println!("from renderer: {:?} :: {:?}", command, path);
 
@@ -207,7 +189,7 @@ where
                 // TODO: move 'find' logic into tree/dom module
 
                 let nodes = &[dom.clone()];
-                let node = find(&path, nodes);
+                let node = find(path.raw(), nodes);
                 // println!("{:?}", node);
 
                 let node = match node {
