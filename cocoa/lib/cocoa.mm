@@ -88,7 +88,6 @@ extern "C" void run() {
         [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
         std::thread([&] {
-
             std::unordered_map<std::string, NSView *> widgets;
 
             std::string line;
@@ -97,16 +96,22 @@ extern "C" void run() {
 
                 auto event = json::parse(line.c_str());
 
-                // std::cerr << "received: " << event["Create"][0] << std::endl;
-
                 if (event.count("Create")) {
-                    auto ident = event["Create"][0];
-                    auto widget = event["Create"][1];
+                    // std::cerr << "received: " << event["Create"] << std::endl;
+
+                    auto &create = event["Create"];
+                    auto ident = create["id"];
+                    auto widget = create["kind"];
+                    std::string text = create["text"];
 
                     if (widget == "Button") {
-                        auto frame = NSMakeRect(0, 0, 100, 100);
+                        static auto frame = NSMakeRect(0, 0, 100, 100);
+                        frame.origin.x += 100; // HACK: avoid overlapping position
+
                         auto button = [[NSButton alloc] initWithFrame:frame];
                         button.bezelStyle = NSRoundedBezelStyle;
+
+                        button.title = [NSString stringWithUTF8String:text.c_str()];
 
                         auto action = [[Action alloc] initWithID:ident];
                         [button setAction:@selector(click:)];
@@ -119,7 +124,7 @@ extern "C" void run() {
                         auto frame = NSMakeRect(100, 100, 100, 100);
                         auto label = [[NSTextField alloc] initWithFrame:frame];
 
-                        [label setStringValue:@"***"];
+                        [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
 
                         [label setBezeled:NO];
                         [label setDrawsBackground:NO];

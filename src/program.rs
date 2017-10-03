@@ -21,8 +21,16 @@ type Identifier = String;
 
 #[derive(Serialize, Deserialize, Debug)]
 enum Event {
-    Create(Identifier, String), // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
+    // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
+    // TODO: `text` should really be generic list of 'attributes'
+    Create {
+        id: Identifier,
+        kind: String,
+        text: String,
+    },
+
     Update(Identifier, String, String), // ID -> Attribute
+
     Remove(Identifier), // ID
 }
 
@@ -33,7 +41,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     fn expand<S>(path: tree::Path, node: &dom::Object<S>, events: &mut Vec<Event>) {
         // TODO: use breadth-first traversal here (using queue) - use path!
 
-        let (ref kind, _) = node.value;
+        let (ref kind, ref attrs) = node.value;
 
         // TODO: this code is duplicated below (DRY)
         // Create string representation of path (e.g. 0.0.1.3)
@@ -47,10 +55,40 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             })
         };
 
+        // Get 'text' attribute in `attrs`
+        let mut text = None;
+        for attr in attrs {
+            match attr {
+                &dom::Attribute::Text(ref t) => {
+                    text = Some(t.clone());
+                    break;
+                }
+                _ => {}
+            }
+        }
+
         match kind {
-            &dom::Kind::Label => events.push(Event::Create(id, "Label".into())),
-            &dom::Kind::Button => events.push(Event::Create(id, "Button".into())),
-            &dom::Kind::Field => events.push(Event::Create(id, "Field".into())),
+            &dom::Kind::Label => {
+                events.push(Event::Create {
+                    id,
+                    kind: "Label".into(),
+                    text: text.unwrap(),
+                })
+            }
+            &dom::Kind::Button => {
+                events.push(Event::Create {
+                    id,
+                    kind: "Button".into(),
+                    text: text.unwrap(),
+                })
+            }
+            &dom::Kind::Field => {
+                events.push(Event::Create {
+                    id,
+                    kind: "Field".into(),
+                    text: "".into(),
+                })
+            }
             _ => {}
         }
 
