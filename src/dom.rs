@@ -20,16 +20,11 @@ pub enum Widget<S> {
     Field,
 }
 
-// pub type Value<S> = (Kind, Attributes<S>);
 pub type Attributes<S> = Vec<Attribute<S>>;
 
 #[derive(Clone, Debug)]
 pub struct Object<S> {
-    pub kind: Kind,
-    pub attributes: Attributes<S>,
-
     pub widget: Widget<S>,
-
     pub children: Vec<Object<S>>,
 }
 
@@ -86,58 +81,32 @@ impl<S> Object<S> {
         }
         self
     }
-
-    pub fn placeholder(mut self, text: String) -> Self {
-        self.attributes.push(Attribute::Placeholder(text));
-        self
-    }
-
-    pub fn change(mut self, messenger: fn(String) -> S) -> Self {
-        self.attributes.push(Attribute::Change(messenger));
-        self
-    }
 }
 
 pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
     Object {
-        kind: Kind::Stack,
-        attributes: vec![],
-
         widget: Widget::Stack,
-
         children: objects,
     }
 }
 
 pub fn label<S>(text: String) -> Object<S> {
     Object {
-        kind: Kind::Label,
-        attributes: vec![],
-
         widget: Widget::Label(Label { text }),
-
         children: vec![],
     }
 }
 
 pub fn button<S>(text: String) -> Object<S> {
     Object {
-        kind: Kind::Button,
-        attributes: vec![],
-
         widget: Widget::Button(Button { text, click: None }),
-
         children: vec![],
     }
 }
 
 pub fn field<S>() -> Object<S> {
     Object {
-        kind: Kind::Field,
-        attributes: vec![],
-
         widget: Widget::Field,
-
         children: vec![],
     }
 }

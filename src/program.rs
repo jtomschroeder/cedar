@@ -88,15 +88,6 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             tree::Operation::Create => expand(path, node, &mut events),
             tree::Operation::Update => {
                 let id = path.to_string();
-                // for attr in &node.attributes {
-                //     match attr {
-                //         &dom::Attribute::Text(ref txt) => {
-                //             events.push(Event::Update(id.clone(), "Text".into(), txt.clone()))
-                //         }
-                //         _ => {}
-                //     }
-                // }
-
                 match node.widget {
                     dom::Widget::Label(ref label) => {
                         events.push(Event::Update(id, "Text".into(), label.text.clone()))
@@ -163,18 +154,16 @@ where
         writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
     }
 
+    /// Receive messages from 'renderer' process (via stdout)
+
     let stdout = BufReader::new(output.stdout.unwrap());
     for line in stdout.lines() {
-        // println!("from renderer: {:?}", line);
+        // TODO: define/implement this API using JSON
 
         let line = line.unwrap();
-
         let mut split = line.split(".");
         let command = split.next().unwrap();
-
         let path = tree::Path::from_vec(split.map(|s| s.parse().unwrap()).collect());
-
-        // println!("from renderer: {:?} :: {:?}", command, path);
 
         let message = match command {
             "click" => {
@@ -195,23 +184,16 @@ where
             _ => continue,
         };
 
-        // println!("message: {:?}", message);
-
         model = update(model, message);
 
         let old = dom;
         dom = view(&model);
 
-        // println!("node: {:?}", new);
-
         let changeset = dom::diff(&old, &dom);
-        // println!("changeset: {:?}", changeset);
 
         let events = convert(&dom, changeset);
 
-        // let mut stdin = output.stdin.unwrap();
         for event in events.into_iter() {
-            // println!("event: {:?}", event);
             writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
         }
     }
