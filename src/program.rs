@@ -41,13 +41,11 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     fn expand<S>(path: tree::Path, node: &dom::Object<S>, events: &mut Vec<Event>) {
         // TODO: use breadth-first traversal here (using queue) - use path!
 
-        let (ref kind, ref attrs) = node.value;
-
         let id = path.to_string();
 
         // Get 'text' attribute in `attrs`
         let mut text = None;
-        for attr in attrs {
+        for attr in &node.attributes {
             match attr {
                 &dom::Attribute::Text(ref t) => {
                     text = Some(t.clone());
@@ -57,22 +55,24 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
             }
         }
 
-        match kind {
-            &dom::Kind::Label => {
+        match node.kind {
+            dom::Kind::Label => {
                 events.push(Event::Create {
                     id,
                     kind: "Label".into(),
                     text: text.unwrap(),
                 })
             }
-            &dom::Kind::Button => {
+
+            dom::Kind::Button => {
                 events.push(Event::Create {
                     id,
                     kind: "Button".into(),
                     text: text.unwrap(),
                 })
             }
-            &dom::Kind::Field => {
+
+            dom::Kind::Field => {
                 events.push(Event::Create {
                     id,
                     kind: "Field".into(),
@@ -98,12 +98,8 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
         match op {
             tree::Operation::Create => expand(path, node, &mut events),
             tree::Operation::Update => {
-
-                let (_, ref attrs) = node.value;
-
                 let id = path.to_string();
-
-                for attr in attrs {
+                for attr in &node.attributes {
                     match attr {
                         &dom::Attribute::Text(ref txt) => {
                             events.push(Event::Update(id.clone(), "Text".into(), txt.clone()))
@@ -200,8 +196,7 @@ where
                 // - possibly make attributes members of struct instead of vector?
 
                 let mut message = None;
-                let (_, ref attrs) = node.value;
-                for attr in attrs {
+                for attr in &node.attributes {
                     match attr {
                         &dom::Attribute::Click(ref e) => {
                             message = Some(e.clone());
