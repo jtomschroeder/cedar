@@ -31,7 +31,10 @@ pub enum Difference {
     Value,
 }
 
-pub fn diff<V: Vertex>(old: &V, new: &V) -> Changeset {
+pub fn diff<V>(old: &V, new: &V) -> Changeset
+where
+    V: Vertex,
+{
     use self::Operation::*;
 
     // -      if `old` doesn't exist: CREATE new

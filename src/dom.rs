@@ -32,7 +32,10 @@ pub struct Object<S> {
     pub children: Vec<Object<S>>,
 }
 
-impl<T: PartialEq> tree::Vertex for Object<T> {
+impl<T> tree::Vertex for Object<T>
+where
+    T: PartialEq,
+{
     fn children(&self) -> &[Self] {
         &self.children
     }
@@ -54,7 +57,10 @@ impl<T: PartialEq> tree::Vertex for Object<T> {
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
 
-pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
+pub fn diff<S>(old: &Object<S>, new: &Object<S>) -> Changeset
+where
+    S: PartialEq,
+{
     tree::diff(old, new)
 }
 

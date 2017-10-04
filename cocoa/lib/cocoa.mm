@@ -15,7 +15,7 @@ using json = nlohmann::json;
 
 @implementation WindowDelegate
 
-- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)size {
+- (NSSize)windowWillResize:(NSWindow *)__unused sender toSize:(NSSize)size {
     printf("Resized Window!: %f %f\n", size.width, size.height);
     fflush(stdout);
 
@@ -38,7 +38,7 @@ using json = nlohmann::json;
     return self;
 }
 
-- (void)click:(id)sender {
+- (void)click:(id)__unused sender {
     // TODO: formalize as JSON
     std::cout << "click." << self->identifier << std::endl;
 }
@@ -68,8 +68,14 @@ extern "C" void run() {
         }
 
         auto frame = NSMakeRect(0, 0, 500, 500);
+
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12)
+        auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
+                         NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
+#else
         auto styleMask = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
                          NSClosableWindowMask;
+#endif
 
         auto window = [[NSWindow alloc] initWithContentRect:frame
                                                   styleMask:styleMask
@@ -146,8 +152,8 @@ extern "C" void run() {
                     std::string value = update[2];
 
                     if (attribute == "Text") {
-                        auto widget = widgets[ident];
-                        [widget setStringValue:[NSString stringWithUTF8String:value.c_str()]];
+                        auto field = (NSTextField *)(widgets[ident]);
+                        [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                     }
                 }
             }
