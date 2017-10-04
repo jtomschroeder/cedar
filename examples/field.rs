@@ -21,7 +21,7 @@ fn view(model: &Model) -> dom::Object<Message> {
         dom::field()
             .placeholder("Text to reverse!".into())
             .change(Message::NewContent),
-        dom::label().text(model.chars().rev().collect()),
+        dom::label(model.chars().rev().collect()),
     ])
 }
 

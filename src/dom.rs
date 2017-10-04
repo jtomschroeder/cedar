@@ -13,14 +13,18 @@ pub struct Label {
 }
 
 #[derive(PartialEq, Clone, Debug)]
+pub struct Field<S> {
+    pub placeholder: Option<String>,
+    pub change: Option<fn(String) -> S>,
+}
+
+#[derive(PartialEq, Clone, Debug)]
 pub enum Widget<S> {
     Stack,
     Button(Button<S>),
     Label(Label),
-    Field,
+    Field(Field<S>),
 }
-
-pub type Attributes<S> = Vec<Attribute<S>>;
 
 #[derive(Clone, Debug)]
 pub struct Object<S> {
@@ -47,22 +51,6 @@ impl<T: PartialEq> tree::Vertex for Object<T> {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
-pub enum Kind {
-    Stack,
-    Button,
-    Label,
-    Field,
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum Attribute<S> {
-    Text(String),
-    Click(S),
-    Placeholder(String),
-    Change(fn(String) -> S),
-}
-
 pub type Change = tree::Change;
 pub type Changeset = tree::Changeset;
 
@@ -73,11 +61,22 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
 /// 'Builder' methods for Object
 impl<S> Object<S> {
     pub fn click(mut self, action: S) -> Self {
-        match self.widget {
-            Widget::Button(ref mut button) => {
-                button.click = Some(action);
-            }
-            _ => {}
+        if let Widget::Button(ref mut button) = self.widget {
+            button.click = Some(action);
+        }
+        self
+    }
+
+    pub fn placeholder(mut self, text: String) -> Self {
+        if let Widget::Field(ref mut field) = self.widget {
+            field.placeholder = Some(text);
+        }
+        self
+    }
+
+    pub fn change(mut self, change: fn(String) -> S) -> Self {
+        if let Widget::Field(ref mut field) = self.widget {
+            field.change = Some(change);
         }
         self
     }
@@ -106,7 +105,11 @@ pub fn button<S>(text: String) -> Object<S> {
 
 pub fn field<S>() -> Object<S> {
     Object {
-        widget: Widget::Field,
+        widget: Widget::Field(Field {
+            placeholder: None,
+            change: None,
+        }),
+
         children: vec![],
     }
 }

@@ -60,7 +60,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
                 })
             }
 
-            dom::Widget::Field => {
+            dom::Widget::Field(_) => {
                 events.push(Event::Create {
                     id,
                     kind: "Field".into(),
