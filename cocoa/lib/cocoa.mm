@@ -69,7 +69,7 @@ extern "C" void run() {
 
         auto frame = NSMakeRect(0, 0, 500, 500);
 
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12)
+#ifdef MAC_OS_X_VERSION_10_12 // macOS >= 10.12 (for WindowMask deprecation)
         auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
                          NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
 #else
