@@ -1,24 +1,24 @@
 
 use tree;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Button<S> {
     pub text: String,
     pub click: Option<S>,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Label {
     pub text: String,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Field<S> {
     pub placeholder: Option<String>,
     pub change: Option<fn(String) -> S>,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Widget<S> {
     Stack,
     Button(Button<S>),
@@ -26,7 +26,7 @@ pub enum Widget<S> {
     Field(Field<S>),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Object<S> {
     pub widget: Widget<S>,
     pub children: Vec<Object<S>>,
