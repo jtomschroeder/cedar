@@ -2,7 +2,7 @@
 use std::str;
 use std::fmt::Debug;
 use std::process::{Command, Stdio};
-
+use std::collections::VecDeque;
 use std::io::BufReader;
 use std::io::prelude::*;
 
@@ -10,6 +10,7 @@ use serde_json as json;
 
 use dom;
 use tree;
+use tree::Vertex;
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -35,7 +36,7 @@ enum Event {
 }
 
 /// Convert 'changeset' to list of events to send to UI 'rendering' process
-fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
+fn convert<T: PartialEq + Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     let mut events = vec![];
 
     fn expand<S>(path: tree::Path, node: &dom::Object<S>, events: &mut Vec<Event>) {
@@ -80,8 +81,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     }
 
     for (path, op) in set.into_iter() {
-        let nodes = &[dom.clone()];
-        let node = find(path.raw(), nodes).expect("path in nodes");
+        let node = dom.find(&path).expect("path in nodes");
 
         match op {
             tree::Operation::Create => expand(path, node, &mut events),
@@ -101,22 +101,6 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     }
 
     events
-}
-
-fn find<'s, S>(path: &[usize], nodes: &'s [dom::Object<S>]) -> Option<&'s dom::Object<S>> {
-    if path.len() == 0 {
-        None
-    } else if path.len() == 1 {
-        Some(&nodes[path[0]])
-    } else {
-        for node in nodes {
-            let obj = find(&path[1..], &node.children);
-            if obj.is_some() {
-                return obj;
-            }
-        }
-        None
-    }
 }
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
@@ -168,8 +152,7 @@ where
             "click" => {
                 // TODO: move 'find' logic into tree/dom module
 
-                let nodes = &[dom.clone()];
-                find(path.raw(), nodes).and_then(|node| match node.widget {
+                dom.find(&path).and_then(|node| match node.widget {
                     dom::Widget::Button(ref button) => button.click.clone(),
                     _ => None,
                 })
@@ -197,10 +180,32 @@ where
         // TODO: generate layout for `dom`
         // TODO: pass `layout` to `convert` to be associated with events (to renderer)
 
+        {
+            let mut queue = VecDeque::new();
+            queue.push_back((0, &dom));
+
+            while let Some((level, node)) = queue.pop_front() {
+                println!("node[{}]: {:?}", level, node);
+
+                for child in &node.children {
+                    queue.push_back((level + 1, child));
+                }
+            }
+        }
+
+
         let events = convert(&dom, changeset);
 
         for event in events.into_iter() {
             writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
         }
+    }
+}
+
+mod yoga {
+    use layout::yoga::*;
+
+    struct Node {
+        node: YGNode,
     }
 }

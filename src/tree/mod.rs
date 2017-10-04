@@ -13,6 +13,34 @@ pub trait Vertex {
         Self: Sized;
 
     fn compare(&self, other: &Self) -> Option<Difference>;
+
+    fn find(&self, path: &Path) -> Option<&Self>
+    where
+        Self: Sized,
+    {
+        let path = path.raw();
+
+        let mut queue = VecDeque::new();
+        queue.push_back((path, 0, self));
+
+        while let Some((path, i, node)) = queue.pop_front() {
+            match path.len() {
+                0 => {}
+
+                1 if i == path[0] => return Some(node),
+
+                _ if i == path[0] => {
+                    for (n, child) in node.children().iter().enumerate() {
+                        queue.push_back((&path[1..], n, child));
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Debug)]
