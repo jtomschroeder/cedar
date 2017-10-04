@@ -183,12 +183,19 @@ where
             _ => continue,
         };
 
+        // TODO: some events from renderer (e.g. window resize) will not generate 'message' to `update`
+        //   but will (potentially) require re-layout
+        // - no `update` means call to `view` i.e. no new `dom`
+
         model = update(model, message);
 
         let old = dom;
         dom = view(&model);
 
         let changeset = dom::diff(&old, &dom);
+
+        // TODO: generate layout for `dom`
+        // TODO: pass `layout` to `convert` to be associated with events (to renderer)
 
         let events = convert(&dom, changeset);
 
