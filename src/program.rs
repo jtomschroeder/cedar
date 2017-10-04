@@ -180,22 +180,6 @@ where
         // TODO: generate layout for `dom`
         // TODO: pass `layout` to `convert` to be associated with events (to renderer)
 
-        // {
-        //     let mut root = yoga::Node::new();
-
-        //     let mut queue = VecDeque::new();
-        //     queue.push_back((0, &dom));
-
-        //     while let Some((level, node)) = queue.pop_front() {
-
-        //         for child in node.children.iter() {
-        //             queue.push_back((level + 1, child));
-        //         }
-
-        //         println!("node[{}]: {:?}", level, node);
-        //     }
-        // }
-
         let root = layout(&dom);
         root.calculuate();
 
@@ -210,10 +194,8 @@ where
 fn layout<V: Vertex>(tree: &V) -> yoga::Node {
     let mut root = yoga::Node::new();
 
-    // let children: Vec<yoga::Node> = tree.children().iter().map(layout).collect();
-
-    for node in tree.children().iter().map(layout) {
-        root.insert(node, 0);
+    for (n, node) in tree.children().iter().map(layout).enumerate() {
+        root.insert(node, n as u32);
     }
 
     root
@@ -241,12 +223,12 @@ mod yoga {
                 YGNodeStyleSetFlexGrow(child.node, 1.);
                 YGNodeInsertChild(self.node, child.node, index);
             }
+
+            // TODO: use `index` here?
             self.children.push(child);
         }
 
         pub fn calculuate(&self) {
-            // YGNodeCalculateLayout
-
             unsafe {
                 let node = self.node;
                 YGNodeCalculateLayout(node, 500., 400., YGDirection::YGDirectionInherit);
@@ -272,10 +254,3 @@ mod yoga {
         }
     }
 }
-
-// #[derive(Debug)]
-// pub struct Layout<'l, S> {
-//     pub layout: &'l yoga::Node,
-//     pub widget: dom::Widget<S>,
-//     pub children: Vec<Layout<S>>,
-// }

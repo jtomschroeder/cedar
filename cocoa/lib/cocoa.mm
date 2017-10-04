@@ -16,9 +16,7 @@ using json = nlohmann::json;
 @implementation WindowDelegate
 
 - (NSSize)windowWillResize:(NSWindow *)__unused sender toSize:(NSSize)size {
-    printf("Resized Window!: %f %f\n", size.width, size.height);
-    fflush(stdout);
-
+    std::cerr << "Resized Window!: " << size.width << " " << size.height << std::endl;
     return size;
 }
 
