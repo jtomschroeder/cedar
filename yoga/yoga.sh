@@ -11,4 +11,4 @@ cp -af yoga-1.6.0/yoga ../.
 cd ..
 rm -rf yoga-tmp
 
-bindgen --whitelist-function "^YG.*" yoga/YGNodeList.h -o src/yoga.rs
+bindgen --whitelist-function "^YG.*" yoga/YGNodeList.h -o src/sys.rs

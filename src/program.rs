@@ -2,15 +2,14 @@
 use std::str;
 use std::fmt::Debug;
 use std::process::{Command, Stdio};
-use std::collections::VecDeque;
 use std::io::BufReader;
 use std::io::prelude::*;
 
 use serde_json as json;
 
+use yoga;
 use dom;
 use tree;
-use layout;
 
 use tree::Vertex;
 
@@ -169,7 +168,7 @@ where
         };
 
         // TODO: some events from renderer (e.g. window resize) will not generate 'message' to `update`
-        //   but will (potentially) require re-layout
+        //   but will (potentially) require re-yoga
         // - no `update` means call to `view` i.e. no new `dom`
 
         model = update(model, message);
@@ -179,10 +178,10 @@ where
 
         let changeset = dom::diff(&old, &dom);
 
-        // TODO: generate layout for `dom`
-        // TODO: pass `layout` to `convert` to be associated with events (to renderer)
+        // TODO: generate yoga for `dom`
+        // TODO: pass `yoga` to `convert` to be associated with events (to renderer)
 
-        let root = layout(&dom);
+        let root = yoga(&dom);
         root.calculuate();
 
         let events = convert(&dom, changeset);
@@ -193,10 +192,10 @@ where
     }
 }
 
-fn layout<V: Vertex>(tree: &V) -> layout::Node {
-    let mut root = layout::Node::new();
+fn yoga<V: Vertex>(tree: &V) -> yoga::Node {
+    let mut root = yoga::Node::new();
 
-    for (n, node) in tree.children().iter().map(layout).enumerate() {
+    for (n, node) in tree.children().iter().map(yoga).enumerate() {
         root.insert(node, n as u32);
     }
 
