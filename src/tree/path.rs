@@ -1,6 +1,8 @@
 
 use std::fmt;
 
+// TODO: PathRef (&[usize])
+
 #[derive(Clone, Debug)]
 pub struct Path {
     path: Vec<usize>,

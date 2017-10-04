@@ -88,10 +88,10 @@ impl<S> Object<S> {
     }
 }
 
-pub fn stack<S>(objects: Vec<Object<S>>) -> Object<S> {
+pub fn stack<S>(children: Vec<Object<S>>) -> Object<S> {
     Object {
         widget: Widget::Stack,
-        children: objects,
+        children,
     }
 }
 
