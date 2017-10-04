@@ -109,24 +109,20 @@ where
     S: Clone + Send + 'static + PartialEq + Debug,
     M: Send + 'static + Debug,
 {
-    let mut dom = view(&model);
-
-    // let tree = tree::Tree { children: vec![dom] };
-
-    // println!("model: {:?}", model);
-    // println!("view: {:?}", dom);
-
     // TODO: use `spawn` and listen to stdin/stdout
     // - implement 'quit' event (or just exit when process terminates)
 
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
 
+    // start 'renderer' subprocess
     let output = Command::new("./cocoa/target/release/cocoa")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
         .expect("failed to execute process");
+
+    let mut dom = view(&model);
 
     // Create changeset: Create @ 'root'
     let patch = vec![(tree::Path::new(), tree::Operation::Create)];
@@ -194,6 +190,8 @@ where
 
 fn yoga<V: Vertex>(tree: &V) -> yoga::Node {
     let mut root = yoga::Node::new();
+
+    // Traverse children, building nodes 'bottom-up'
 
     for (n, node) in tree.children().iter().map(yoga).enumerate() {
         root.insert(node, n as u32);
