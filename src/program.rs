@@ -10,6 +10,8 @@ use serde_json as json;
 
 use dom;
 use tree;
+use layout;
+
 use tree::Vertex;
 
 pub type Update<M, S> = fn(M, S) -> M;
@@ -191,66 +193,12 @@ where
     }
 }
 
-fn layout<V: Vertex>(tree: &V) -> yoga::Node {
-    let mut root = yoga::Node::new();
+fn layout<V: Vertex>(tree: &V) -> layout::Node {
+    let mut root = layout::Node::new();
 
     for (n, node) in tree.children().iter().map(layout).enumerate() {
         root.insert(node, n as u32);
     }
 
     root
-}
-
-mod yoga {
-    use layout::yoga::*;
-
-    #[derive(Debug)]
-    pub struct Node {
-        node: YGNodeRef,
-        children: Vec<Node>,
-    }
-
-    impl Node {
-        pub fn new() -> Self {
-            Node {
-                node: unsafe { YGNodeNew() },
-                children: vec![],
-            }
-        }
-
-        pub fn insert(&mut self, child: Node, index: u32) {
-            unsafe {
-                YGNodeStyleSetFlexGrow(child.node, 1.);
-                YGNodeInsertChild(self.node, child.node, index);
-            }
-
-            // TODO: use `index` here?
-            self.children.push(child);
-        }
-
-        pub fn calculuate(&self) {
-            unsafe {
-                let node = self.node;
-                YGNodeCalculateLayout(node, 500., 400., YGDirection::YGDirectionInherit);
-
-                for child in &self.children {
-                    let node = child.node;
-                    println!("{}", YGNodeLayoutGetLeft(node));
-                    println!("{}", YGNodeLayoutGetTop(node));
-                    println!("{}", YGNodeLayoutGetRight(node));
-                    println!("{}", YGNodeLayoutGetBottom(node));
-                    println!("{}", YGNodeLayoutGetWidth(node));
-                    println!("{}", YGNodeLayoutGetHeight(node));
-
-                    println!("");
-                }
-            }
-        }
-    }
-
-    impl Drop for Node {
-        fn drop(&mut self) {
-            unsafe { YGNodeFree(self.node) }
-        }
-    }
 }
