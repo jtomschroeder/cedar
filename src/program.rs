@@ -80,9 +80,8 @@ fn convert<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     }
 
     for (path, op) in set.into_iter() {
-        let dom = dom.clone();
-        let nodes = vec![dom];
-        let node = find(path.raw(), &nodes).expect("path in nodes");
+        let nodes = &[dom.clone()];
+        let node = find(path.raw(), nodes).expect("path in nodes");
 
         match op {
             tree::Operation::Create => expand(path, node, &mut events),
