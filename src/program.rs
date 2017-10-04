@@ -147,8 +147,6 @@ where
 
         let message = match command {
             "click" => {
-                // TODO: move 'find' logic into tree/dom module
-
                 dom.find(&path).and_then(|node| match node.widget {
                     dom::Widget::Button(ref button) => button.click.clone(),
                     _ => None,
@@ -174,8 +172,8 @@ where
 
         let changeset = dom::diff(&old, &dom);
 
-        // TODO: generate yoga for `dom`
-        // TODO: pass `yoga` to `convert` to be associated with events (to renderer)
+        // TODO: generate layout for `dom`
+        // TODO: pass `layout` to `convert` to be associated with events (to renderer)
 
         let root = yoga(&dom);
         root.calculuate();
