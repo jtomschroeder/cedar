@@ -41,6 +41,28 @@ pub trait Vertex {
 
         None
     }
+
+    fn traverse<D>(&self, mut delegate: D)
+    where
+        Self: Sized,
+        D: FnMut(&Path, &Self),
+    {
+        let path = Path::new();
+
+        let mut queue = VecDeque::new();
+        queue.push_back((path, self));
+
+        while let Some((path, node)) = queue.pop_front() {
+            delegate(&path, node);
+
+            for (n, child) in node.children().iter().enumerate() {
+                let mut path = path.clone();
+                path.push(n);
+
+                queue.push_back((path, child));
+            }
+        }
+    }
 }
 
 #[derive(Debug)]

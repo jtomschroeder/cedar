@@ -4,6 +4,7 @@ use std::fmt::Debug;
 use std::process::{Command, Stdio};
 use std::io::BufReader;
 use std::io::prelude::*;
+use std::collections::VecDeque;
 
 use serde_json as json;
 
@@ -40,45 +41,38 @@ enum Event {
 fn convert<T: PartialEq + Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
     let mut events = vec![];
 
-    fn expand<S>(path: tree::Path, node: &dom::Object<S>, events: &mut Vec<Event>) {
-        // TODO: use breadth-first traversal here (using queue) - use path!
+    fn expand<S: PartialEq>(node: &dom::Object<S>, events: &mut Vec<Event>) {
+        node.traverse(|path, node| {
+            let id = path.to_string();
 
-        let id = path.to_string();
+            match node.widget {
+                dom::Widget::Label(ref label) => {
+                    events.push(Event::Create {
+                        id,
+                        kind: "Label".into(),
+                        text: label.text.clone(),
+                    })
+                }
 
-        match node.widget {
-            dom::Widget::Label(ref label) => {
-                events.push(Event::Create {
-                    id,
-                    kind: "Label".into(),
-                    text: label.text.clone(),
-                })
+                dom::Widget::Button(ref button) => {
+                    events.push(Event::Create {
+                        id,
+                        kind: "Button".into(),
+                        text: button.text.clone(),
+                    })
+                }
+
+                dom::Widget::Field(_) => {
+                    events.push(Event::Create {
+                        id,
+                        kind: "Field".into(),
+                        text: "".into(),
+                    })
+                }
+
+                _ => {}
             }
-
-            dom::Widget::Button(ref button) => {
-                events.push(Event::Create {
-                    id,
-                    kind: "Button".into(),
-                    text: button.text.clone(),
-                })
-            }
-
-            dom::Widget::Field(_) => {
-                events.push(Event::Create {
-                    id,
-                    kind: "Field".into(),
-                    text: "".into(),
-                })
-            }
-
-            _ => {}
-        }
-
-        for (n, child) in node.children.iter().enumerate() {
-            let mut path = path.clone();
-            path.push(n);
-
-            expand(path, child, events);
-        }
+        });
     }
 
     for (path, op) in set.into_iter() {
@@ -103,6 +97,8 @@ fn convert<T: PartialEq + Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> V
 
     events
 }
+
+// fn render() {}
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
