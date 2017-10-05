@@ -32,14 +32,16 @@ pub struct Object<S> {
     pub children: Vec<Object<S>>,
 }
 
-impl<T> tree::Vertex for Object<T>
-where
-    T: PartialEq,
-{
+impl<T> tree::Vertex for Object<T> {
     fn children(&self) -> &[Self] {
         &self.children
     }
+}
 
+impl<T> tree::Comparable for Object<T>
+where
+    T: PartialEq,
+{
     fn compare(&self, other: &Self) -> Option<tree::Difference> {
         if self.widget == other.widget {
             None

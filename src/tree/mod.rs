@@ -12,7 +12,7 @@ pub trait Vertex {
     where
         Self: Sized;
 
-    fn compare(&self, other: &Self) -> Option<Difference>;
+    // fn compare(&self, other: &Self) -> Option<Difference>;
 
     fn find(&self, path: &Path) -> Option<&Self>
     where
@@ -93,6 +93,10 @@ pub trait Vertex {
     }
 }
 
+pub trait Comparable {
+    fn compare(&self, other: &Self) -> Option<Difference>;
+}
+
 #[derive(Debug)]
 pub enum Operation {
     Create,
@@ -111,7 +115,7 @@ pub enum Difference {
 
 pub fn diff<V>(old: &V, new: &V) -> Changeset
 where
-    V: Vertex,
+    V: Vertex + Comparable,
 {
     use self::Operation::*;
 

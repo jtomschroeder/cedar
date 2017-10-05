@@ -107,12 +107,13 @@ extern "C" void run() {
                     auto ident = create["id"];
                     auto widget = create["kind"];
                     std::string text = create["text"];
+                    auto frame = create["frame"];
+
+                    // TODO: convert left-top to left-bottom coordinates!
+                    static auto rect = NSMakeRect(frame[0], frame[1], frame[2], frame[3]);
 
                     if (widget == "Button") {
-                        static auto frame = NSMakeRect(0, 0, 100, 100);
-                        frame.origin.x += 100; // HACK: avoid overlapping position
-
-                        auto button = [[NSButton alloc] initWithFrame:frame];
+                        auto button = [[NSButton alloc] initWithFrame:rect];
                         button.bezelStyle = NSRoundedBezelStyle;
 
                         button.title = [NSString stringWithUTF8String:text.c_str()];
@@ -125,8 +126,7 @@ extern "C" void run() {
 
                         [window.contentView addSubview:button];
                     } else if (widget == "Label") {
-                        auto frame = NSMakeRect(100, 100, 100, 100);
-                        auto label = [[NSTextField alloc] initWithFrame:frame];
+                        auto label = [[NSTextField alloc] initWithFrame:rect];
 
                         [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
 

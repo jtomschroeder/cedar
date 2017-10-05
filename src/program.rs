@@ -30,6 +30,7 @@ enum Event {
         id: Identifier,
         kind: String,
         text: String,
+        frame: (f32, f32, f32, f32), // (x, y, w, h)
     },
 
     Update(Identifier, String, String), // ID -> Attribute
@@ -38,14 +39,10 @@ enum Event {
 }
 
 /// Convert 'changeset' to list of events to send to UI 'rendering' process
-fn convert<T: PartialEq + Clone>(
-    dom: &dom::Object<T>,
-    layout: &yoga::Node,
-    set: dom::Changeset,
-) -> Vec<Event> {
+fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Changeset) -> Vec<Event> {
     let mut events = vec![];
 
-    fn expand<S: PartialEq>(
+    fn expand<S>(
         path: &tree::Path,
         node: &dom::Object<S>,
         layout: &yoga::Node,
@@ -58,12 +55,15 @@ fn convert<T: PartialEq + Clone>(
 
             println!("layout: {:?} :: {:?}", path, layout);
 
+            let frame = (layout.left(), layout.top(), layout.width(), layout.height());
+
             match node.widget {
                 dom::Widget::Label(ref label) => {
                     events.push(Event::Create {
                         id,
                         kind: "Label".into(),
                         text: label.text.clone(),
+                        frame,
                     })
                 }
 
@@ -72,6 +72,7 @@ fn convert<T: PartialEq + Clone>(
                         id,
                         kind: "Button".into(),
                         text: button.text.clone(),
+                        frame,
                     })
                 }
 
@@ -80,6 +81,7 @@ fn convert<T: PartialEq + Clone>(
                         id,
                         kind: "Field".into(),
                         text: "".into(),
+                        frame,
                     })
                 }
 
@@ -198,24 +200,25 @@ where
     }
 }
 
-fn yoga<V: Vertex>(tree: &V) -> yoga::Node {
-    let mut root = yoga::Node::new();
+fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {
+    let mut layout = yoga::Node::new();
+
+    match node.widget {
+        dom::Widget::Stack => layout.set_direction(),
+        _ => {}
+    }
 
     // Traverse children, building nodes 'bottom-up'
 
-    for (n, node) in tree.children().iter().map(yoga).enumerate() {
-        root.insert(node, n as u32);
+    for (n, node) in node.children().iter().map(yoga).enumerate() {
+        layout.insert(node, n as u32);
     }
 
-    root
+    layout
 }
 
 impl tree::Vertex for yoga::Node {
     fn children(&self) -> &[Self] {
         self.children()
-    }
-
-    fn compare(&self, other: &Self) -> Option<tree::Difference> {
-        None
     }
 }

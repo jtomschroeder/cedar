@@ -37,22 +37,30 @@ impl Node {
         }
     }
 
-    fn left(&self) -> f32 {
+    pub fn set_direction(&mut self) {
+        // TODO: should NOT be hardcoded!!
+        unsafe {
+            // YGFlexDirectionColumnReverse
+            sys::YGNodeStyleSetFlexDirection(self.node, sys::YGFlexDirection::YGFlexDirectionColumn)
+        };
+    }
+
+    pub fn left(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetLeft(self.node) }
     }
-    fn top(&self) -> f32 {
+    pub fn top(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetTop(self.node) }
     }
-    fn right(&self) -> f32 {
+    pub fn right(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetRight(self.node) }
     }
-    fn bottom(&self) -> f32 {
+    pub fn bottom(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetBottom(self.node) }
     }
-    fn width(&self) -> f32 {
+    pub fn width(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetWidth(self.node) }
     }
-    fn height(&self) -> f32 {
+    pub fn height(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetHeight(self.node) }
     }
 }
