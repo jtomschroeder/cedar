@@ -38,12 +38,25 @@ enum Event {
 }
 
 /// Convert 'changeset' to list of events to send to UI 'rendering' process
-fn convert<T: PartialEq + Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Event> {
+fn convert<T: PartialEq + Clone>(
+    dom: &dom::Object<T>,
+    layout: &yoga::Node,
+    set: dom::Changeset,
+) -> Vec<Event> {
     let mut events = vec![];
 
-    fn expand<S: PartialEq>(node: &dom::Object<S>, events: &mut Vec<Event>) {
-        node.traverse(|path, node| {
+    fn expand<S: PartialEq>(
+        path: &tree::Path,
+        node: &dom::Object<S>,
+        layout: &yoga::Node,
+        events: &mut Vec<Event>,
+    ) {
+        // TODO: handle create path issue (vertex traversal assumes from root)
+
+        node.merge(layout, |path, node, layout| {
             let id = path.to_string();
+
+            println!("layout: {:?} :: {:?}", path, layout);
 
             match node.widget {
                 dom::Widget::Label(ref label) => {
@@ -79,7 +92,7 @@ fn convert<T: PartialEq + Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> V
         let node = dom.find(&path).expect("path in nodes");
 
         match op {
-            tree::Operation::Create => expand(path, node, &mut events),
+            tree::Operation::Create => expand(&path, node, layout, &mut events),
             tree::Operation::Update => {
                 let id = path.to_string();
                 match node.widget {
@@ -120,10 +133,13 @@ where
 
     let mut dom = view(&model);
 
+    let layout = yoga(&dom);
+    layout.calculuate();
+
     // Create changeset: Create @ 'root'
     let patch = vec![(tree::Path::new(), tree::Operation::Create)];
 
-    let events = convert(&dom, patch);
+    let events = convert(&dom, &layout, patch);
 
     let mut stdin = output.stdin.unwrap();
     for event in events.into_iter() {
@@ -171,10 +187,10 @@ where
         // TODO: generate layout for `dom`
         // TODO: pass `layout` to `convert` to be associated with events (to renderer)
 
-        let root = yoga(&dom);
-        root.calculuate();
+        let layout = yoga(&dom);
+        layout.calculuate();
 
-        let events = convert(&dom, changeset);
+        let events = convert(&dom, &layout, changeset);
 
         for event in events.into_iter() {
             writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
@@ -192,4 +208,14 @@ fn yoga<V: Vertex>(tree: &V) -> yoga::Node {
     }
 
     root
+}
+
+impl tree::Vertex for yoga::Node {
+    fn children(&self) -> &[Self] {
+        self.children()
+    }
+
+    fn compare(&self, other: &Self) -> Option<tree::Difference> {
+        None
+    }
 }

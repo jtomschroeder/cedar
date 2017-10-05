@@ -63,6 +63,34 @@ pub trait Vertex {
             }
         }
     }
+
+    fn merge<V, D>(&self, other: &V, mut delegate: D)
+    where
+        Self: Sized,
+        V: Vertex,
+        D: FnMut(&Path, &Self, &V),
+    {
+        let path = Path::new();
+
+        let mut queue = VecDeque::new();
+        queue.push_back((path, self, other));
+
+        while let Some((path, node, other)) = queue.pop_front() {
+            delegate(&path, node, other);
+
+            for (n, (child, other)) in
+                node.children()
+                    .iter()
+                    .zip(other.children().iter())
+                    .enumerate()
+            {
+                let mut path = path.clone();
+                path.push(n);
+
+                queue.push_back((path, child, other));
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
