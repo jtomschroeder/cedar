@@ -171,7 +171,7 @@ where
         line.ok().and_then(|line| json::from_str(&line).ok())
     })
     {
-        // TODO: serialize ID and Path object to avoid parsing!
+        // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
         let message = match event {
@@ -227,13 +227,15 @@ where
 fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {
     let mut layout = yoga::Node::new();
 
+    // TODO: 'Flow' => Row
+    // TODO: set max/min height for Button, Label, Field
+
     match node.widget {
-        dom::Widget::Stack => layout.set_direction(),
+        dom::Widget::Stack => layout.set_direction(), // Column
         _ => {}
     }
 
     // Traverse children, building nodes 'bottom-up'
-
     for (n, node) in node.children().iter().map(yoga).enumerate() {
         layout.insert(node, n as u32);
     }
