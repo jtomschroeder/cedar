@@ -1,7 +1,7 @@
 
 use std::str;
 use std::fmt::Debug;
-use std::process::{Command, Stdio};
+use std::process::{self, Stdio};
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::collections::VecDeque;
@@ -23,7 +23,7 @@ pub type View<M, S> = fn(&M) -> dom::Object<S>;
 type Identifier = String;
 
 #[derive(Serialize, Deserialize, Debug)]
-enum Event {
+enum Command {
     // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
     // TODO: `text` should really be generic list of 'attributes'
     Create {
@@ -38,15 +38,25 @@ enum Event {
     Remove(Identifier), // ID
 }
 
-/// Convert 'changeset' to list of events to send to UI 'rendering' process
-fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Changeset) -> Vec<Event> {
-    let mut events = vec![];
+#[derive(Serialize, Deserialize, Debug)]
+enum Event {
+    Click { id: Identifier },
+    Change { id: Identifier, value: String },
+}
+
+/// Convert 'changeset' to list of commands to send to UI 'rendering' process
+fn convert<T: Clone>(
+    dom: &dom::Object<T>,
+    layout: &yoga::Node,
+    set: dom::Changeset,
+) -> Vec<Command> {
+    let mut commands = vec![];
 
     fn expand<S>(
         path: &tree::Path,
         node: &dom::Object<S>,
         layout: &yoga::Node,
-        events: &mut Vec<Event>,
+        commands: &mut Vec<Command>,
     ) {
         // TODO: handle create path issue (vertex traversal assumes from root)
 
@@ -59,7 +69,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Change
 
             match node.widget {
                 dom::Widget::Label(ref label) => {
-                    events.push(Event::Create {
+                    commands.push(Command::Create {
                         id,
                         kind: "Label".into(),
                         text: label.text.clone(),
@@ -68,7 +78,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Change
                 }
 
                 dom::Widget::Button(ref button) => {
-                    events.push(Event::Create {
+                    commands.push(Command::Create {
                         id,
                         kind: "Button".into(),
                         text: button.text.clone(),
@@ -77,7 +87,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Change
                 }
 
                 dom::Widget::Field(_) => {
-                    events.push(Event::Create {
+                    commands.push(Command::Create {
                         id,
                         kind: "Field".into(),
                         text: "".into(),
@@ -94,12 +104,12 @@ fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Change
         let node = dom.find(&path).expect("path in nodes");
 
         match op {
-            tree::Operation::Create => expand(&path, node, layout, &mut events),
+            tree::Operation::Create => expand(&path, node, layout, &mut commands),
             tree::Operation::Update => {
                 let id = path.to_string();
                 match node.widget {
                     dom::Widget::Label(ref label) => {
-                        events.push(Event::Update(id, "Text".into(), label.text.clone()))
+                        commands.push(Command::Update(id, "Text".into(), label.text.clone()))
                     }
 
                     _ => unimplemented!(),
@@ -110,7 +120,7 @@ fn convert<T: Clone>(dom: &dom::Object<T>, layout: &yoga::Node, set: dom::Change
         }
     }
 
-    events
+    commands
 }
 
 // fn render() {}
@@ -126,8 +136,13 @@ where
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
 
+    println!(
+        "{}",
+        json::to_string(&Event::Click { id: "".into() }).unwrap()
+    );
+
     // start 'renderer' subprocess
-    let output = Command::new("./cocoa/target/release/cocoa")
+    let output = process::Command::new("./cocoa/target/release/cocoa")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -141,35 +156,42 @@ where
     // Create changeset: Create @ 'root'
     let patch = vec![(tree::Path::new(), tree::Operation::Create)];
 
-    let events = convert(&dom, &layout, patch);
+    let commands = convert(&dom, &layout, patch);
 
     let mut stdin = output.stdin.unwrap();
-    for event in events.into_iter() {
+    for event in commands.into_iter() {
         writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
     }
 
     /// Receive messages from 'renderer' process (via stdout)
 
     let stdout = BufReader::new(output.stdout.unwrap());
-    for line in stdout.lines() {
-        // TODO: define/implement this API using JSON
+    for event in stdout.lines().filter_map(|line| {
+        // TODO: refactor this?
+        line.ok().and_then(|line| json::from_str(&line).ok())
+    })
+    {
+        // TODO: serialize ID and Path object to avoid parsing!
+        // - in both Command and Event
 
-        println!("received: {:?}", line);
-
-        let line = line.unwrap();
-        let mut split = line.split(".");
-        let command = split.next().unwrap();
-        let path = tree::Path::from_vec(split.map(|s| s.parse().unwrap()).collect());
-
-        let message = match command {
-            "click" => {
+        let message = match event {
+            Event::Click { id } => {
+                let path =
+                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
                 dom.find(&path).and_then(|node| match node.widget {
                     dom::Widget::Button(ref button) => button.click.clone(),
                     _ => None,
                 })
             }
 
-            _ => None,
+            Event::Change { id, value } => {
+                let path =
+                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
+                dom.find(&path).and_then(|node| match node.widget {
+                    dom::Widget::Field(ref field) => field.change.map(|c| c(value)),
+                    _ => None,
+                })
+            }
         };
 
         let message = match message {
@@ -177,7 +199,7 @@ where
             _ => continue,
         };
 
-        // TODO: some events from renderer (e.g. window resize) will not generate 'message' to `update`
+        // TODO: some commands from renderer (e.g. window resize) will not generate 'message' to `update`
         //   but will (potentially) require re-yoga
         // - no `update` means call to `view` i.e. no new `dom`
 
@@ -189,14 +211,14 @@ where
         let changeset = dom::diff(&old, &dom);
 
         // TODO: generate layout for `dom`
-        // TODO: pass `layout` to `convert` to be associated with events (to renderer)
+        // TODO: pass `layout` to `convert` to be associated with commands (to renderer)
 
         let layout = yoga(&dom);
         layout.calculuate();
 
-        let events = convert(&dom, &layout, changeset);
+        let commands = convert(&dom, &layout, changeset);
 
-        for event in events.into_iter() {
+        for event in commands.into_iter() {
             writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
         }
     }

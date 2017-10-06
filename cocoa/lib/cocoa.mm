@@ -16,8 +16,6 @@ using json = nlohmann::json;
 @implementation WindowDelegate
 
 - (NSSize)windowWillResize:(NSWindow *)window toSize:(NSSize)__unused size {
-    // std::cerr << "Resized Window!: " << size.width << " " << size.height << std::endl;
-
     const auto frame = window.contentView.frame;
     std::cerr << "Resized Window!: " << frame.size.width << " " << frame.size.height << std::endl;
 
@@ -41,8 +39,8 @@ using json = nlohmann::json;
 }
 
 - (void)click:(id)__unused sender {
-    // TODO: formalize as JSON
-    std::cout << "click." << self->identifier << std::endl;
+    auto event = json{{"Click", {{"id", self->identifier}}}};
+    std::cout << event << std::endl;
 }
 
 @end
@@ -72,9 +70,9 @@ using json = nlohmann::json;
 }
 
 - (void)controlTextDidChange:(NSNotification *)__unused notification {
-    std::cerr << "controlTextDidChange!" << std::endl;
-
-    // TODO: send JSON event!
+    auto value = [[self stringValue] UTF8String];
+    auto event = json{{"Change", {{"id", self->identifier}, {"value", value}}}};
+    std::cout << event << std::endl;
 }
 
 @end
