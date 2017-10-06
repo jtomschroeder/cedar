@@ -90,6 +90,25 @@ impl<S> Object<S> {
     }
 }
 
+// TODO: create macro language a la JSX in React for defining DOM
+
+// <stack>
+// <button></button>
+// <label></button>
+// <button></button>
+// </stack>
+
+// or a lisp?
+// (stack [(button), (label), (button)])
+
+// or a la elm?
+// view model =
+//   div []
+//     [ button [ onClick Decrement ] [ text "-" ]
+//     , div [] [ text (toString model) ]
+//     , button [ onClick Increment ] [ text "+" ]
+//     ]
+
 pub fn stack<S>(children: Vec<Object<S>>) -> Object<S> {
     Object {
         widget: Widget::Stack,

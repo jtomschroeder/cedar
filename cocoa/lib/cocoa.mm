@@ -96,24 +96,26 @@ extern "C" void run() {
 
             std::string line;
             while (std::getline(std::cin, line)) {
-                // std::cerr << "received: " << line << std::endl;
-
                 auto event = json::parse(line.c_str());
 
                 if (event.count("Create")) {
-                    // std::cerr << "received: " << event["Create"] << std::endl;
-
                     auto &create = event["Create"];
-                    auto ident = create["id"];
-                    auto widget = create["kind"];
+                    auto &ident = create["id"];
+                    auto &widget = create["kind"];
                     std::string text = create["text"];
-                    auto frame = create["frame"];
+                    auto &location = create["frame"];
 
-                    // TODO: convert left-top to left-bottom coordinates!
-                    static auto rect = NSMakeRect(frame[0], frame[1], frame[2], frame[3]);
+                    // Convert left-top to left-bottom coordinates
+                    const float left = location[0];
+                    const float top = location[1];
+                    const float width = location[2];
+                    const float height = location[3];
+                    const float bottom = window.frame.size.height - (top + height);
+
+                    const auto frame = NSMakeRect(left, bottom, width, height);
 
                     if (widget == "Button") {
-                        auto button = [[NSButton alloc] initWithFrame:rect];
+                        auto button = [[NSButton alloc] initWithFrame:frame];
                         button.bezelStyle = NSRoundedBezelStyle;
 
                         button.title = [NSString stringWithUTF8String:text.c_str()];
@@ -126,7 +128,7 @@ extern "C" void run() {
 
                         [window.contentView addSubview:button];
                     } else if (widget == "Label") {
-                        auto label = [[NSTextField alloc] initWithFrame:rect];
+                        auto label = [[NSTextField alloc] initWithFrame:frame];
 
                         [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
 
@@ -142,8 +144,6 @@ extern "C" void run() {
                         [window.contentView addSubview:label];
                     }
                 } else if (event.count("Update")) {
-                    // std::cerr << "received: " << event["Update"] << std::endl;
-
                     auto &update = event["Update"];
                     auto ident = update[0];
                     auto attribute = update[1];
