@@ -12,7 +12,15 @@ pub struct Node {
 impl Node {
     pub fn new() -> Self {
         Node {
-            node: unsafe { sys::YGNodeNew() },
+            node: unsafe {
+                let node = sys::YGNodeNew();
+
+                // TODO: remove these! (temporary for prototyping)
+                sys::YGNodeStyleSetFlexGrow(node, 1.);
+                sys::YGNodeStyleSetPadding(node, sys::YGEdge::YGEdgeAll, 20.);
+
+                node
+            },
             children: vec![],
         }
     }
@@ -22,10 +30,7 @@ impl Node {
     }
 
     pub fn insert(&mut self, child: Node, index: u32) {
-        unsafe {
-            sys::YGNodeStyleSetFlexGrow(child.node, 1.);
-            sys::YGNodeInsertChild(self.node, child.node, index);
-        }
+        unsafe { sys::YGNodeInsertChild(self.node, child.node, index) };
 
         // TODO: use `index` here?
         self.children.push(child);
@@ -33,7 +38,7 @@ impl Node {
 
     pub fn calculuate(&self) {
         unsafe {
-            sys::YGNodeCalculateLayout(self.node, 500., 400., sys::YGDirection::YGDirectionInherit);
+            sys::YGNodeCalculateLayout(self.node, 500., 500., sys::YGDirection::YGDirectionInherit);
         }
     }
 

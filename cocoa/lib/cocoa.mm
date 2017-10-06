@@ -15,8 +15,12 @@ using json = nlohmann::json;
 
 @implementation WindowDelegate
 
-- (NSSize)windowWillResize:(NSWindow *)__unused sender toSize:(NSSize)size {
-    std::cerr << "Resized Window!: " << size.width << " " << size.height << std::endl;
+- (NSSize)windowWillResize:(NSWindow *)window toSize:(NSSize)__unused size {
+    // std::cerr << "Resized Window!: " << size.width << " " << size.height << std::endl;
+
+    const auto frame = window.contentView.frame;
+    std::cerr << "Resized Window!: " << frame.size.width << " " << frame.size.height << std::endl;
+
     return size;
 }
 
@@ -43,120 +47,158 @@ using json = nlohmann::json;
 
 @end
 
+// TODO: create Label & Button classes
+// TODO: split into separate files
+
+@interface TextField : NSTextField <NSTextFieldDelegate> {
+    std::string identifier;
+}
+@end
+
+@implementation TextField
+
+- (id)initWithFrame:(NSRect)frame ID:(std::string)ident {
+    if (self = [super initWithFrame:frame]) {
+        self->identifier = ident;
+
+        [self setBezeled:YES];
+        [self setDrawsBackground:YES];
+        [self setEditable:YES];
+        [self setSelectable:YES];
+
+        [self setDelegate:self];
+    }
+    return self;
+}
+
+- (void)controlTextDidChange:(NSNotification *)__unused notification {
+    std::cerr << "controlTextDidChange!" << std::endl;
+
+    // TODO: send JSON event!
+}
+
+@end
+
 extern "C" void run() {
-    @autoreleasepool {
-        [NSApplication sharedApplication];
-        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
 
-        // build menu for window
-        {
-            auto menubar = [NSMenu new];
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-            auto app_menu_item = [NSMenuItem new];
-            [menubar addItem:app_menu_item];
+    // build menu for window
+    {
+        auto menubar = [NSMenu new];
 
-            [NSApp setMainMenu:menubar];
+        auto app_menu_item = [NSMenuItem new];
+        [menubar addItem:app_menu_item];
 
-            auto app_menu = [NSMenu new];
-            auto quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit"
-                                                        action:@selector(terminate:)
-                                                 keyEquivalent:@"q"];
-            [app_menu addItem:quit_item];
-            [app_menu_item setSubmenu:app_menu];
-        }
+        [NSApp setMainMenu:menubar];
 
-        auto frame = NSMakeRect(0, 0, 500, 500);
+        auto app_menu = [NSMenu new];
+        auto quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit"
+                                                    action:@selector(terminate:)
+                                             keyEquivalent:@"q"];
+        [app_menu addItem:quit_item];
+        [app_menu_item setSubmenu:app_menu];
+    }
+
+    auto frame = NSMakeRect(0, 0, 500, 500);
 
 #ifdef MAC_OS_X_VERSION_10_12 // macOS >= 10.12 (for WindowMask deprecation)
-        auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
-                         NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
+    auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
+                     NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable;
 #else
-        auto styleMask = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
-                         NSClosableWindowMask;
+    auto styleMask = NSResizableWindowMask | NSTitledWindowMask | NSMiniaturizableWindowMask |
+                     NSClosableWindowMask;
 #endif
 
-        auto window = [[NSWindow alloc] initWithContentRect:frame
-                                                  styleMask:styleMask
-                                                    backing:NSBackingStoreBuffered
-                                                      defer:NO];
+    auto window = [[NSWindow alloc] initWithContentRect:frame
+                                              styleMask:styleMask
+                                                backing:NSBackingStoreBuffered
+                                                  defer:NO];
 
-        window.delegate = [[WindowDelegate alloc] init];
+    [window setDelegate:[[WindowDelegate alloc] init]];
 
-        [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
-        [window center];
-        [window setTitle:@"** cedar **"];
-        [window makeKeyAndOrderFront:nil];
+    [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
+    [window center];
+    [window setTitle:@"** cedar **"];
+    [window makeKeyAndOrderFront:nil];
 
-        // Bring window to front
-        auto app = [NSRunningApplication currentApplication];
-        [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+    // Bring window to front
+    auto app = [NSRunningApplication currentApplication];
+    [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-        std::thread([&] {
-            std::unordered_map<std::string, NSView *> widgets;
+    std::thread([&] {
+        std::unordered_map<std::string, NSView *> widgets;
 
-            std::string line;
-            while (std::getline(std::cin, line)) {
-                auto event = json::parse(line.c_str());
+        std::string line;
+        while (std::getline(std::cin, line)) {
+            auto event = json::parse(line);
 
-                if (event.count("Create")) {
-                    auto &create = event["Create"];
-                    auto &ident = create["id"];
-                    auto &widget = create["kind"];
-                    std::string text = create["text"];
-                    auto &location = create["frame"];
+            if (event.count("Create")) {
+                auto &create = event["Create"];
+                auto &ident = create["id"];
+                auto &widget = create["kind"];
+                std::string text = create["text"];
+                auto &location = create["frame"];
 
-                    // Convert left-top to left-bottom coordinates
-                    const float left = location[0];
-                    const float top = location[1];
-                    const float width = location[2];
-                    const float height = location[3];
-                    const float bottom = window.frame.size.height - (top + height);
+                // Convert left-top to left-bottom coordinates
+                const float left = location[0];
+                const float top = location[1];
+                const float width = location[2];
+                const float height = location[3];
+                const float bottom = window.contentView.frame.size.height - (top + height);
 
-                    const auto frame = NSMakeRect(left, bottom, width, height);
+                const auto frame = NSMakeRect(left, bottom, width, height);
 
-                    if (widget == "Button") {
-                        auto button = [[NSButton alloc] initWithFrame:frame];
-                        button.bezelStyle = NSRoundedBezelStyle;
+                if (widget == "Button") {
+                    auto button = [[NSButton alloc] initWithFrame:frame];
+                    button.bezelStyle = NSRoundedBezelStyle;
 
-                        button.title = [NSString stringWithUTF8String:text.c_str()];
+                    button.title = [NSString stringWithUTF8String:text.c_str()];
 
-                        auto action = [[Action alloc] initWithID:ident];
-                        [button setAction:@selector(click:)];
-                        [button setTarget:action];
+                    auto action = [[Action alloc] initWithID:ident];
+                    [button setAction:@selector(click:)];
+                    [button setTarget:action];
 
-                        widgets[ident] = button;
+                    widgets[ident] = button;
+                    [window.contentView addSubview:button];
+                } else if (widget == "Label") {
+                    auto label = [[NSTextField alloc] initWithFrame:frame];
 
-                        [window.contentView addSubview:button];
-                    } else if (widget == "Label") {
-                        auto label = [[NSTextField alloc] initWithFrame:frame];
+                    [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
 
-                        [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
+                    [label setBezeled:NO];
+                    [label setDrawsBackground:NO];
+                    [label setEditable:NO];
+                    [label setSelectable:NO];
 
-                        [label setBezeled:NO];
-                        [label setDrawsBackground:NO];
-                        [label setEditable:NO];
-                        [label setSelectable:NO];
+                    [label setAlignment:NSTextAlignmentCenter];
 
-                        [label setAlignment:NSTextAlignmentCenter];
+                    widgets[ident] = label;
+                    [window.contentView addSubview:label];
+                } else if (widget == "Field") {
+                    auto field = [[TextField alloc] initWithFrame:frame ID:ident];
 
-                        widgets[ident] = label;
+                    widgets[ident] = field;
+                    [window.contentView addSubview:field];
+                } else {
+                    std::cerr << "Unknown widget: " << widget << std::endl;
+                }
 
-                        [window.contentView addSubview:label];
-                    }
-                } else if (event.count("Update")) {
-                    auto &update = event["Update"];
-                    auto ident = update[0];
-                    auto attribute = update[1];
-                    std::string value = update[2];
+            } else if (event.count("Update")) {
+                auto &update = event["Update"];
+                auto ident = update[0];
+                auto attribute = update[1];
+                std::string value = update[2];
 
-                    if (attribute == "Text") {
-                        auto field = (NSTextField *)(widgets[ident]);
-                        [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
-                    }
+                if (attribute == "Text") {
+                    auto field = (NSTextField *)(widgets[ident]);
+                    [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                 }
             }
-        }).detach();
+        }
+    }).detach();
 
-        [NSApp run];
-    }
+    [NSApp run];
 }

@@ -154,6 +154,8 @@ where
     for line in stdout.lines() {
         // TODO: define/implement this API using JSON
 
+        println!("received: {:?}", line);
+
         let line = line.unwrap();
         let mut split = line.split(".");
         let command = split.next().unwrap();

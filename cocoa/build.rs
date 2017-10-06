@@ -1,8 +1,8 @@
 
-extern crate gcc;
+extern crate cc;
 
 fn main() {
-    gcc::Build::new()
+    cc::Build::new()
         .cpp(true)
         .flag("-std=c++14")
         .file("lib/cocoa.mm")

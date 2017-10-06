@@ -14,3 +14,7 @@ mod program;
 
 pub mod dom;
 pub use program::program;
+
+// TODO: handle window 'resize' event
+// TODO: implement 'field' rendering
+// TODO: implement 'change' event
