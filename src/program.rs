@@ -1,10 +1,9 @@
 
 use std::str;
-use std::fmt::Debug;
+use std::collections::HashMap;
 use std::process::{self, Stdio};
 use std::io::BufReader;
 use std::io::prelude::*;
-use std::collections::{HashMap, VecDeque};
 
 use serde_json as json;
 
@@ -16,9 +15,6 @@ use tree::Vertex;
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
-
-// TODO: investigate using Godel numbering of lists to encode 'path' of widget as usize ID
-// - might be easier than allocating vectors for each child
 
 type Identifier = String;
 type Frame = (f32, f32, f32, f32); // (x, y, w, h)
@@ -56,7 +52,7 @@ fn convert<T: Clone>(
     let mut commands = vec![];
 
     fn expand<S>(
-        path: &tree::Path,
+        _path: &tree::Path,
         node: &dom::Object<S>,
         layout: &yoga::Node,
         commands: &mut Vec<Command>,
@@ -127,8 +123,8 @@ fn convert<T: Clone>(
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
-    S: Clone + Send + 'static + PartialEq + Debug,
-    M: Send + 'static + Debug,
+    S: Clone + Send + 'static + PartialEq,
+    M: Send + 'static,
 {
     // TODO: use `spawn` and listen to stdin/stdout
     // - implement 'quit' event (or just exit when process terminates)

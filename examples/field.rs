@@ -3,7 +3,7 @@ extern crate cedar;
 
 type Model = String;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 enum Message {
     NewContent(String),
 }

@@ -98,7 +98,7 @@ impl<S> Object<S> {
 // <button></button>
 // </stack>
 
-// or a lisp?
+// or this?
 // (stack [(button), (label), (button)])
 
 // or a la elm?

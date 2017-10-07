@@ -3,7 +3,7 @@ extern crate cedar;
 
 type Model = i32;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Clone)]
 enum Message {
     Increment,
     Decrement,
