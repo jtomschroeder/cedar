@@ -10,6 +10,12 @@
 
 using json = nlohmann::json;
 
+template <class C>
+void send(const C &command) {
+    std::cout << command << std::endl;
+    fflush(stdout);
+}
+
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
 
@@ -20,7 +26,7 @@ using json = nlohmann::json;
     const auto frame = window.contentView.frame;
 
     auto command = json{{"Resize", {{"width", frame.size.width}, {"height", frame.size.height}}}};
-    std::cout << command << std::endl;
+    send(command);
 }
 
 @end
@@ -41,7 +47,7 @@ using json = nlohmann::json;
 
 - (void)click:(id)__unused sender {
     auto command = json{{"Click", {{"id", self->identifier}}}};
-    std::cout << command << std::endl;
+    send(command);
 }
 
 @end
@@ -84,7 +90,7 @@ using json = nlohmann::json;
 - (void)controlTextDidChange:(NSNotification *)__unused notification {
     auto value = [[self stringValue] UTF8String];
     auto command = json{{"Change", {{"id", self->identifier}, {"value", value}}}};
-    std::cout << command << std::endl;
+    send(command);
 }
 
 @end
@@ -220,19 +226,23 @@ extern "C" void run() {
                     [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                 }
             } else if (command.count("Move")) {
-                auto &move = command["Move"];
-                auto ident = move["id"];
+                // auto &move = command["Move"];
+                // std::cerr << move << std::endl;
 
-                auto widget = widgets.find(ident);
-                if (widget != widgets.end()) {
-                    auto &frame = move["frame"];
+                for (auto &move : command["Move"]) {
+                    auto ident = move[0];
 
-                    const float left = frame[0];
-                    const float top = frame[1];
-                    const float width = frame[2];
-                    const float height = frame[3];
+                    auto widget = widgets.find(ident);
+                    if (widget != widgets.end()) {
+                        auto &frame = move[1];
 
-                    [widget->second setFrame:NSMakeRect(left, top, width, height)];
+                        const float left = frame[0];
+                        const float top = frame[1];
+                        const float width = frame[2];
+                        const float height = frame[3];
+
+                        [widget->second setFrame:NSMakeRect(left, top, width, height)];
+                    }
                 }
 
             } else {

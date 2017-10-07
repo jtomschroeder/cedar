@@ -30,7 +30,7 @@ enum Command {
 
     Update(Identifier, String, String), // ID -> Attribute
 
-    Move { id: Identifier, frame: Frame },
+    Move(Vec<(Identifier, Frame)>),
 
     Remove(Identifier), // ID
 }
@@ -154,6 +154,7 @@ where
     let mut stdin = output.stdin.unwrap();
     for event in commands.into_iter() {
         writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
+        stdin.flush().unwrap();
     }
 
     /// Receive messages from 'renderer' process (via stdout)
@@ -205,10 +206,6 @@ where
             _ => continue,
         };
 
-        // TODO: some commands from renderer (e.g. window resize) will not generate 'message' to `update`
-        //   but will (potentially) require re-yoga
-        // - no `update` means call to `view` i.e. no new `dom`
-
         match action {
             Action::Update(message) => {
                 model = update(model, message);
@@ -231,20 +228,26 @@ where
 
         let mut commands = convert(&dom, &layout, changeset);
 
-        old_layout.merge(
-            &layout,
-            |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
-                old.width() != new.width() ||
-                old.height() != new.height()
-            {
-                let id = path.to_string();
-                let frame = (new.left(), new.top(), new.width(), new.height());
-                commands.push(Command::Move { id, frame })
-            },
-        );
+        {
+            let mut moves = vec![];
+            old_layout.merge(
+                &layout,
+                |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
+                    old.width() != new.width() ||
+                    old.height() != new.height()
+                {
+                    let id = path.to_string();
+                    let frame = (new.left(), new.top(), new.width(), new.height());
+                    moves.push((id, frame));
+                },
+            );
+
+            commands.push(Command::Move(moves))
+        }
 
         for event in commands.into_iter() {
             writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
+            stdin.flush().unwrap();
         }
     }
 }
