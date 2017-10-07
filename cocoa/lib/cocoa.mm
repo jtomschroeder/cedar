@@ -17,7 +17,9 @@ using json = nlohmann::json;
 
 - (NSSize)windowWillResize:(NSWindow *)window toSize:(NSSize)__unused size {
     const auto frame = window.contentView.frame;
-    std::cerr << "Resized Window!: " << frame.size.width << " " << frame.size.height << std::endl;
+
+    auto event = json{{"Resize", {{"width", frame.size.width}, {"height", frame.size.height}}}};
+    std::cout << event << std::endl;
 
     return size;
 }

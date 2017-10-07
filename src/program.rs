@@ -41,6 +41,8 @@ enum Command {
 enum Event {
     Click { id: Identifier },
     Change { id: Identifier, value: String },
+
+    Resize { width: f32, height: f32 },
 }
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
@@ -142,7 +144,7 @@ where
     let mut dom = view(&model);
 
     let layout = yoga(&dom);
-    layout.calculuate();
+    layout.calculuate(500., 500.);
 
     // Create changeset: Create @ 'root'
     let patch = vec![(tree::Path::new(), tree::Operation::Create)];
@@ -157,20 +159,29 @@ where
     /// Receive messages from 'renderer' process (via stdout)
 
     let stdout = BufReader::new(output.stdout.unwrap());
-    for event in stdout.lines().filter_map(|line| {
-        // TODO: refactor this?
-        line.ok().and_then(|line| json::from_str(&line).ok())
-    })
-    {
+    for line in stdout.lines().filter_map(|line| line.ok()) {
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
-        let message = match event {
+        let event = match json::from_str(&line) {
+            Ok(event) => event,
+            Err(err) => {
+                println!("Failed to parse event: '{}' :: {:?}", line, err);
+                continue;
+            }
+        };
+
+        enum Action<S> {
+            Update(S),
+            Layout(f32, f32),
+        }
+
+        let action = match event {
             Event::Click { id } => {
                 let path =
                     tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
                 dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Button(ref button) => button.click.clone(),
+                    dom::Widget::Button(ref button) => button.click.clone().map(Action::Update),
                     _ => None,
                 })
             }
@@ -179,14 +190,18 @@ where
                 let path =
                     tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
                 dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Field(ref field) => field.change.map(|c| c(value)),
+                    dom::Widget::Field(ref field) => {
+                        field.change.map(|c| c(value)).map(Action::Update)
+                    }
                     _ => None,
                 })
             }
+
+            Event::Resize { width, height } => None,
         };
 
-        let message = match message {
-            Some(m) => m,
+        let action = match action {
+            Some(a) => a,
             _ => continue,
         };
 
@@ -194,23 +209,26 @@ where
         //   but will (potentially) require re-yoga
         // - no `update` means call to `view` i.e. no new `dom`
 
-        model = update(model, message);
+        match action {
+            Action::Update(message) => {
+                model = update(model, message);
 
-        let old = dom;
-        dom = view(&model);
+                let old = dom;
+                dom = view(&model);
 
-        let changeset = dom::diff(&old, &dom);
+                let changeset = dom::diff(&old, &dom);
 
-        // TODO: generate layout for `dom`
-        // TODO: pass `layout` to `convert` to be associated with commands (to renderer)
+                let layout = yoga(&dom);
+                layout.calculuate(500., 500.);
 
-        let layout = yoga(&dom);
-        layout.calculuate();
+                let commands = convert(&dom, &layout, changeset);
 
-        let commands = convert(&dom, &layout, changeset);
+                for event in commands.into_iter() {
+                    writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
+                }
+            }
 
-        for event in commands.into_iter() {
-            writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
+            Action::Layout(width, height) => {}
         }
     }
 }

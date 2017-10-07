@@ -35,9 +35,14 @@ impl Node {
         self.children.push(child);
     }
 
-    pub fn calculuate(&self) {
+    pub fn calculuate(&self, width: f32, height: f32) {
         unsafe {
-            sys::YGNodeCalculateLayout(self.node, 500., 500., sys::YGDirection::YGDirectionInherit);
+            sys::YGNodeCalculateLayout(
+                self.node,
+                width,
+                height,
+                sys::YGDirection::YGDirectionInherit,
+            );
         }
     }
 
