@@ -131,14 +131,16 @@ extern "C" void run() {
 
         std::string line;
         while (std::getline(std::cin, line)) {
-            auto event = json::parse(line);
+            const auto &event = json::parse(line);
 
             if (event.count("Create")) {
+                // std::cerr << event << std::endl;
+
                 auto &create = event["Create"];
                 auto &ident = create["id"];
                 auto &widget = create["kind"];
-                std::string text = create["text"];
                 auto &location = create["frame"];
+                auto &attributes = create["attributes"];
 
                 // Convert left-top to left-bottom coordinates
                 const float left = location[0];
@@ -153,6 +155,7 @@ extern "C" void run() {
                     auto button = [[NSButton alloc] initWithFrame:frame];
                     button.bezelStyle = NSRoundedBezelStyle;
 
+                    const std::string &text = attributes["Text"];
                     button.title = [NSString stringWithUTF8String:text.c_str()];
 
                     auto action = [[Action alloc] initWithID:ident];
@@ -164,6 +167,7 @@ extern "C" void run() {
                 } else if (widget == "Label") {
                     auto label = [[NSTextField alloc] initWithFrame:frame];
 
+                    const std::string &text = attributes["Text"];
                     [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
 
                     [label setBezeled:NO];
@@ -177,6 +181,16 @@ extern "C" void run() {
                     [window.contentView addSubview:label];
                 } else if (widget == "Field") {
                     auto field = [[TextField alloc] initWithFrame:frame ID:ident];
+
+                    auto placeholder = attributes.find("Placeholder");
+                    if (placeholder != attributes.end()) {
+                        const std::string &text = *placeholder;
+
+                        auto string = [[NSAttributedString alloc]
+                            initWithString:[NSString stringWithUTF8String:text.c_str()]];
+
+                        [field setPlaceholderAttributedString:string];
+                    }
 
                     widgets[ident] = field;
                     [window.contentView addSubview:field];

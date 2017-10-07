@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use std::process::{self, Stdio};
 use std::io::BufReader;
 use std::io::prelude::*;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use serde_json as json;
 
@@ -21,16 +21,15 @@ pub type View<M, S> = fn(&M) -> dom::Object<S>;
 // - might be easier than allocating vectors for each child
 
 type Identifier = String;
+type Frame = (f32, f32, f32, f32); // (x, y, w, h)
 
 #[derive(Serialize, Deserialize, Debug)]
 enum Command {
-    // TODO: ID, Attributes (e.g. Text), Location (i.e. 'frame')
-    // TODO: `text` should really be generic list of 'attributes'
     Create {
         id: Identifier,
         kind: String,
-        text: String,
-        frame: (f32, f32, f32, f32), // (x, y, w, h)
+        frame: Frame,
+        attributes: HashMap<String, String>,
     },
 
     Update(Identifier, String, String), // ID -> Attribute
@@ -63,39 +62,38 @@ fn convert<T: Clone>(
         node.merge(layout, |path, node, layout| {
             let id = path.to_string();
 
-            // println!("layout: {:?} :: {:?}", path, layout);
-
             let frame = (layout.left(), layout.top(), layout.width(), layout.height());
 
-            match node.widget {
+            let mut attributes = HashMap::new();
+
+            let kind = match node.widget {
                 dom::Widget::Label(ref label) => {
-                    commands.push(Command::Create {
-                        id,
-                        kind: "Label".into(),
-                        text: label.text.clone(),
-                        frame,
-                    })
+                    attributes.insert("Text".into(), label.text.clone());
+                    Some("Label".into())
                 }
 
                 dom::Widget::Button(ref button) => {
-                    commands.push(Command::Create {
-                        id,
-                        kind: "Button".into(),
-                        text: button.text.clone(),
-                        frame,
-                    })
+                    attributes.insert("Text".into(), button.text.clone());
+                    Some("Button".into())
                 }
 
-                dom::Widget::Field(_) => {
-                    commands.push(Command::Create {
-                        id,
-                        kind: "Field".into(),
-                        text: "".into(),
-                        frame,
-                    })
+                dom::Widget::Field(ref field) => {
+                    if let Some(ref placeholder) = field.placeholder {
+                        attributes.insert("Placeholder".into(), placeholder.clone());
+                    }
+                    Some("Field".into())
                 }
 
-                _ => {}
+                _ => None,
+            };
+
+            if let Some(kind) = kind {
+                commands.push(Command::Create {
+                    id,
+                    kind,
+                    frame,
+                    attributes,
+                })
             }
         });
     }
