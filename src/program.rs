@@ -63,7 +63,7 @@ fn convert<T: Clone>(
         node.merge(layout, |path, node, layout| {
             let id = path.to_string();
 
-            println!("layout: {:?} :: {:?}", path, layout);
+            // println!("layout: {:?} :: {:?}", path, layout);
 
             let frame = (layout.left(), layout.top(), layout.width(), layout.height());
 
@@ -133,11 +133,6 @@ where
 
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
-
-    println!(
-        "{}",
-        json::to_string(&Event::Click { id: "".into() }).unwrap()
-    );
 
     // start 'renderer' subprocess
     let output = process::Command::new("./cocoa/target/release/cocoa")
@@ -226,11 +221,19 @@ fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {
     let mut layout = yoga::Node::new();
 
     // TODO: 'Flow' => Row
-    // TODO: set max/min height for Button, Label, Field
+    // TODO: likely need to treat 'root' node differently
 
     match node.widget {
         dom::Widget::Stack => layout.set_direction(), // Column
-        _ => {}
+
+        dom::Widget::Button(_) |
+        dom::Widget::Label(_) |
+        dom::Widget::Field(_) => {
+            layout.set_margin(20.);
+
+            layout.set_min_height(24.);
+            layout.set_max_height(24.);
+        }
     }
 
     // Traverse children, building nodes 'bottom-up'

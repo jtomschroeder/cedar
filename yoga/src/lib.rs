@@ -15,9 +15,8 @@ impl Node {
             node: unsafe {
                 let node = sys::YGNodeNew();
 
-                // TODO: remove these! (temporary for prototyping)
+                // TODO: remove this? (temporary for prototyping)
                 sys::YGNodeStyleSetFlexGrow(node, 1.);
-                sys::YGNodeStyleSetPadding(node, sys::YGEdge::YGEdgeAll, 20.);
 
                 node
             },
@@ -68,6 +67,17 @@ impl Node {
     }
     pub fn height(&self) -> f32 {
         unsafe { sys::YGNodeLayoutGetHeight(self.node) }
+    }
+
+    pub fn set_margin(&mut self, margin: f32) {
+        unsafe { sys::YGNodeStyleSetMargin(self.node, sys::YGEdge::YGEdgeAll, margin) };
+    }
+
+    pub fn set_min_height(&mut self, height: f32) {
+        unsafe { sys::YGNodeStyleSetMinHeight(self.node, height) }
+    }
+    pub fn set_max_height(&mut self, height: f32) {
+        unsafe { sys::YGNodeStyleSetMaxHeight(self.node, height) }
     }
 }
 
