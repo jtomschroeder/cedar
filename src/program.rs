@@ -123,8 +123,6 @@ fn convert<T: Clone>(
     commands
 }
 
-// fn render() {}
-
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq + Debug,

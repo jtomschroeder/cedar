@@ -12,8 +12,6 @@ pub trait Vertex {
     where
         Self: Sized;
 
-    // fn compare(&self, other: &Self) -> Option<Difference>;
-
     fn find(&self, path: &Path) -> Option<&Self>
     where
         Self: Sized,

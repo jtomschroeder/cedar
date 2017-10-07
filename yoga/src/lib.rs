@@ -46,7 +46,8 @@ impl Node {
         // TODO: should NOT be hardcoded!!
         unsafe {
             // YGFlexDirectionColumnReverse
-            sys::YGNodeStyleSetFlexDirection(self.node, sys::YGFlexDirection::YGFlexDirectionColumn)
+            let direction = sys::YGFlexDirection::YGFlexDirectionColumn;
+            sys::YGNodeStyleSetFlexDirection(self.node, direction)
         };
     }
 
