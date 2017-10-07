@@ -34,6 +34,8 @@ enum Command {
 
     Update(Identifier, String, String), // ID -> Attribute
 
+    Move { id: Identifier, frame: Frame },
+
     Remove(Identifier), // ID
 }
 
@@ -143,8 +145,10 @@ where
 
     let mut dom = view(&model);
 
-    let layout = yoga(&dom);
-    layout.calculuate(500., 500.);
+    let (mut width, mut height) = (500., 500.);
+
+    let mut layout = yoga(&dom);
+    layout.calculuate(width, height);
 
     // Create changeset: Create @ 'root'
     let patch = vec![(tree::Path::new(), tree::Operation::Create)];
@@ -197,7 +201,7 @@ where
                 })
             }
 
-            Event::Resize { width, height } => None,
+            Event::Resize { width, height } => Some(Action::Layout(width, height)),
         };
 
         let action = match action {
@@ -212,23 +216,39 @@ where
         match action {
             Action::Update(message) => {
                 model = update(model, message);
-
-                let old = dom;
-                dom = view(&model);
-
-                let changeset = dom::diff(&old, &dom);
-
-                let layout = yoga(&dom);
-                layout.calculuate(500., 500.);
-
-                let commands = convert(&dom, &layout, changeset);
-
-                for event in commands.into_iter() {
-                    writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
-                }
             }
 
-            Action::Layout(width, height) => {}
+            Action::Layout(w, h) => {
+                width = w;
+                height = h;
+            }
+        }
+
+        let old = dom;
+        dom = view(&model);
+
+        let changeset = dom::diff(&old, &dom);
+
+        let old_layout = layout;
+        layout = yoga(&dom);
+        layout.calculuate(width, height);
+
+        let mut commands = convert(&dom, &layout, changeset);
+
+        old_layout.merge(
+            &layout,
+            |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
+                old.width() != new.width() ||
+                old.height() != new.height()
+            {
+                let id = path.to_string();
+                let frame = (new.left(), new.top(), new.width(), new.height());
+                commands.push(Command::Move { id, frame })
+            },
+        );
+
+        for event in commands.into_iter() {
+            writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
         }
     }
 }

@@ -15,13 +15,12 @@ using json = nlohmann::json;
 
 @implementation WindowDelegate
 
-- (NSSize)windowWillResize:(NSWindow *)window toSize:(NSSize)__unused size {
+- (void)windowDidResize:(NSNotification *)notification {
+    NSWindow *window = [notification object];
     const auto frame = window.contentView.frame;
 
-    auto event = json{{"Resize", {{"width", frame.size.width}, {"height", frame.size.height}}}};
-    std::cout << event << std::endl;
-
-    return size;
+    auto command = json{{"Resize", {{"width", frame.size.width}, {"height", frame.size.height}}}};
+    std::cout << command << std::endl;
 }
 
 @end
@@ -41,8 +40,19 @@ using json = nlohmann::json;
 }
 
 - (void)click:(id)__unused sender {
-    auto event = json{{"Click", {{"id", self->identifier}}}};
-    std::cout << event << std::endl;
+    auto command = json{{"Click", {{"id", self->identifier}}}};
+    std::cout << command << std::endl;
+}
+
+@end
+
+@interface View : NSView
+@end
+
+@implementation View
+
+- (BOOL)isFlipped {
+    return YES;
 }
 
 @end
@@ -73,8 +83,8 @@ using json = nlohmann::json;
 
 - (void)controlTextDidChange:(NSNotification *)__unused notification {
     auto value = [[self stringValue] UTF8String];
-    auto event = json{{"Change", {{"id", self->identifier}, {"value", value}}}};
-    std::cout << event << std::endl;
+    auto command = json{{"Change", {{"id", self->identifier}, {"value", value}}}};
+    std::cout << command << std::endl;
 }
 
 @end
@@ -117,6 +127,7 @@ extern "C" void run() {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
 
+    [window setContentView:[[View alloc] init]];
     [window setDelegate:[[WindowDelegate alloc] init]];
 
     [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
@@ -133,28 +144,26 @@ extern "C" void run() {
 
         std::string line;
         while (std::getline(std::cin, line)) {
-            const auto &event = json::parse(line);
+            const auto &command = json::parse(line);
 
-            if (event.count("Create")) {
-                // std::cerr << event << std::endl;
+            if (command.count("Create")) {
+                // std::cerr << command << std::endl;
 
-                auto &create = event["Create"];
+                auto &create = command["Create"];
                 auto &ident = create["id"];
                 auto &widget = create["kind"];
-                auto &location = create["frame"];
+                auto &frame = create["frame"];
                 auto &attributes = create["attributes"];
 
-                // Convert left-top to left-bottom coordinates
-                const float left = location[0];
-                const float top = location[1];
-                const float width = location[2];
-                const float height = location[3];
-                const float bottom = window.contentView.frame.size.height - (top + height);
+                const float left = frame[0];
+                const float top = frame[1];
+                const float width = frame[2];
+                const float height = frame[3];
 
-                const auto frame = NSMakeRect(left, bottom, width, height);
+                const auto rframe = NSMakeRect(left, top, width, height);
 
                 if (widget == "Button") {
-                    auto button = [[NSButton alloc] initWithFrame:frame];
+                    auto button = [[NSButton alloc] initWithFrame:rframe];
                     button.bezelStyle = NSRoundedBezelStyle;
 
                     const std::string &text = attributes["Text"];
@@ -167,7 +176,7 @@ extern "C" void run() {
                     widgets[ident] = button;
                     [window.contentView addSubview:button];
                 } else if (widget == "Label") {
-                    auto label = [[NSTextField alloc] initWithFrame:frame];
+                    auto label = [[NSTextField alloc] initWithFrame:rframe];
 
                     const std::string &text = attributes["Text"];
                     [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
@@ -182,7 +191,7 @@ extern "C" void run() {
                     widgets[ident] = label;
                     [window.contentView addSubview:label];
                 } else if (widget == "Field") {
-                    auto field = [[TextField alloc] initWithFrame:frame ID:ident];
+                    auto field = [[TextField alloc] initWithFrame:rframe ID:ident];
 
                     auto placeholder = attributes.find("Placeholder");
                     if (placeholder != attributes.end()) {
@@ -200,8 +209,8 @@ extern "C" void run() {
                     std::cerr << "Unknown widget: " << widget << std::endl;
                 }
 
-            } else if (event.count("Update")) {
-                auto &update = event["Update"];
+            } else if (command.count("Update")) {
+                auto &update = command["Update"];
                 auto ident = update[0];
                 auto attribute = update[1];
                 std::string value = update[2];
@@ -210,6 +219,24 @@ extern "C" void run() {
                     auto field = (NSTextField *)(widgets[ident]);
                     [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                 }
+            } else if (command.count("Move")) {
+                auto &move = command["Move"];
+                auto ident = move["id"];
+
+                auto widget = widgets.find(ident);
+                if (widget != widgets.end()) {
+                    auto &frame = move["frame"];
+
+                    const float left = frame[0];
+                    const float top = frame[1];
+                    const float width = frame[2];
+                    const float height = frame[3];
+
+                    [widget->second setFrame:NSMakeRect(left, top, width, height)];
+                }
+
+            } else {
+                std::cerr << "Unknown command: " << command << std::endl;
             }
         }
     }).detach();
