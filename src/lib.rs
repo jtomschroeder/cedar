@@ -7,6 +7,7 @@ extern crate serde;
 extern crate serde_json;
 
 extern crate yoga;
+extern crate cocoa;
 
 #[macro_use]
 mod tree;

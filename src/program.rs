@@ -2,6 +2,9 @@
 use std::str;
 use std::collections::HashMap;
 use std::process::{self, Stdio};
+use std::thread;
+
+use std::io;
 use std::io::BufReader;
 use std::io::prelude::*;
 
@@ -10,6 +13,7 @@ use serde_json as json;
 use yoga;
 use dom;
 use tree;
+use cocoa;
 
 use tree::Vertex;
 
@@ -134,124 +138,129 @@ where
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
 
-    // start 'renderer' subprocess
-    let output = process::Command::new("./cocoa/target/release/cocoa")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("failed to execute process");
+    let interconnect = cocoa::Interconnect::new();
 
-    let mut dom = view(&model);
+    {
+        let sender = interconnect.incoming.clone();
+        let receiver = interconnect.outgoing.clone();
+        thread::spawn(move || {
+            let mut dom = view(&model);
 
-    let (mut width, mut height) = (500., 500.);
+            let (mut width, mut height) = (500., 500.);
 
-    let mut layout = yoga(&dom);
-    layout.calculuate(width, height);
+            let mut layout = yoga(&dom);
+            layout.calculuate(width, height);
 
-    // Create changeset: Create @ 'root'
-    let patch = vec![(tree::Path::new(), tree::Operation::Create)];
+            // Create changeset: Create @ 'root'
+            let patch = vec![(tree::Path::new(), tree::Operation::Create)];
 
-    let commands = convert(&dom, &layout, patch);
+            let commands = convert(&dom, &layout, patch);
 
-    let mut stdin = output.stdin.unwrap();
-    for event in commands.into_iter() {
-        writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
-        stdin.flush().unwrap();
-    }
-
-    /// Receive messages from 'renderer' process (via stdout)
-
-    let stdout = BufReader::new(output.stdout.unwrap());
-    for line in stdout.lines().filter_map(|line| line.ok()) {
-        // TODO: serialize ID as Path object to avoid parsing!
-        // - in both Command and Event
-
-        let event = match json::from_str(&line) {
-            Ok(event) => event,
-            Err(err) => {
-                println!("Failed to parse event: '{}' :: {:?}", line, err);
-                continue;
-            }
-        };
-
-        enum Action<S> {
-            Update(S),
-            Layout(f32, f32),
-        }
-
-        let action = match event {
-            Event::Click { id } => {
-                let path =
-                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
-                dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Button(ref button) => button.click.clone().map(Action::Update),
-                    _ => None,
-                })
+            for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
+                sender.push(event);
             }
 
-            Event::Change { id, value } => {
-                let path =
-                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
-                dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Field(ref field) => {
-                        field.change.map(|c| c(value)).map(Action::Update)
+            // Receive messages from 'renderer'
+
+            loop {
+                let line = receiver.pop();
+
+                // TODO: serialize ID as Path object to avoid parsing!
+                // - in both Command and Event
+
+                let event = match json::from_str(&line) {
+                    Ok(event) => event,
+                    Err(err) => {
+                        println!("Failed to parse event: '{}' :: {:?}", line, err);
+                        continue;
                     }
-                    _ => None,
-                })
-            }
+                };
 
-            Event::Resize { width, height } => Some(Action::Layout(width, height)),
-        };
+                enum Action<S> {
+                    Update(S),
+                    Layout(f32, f32),
+                }
 
-        let action = match action {
-            Some(a) => a,
-            _ => continue,
-        };
+                let action = match event {
+                    Event::Click { id } => {
+                        let path = tree::Path::from_vec(
+                            id.split(".").filter_map(|s| s.parse().ok()).collect(),
+                        );
+                        dom.find(&path).and_then(|node| match node.widget {
+                            dom::Widget::Button(ref button) => {
+                                button.click.clone().map(Action::Update)
+                            }
+                            _ => None,
+                        })
+                    }
 
-        match action {
-            Action::Update(message) => {
-                model = update(model, message);
-            }
+                    Event::Change { id, value } => {
+                        let path = tree::Path::from_vec(
+                            id.split(".").filter_map(|s| s.parse().ok()).collect(),
+                        );
+                        dom.find(&path).and_then(|node| match node.widget {
+                            dom::Widget::Field(ref field) => {
+                                field.change.map(|c| c(value)).map(Action::Update)
+                            }
+                            _ => None,
+                        })
+                    }
 
-            Action::Layout(w, h) => {
-                width = w;
-                height = h;
-            }
-        }
+                    Event::Resize { width, height } => Some(Action::Layout(width, height)),
+                };
 
-        let old = dom;
-        dom = view(&model);
+                let action = match action {
+                    Some(a) => a,
+                    _ => continue,
+                };
 
-        let changeset = dom::diff(&old, &dom);
+                match action {
+                    Action::Update(message) => {
+                        model = update(model, message);
+                    }
 
-        let old_layout = layout;
-        layout = yoga(&dom);
-        layout.calculuate(width, height);
+                    Action::Layout(w, h) => {
+                        width = w;
+                        height = h;
+                    }
+                }
 
-        let mut commands = convert(&dom, &layout, changeset);
+                let old = dom;
+                dom = view(&model);
 
-        {
-            let mut moves = vec![];
-            old_layout.merge(
-                &layout,
-                |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
-                    old.width() != new.width() ||
-                    old.height() != new.height()
+                let changeset = dom::diff(&old, &dom);
+
+                let old_layout = layout;
+                layout = yoga(&dom);
+                layout.calculuate(width, height);
+
+                let mut commands = convert(&dom, &layout, changeset);
+
                 {
-                    let id = path.to_string();
-                    let frame = (new.left(), new.top(), new.width(), new.height());
-                    moves.push((id, frame));
-                },
-            );
+                    let mut moves = vec![];
+                    old_layout.merge(
+                        &layout,
+                        |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
+                            old.width() != new.width() ||
+                            old.height() != new.height()
+                        {
+                            let id = path.to_string();
+                            let frame = (new.left(), new.top(), new.width(), new.height());
+                            moves.push((id, frame));
+                        },
+                    );
 
-            commands.push(Command::Move(moves))
-        }
+                    commands.push(Command::Move(moves))
+                }
 
-        for event in commands.into_iter() {
-            writeln!(stdin, "{}", json::to_string(&event).unwrap()).unwrap();
-            stdin.flush().unwrap();
-        }
+                for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
+                    sender.push(event);
+                }
+            }
+        });
     }
+
+    cocoa::run(interconnect);
 }
 
 fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {
