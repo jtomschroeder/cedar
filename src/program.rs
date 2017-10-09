@@ -134,6 +134,15 @@ where
 
     let interconnect = cocoa::Interconnect::new();
 
+    //
+    // TODO: separate `model` and `update` from `view` and `renderer`
+    // - `model` & `view` => fluxion
+    // - `view` & `renderer` => shadow/facade
+    //
+    // - use single (blocking) queue for events from backend & events from 'effects'
+    //   - effects => commands, subscriptions
+    //
+
     {
         let sender = interconnect.incoming.clone();
         let receiver = interconnect.outgoing.clone();

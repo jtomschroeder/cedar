@@ -32,6 +32,8 @@ impl Interconnect {
     // }
 }
 
+// TODO: handling dropping of interconnect instance
+
 #[no_mangle]
 pub extern "C" fn ic_send(ic: *mut Interconnect, s: *const c_char) {
     let ic: &Interconnect = unsafe { &*ic };
