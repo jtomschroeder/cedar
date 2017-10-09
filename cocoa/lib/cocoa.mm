@@ -10,8 +10,16 @@
 
 using json = nlohmann::json;
 
+static void *interconnect = nullptr;
+extern "C" {
+void ic_send(void *);
+// void ic_recv(void *);
+}
+
 template <class C>
 void send(const C &command) {
+    ic_send(interconnect);
+
     std::cout << command << std::endl;
     fflush(stdout);
 }
@@ -95,8 +103,10 @@ void send(const C &command) {
 
 @end
 
-extern "C" void run() {
+extern "C" void run(void *ic) {
     static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
+
+    interconnect = ic;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
