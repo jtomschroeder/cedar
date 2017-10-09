@@ -12,16 +12,15 @@ using json = nlohmann::json;
 
 static void *interconnect = nullptr;
 extern "C" {
-void ic_send(void *);
-// void ic_recv(void *);
+void ic_send(void *, const char *);
+
+char *ic_recv(void *);
+void ic_string_drop(char *);
 }
 
 template <class C>
 void send(const C &command) {
-    ic_send(interconnect);
-
-    std::cout << command << std::endl;
-    fflush(stdout);
+    ic_send(interconnect, command.dump().c_str());
 }
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
@@ -158,9 +157,10 @@ extern "C" void run(void *ic) {
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
 
-        std::string line;
-        while (std::getline(std::cin, line)) {
-            const auto &command = json::parse(line);
+        while (true) {
+            auto s = ic_recv(interconnect);
+            const auto &command = json::parse(s);
+            ic_string_drop(s);
 
             if (command.count("Create")) {
                 // std::cerr << command << std::endl;
