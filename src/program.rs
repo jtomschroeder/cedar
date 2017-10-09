@@ -121,6 +121,8 @@ fn convert<T: Clone>(
     commands
 }
 
+// TODO: Renderer as main thread (single process with Flux)
+
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq,
