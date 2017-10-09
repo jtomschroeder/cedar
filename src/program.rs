@@ -1,18 +1,14 @@
 
 use std::str;
 use std::collections::HashMap;
-use std::process::{self, Stdio};
 use std::thread;
-
-use std::io;
-use std::io::BufReader;
-use std::io::prelude::*;
 
 use serde_json as json;
 
 use yoga;
 use dom;
 use tree;
+
 use cocoa;
 
 use tree::Vertex;
@@ -125,8 +121,6 @@ fn convert<T: Clone>(
     commands
 }
 
-// TODO: Renderer as main thread (single process with Flux)
-
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq,
@@ -163,7 +157,7 @@ where
             // Receive messages from 'renderer'
 
             loop {
-                let line = receiver.pop();
+                let line = receiver.pop(); // blocking!
 
                 // TODO: serialize ID as Path object to avoid parsing!
                 // - in both Command and Event
@@ -260,7 +254,7 @@ where
         });
     }
 
-    cocoa::run(interconnect);
+    cocoa::run(interconnect) // ensure renderer is 'main' thread
 }
 
 fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {

@@ -1,7 +1,6 @@
 
 extern crate crossbeam;
 
-use std::io;
 use std::os::raw::{c_void, c_char};
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
@@ -47,7 +46,7 @@ pub extern "C" fn ic_send(ic: *mut Interconnect, s: *const c_char) {
 pub extern "C" fn ic_recv(ic: *mut Interconnect) -> *mut c_char {
     let ic: &Interconnect = unsafe { &*ic };
 
-    let mut input = ic.incoming.pop();
+    let input = ic.incoming.pop(); // blocking!
 
     let string = CString::new(input.into_bytes()).unwrap();
     CString::into_raw(string)
