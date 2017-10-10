@@ -14,9 +14,12 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
 before_install:
   - |
+    eval "${MATRIX_EVAL}"
     if [ $TRAVIS_OS_NAME = linux ]; then
       sudo apt-get -qq update
       sudo apt-get install -y libgtk-3-dev
