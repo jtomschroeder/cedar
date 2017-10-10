@@ -6,6 +6,7 @@ use gtk::prelude::*;
 use gtk::{Button, Window, WindowType};
 
 use std::sync::Arc;
+use std::collections::HashMap;
 use crossbeam::sync::MsQueue;
 
 pub struct Renderer {
@@ -23,9 +24,6 @@ impl Renderer {
 }
 
 pub fn run(interconnect: Renderer) {
-    // let interconnect = Box::new(interconnect);
-    // unsafe { bindings::run(Box::into_raw(interconnect) as *mut c_void) }
-
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -35,10 +33,6 @@ pub fn run(interconnect: Renderer) {
     window.set_title("** cedar **");
     window.set_default_size(500, 500);
 
-    let button = Button::new_with_label("Click me!");
-    window.add(&button);
-    window.show_all();
-
     window.connect_delete_event(|_, _| {
         println!("Quit!");
 
@@ -46,13 +40,26 @@ pub fn run(interconnect: Renderer) {
         Inhibit(false)
     });
 
-    button.connect_clicked(|_| {
-        println!("Clicked!");
-    });
+    let mut widgets = HashMap::new();
 
     gtk::timeout_add(16, move || {
         if let Some(command) = interconnect.incoming.try_pop() {
             println!("Command: {:?}", command);
+        }
+
+        if widgets.is_empty() {
+            println!("Adding button!");
+
+            let button = Button::new_with_label("Click me!");
+            window.add(&button);
+
+            button.connect_clicked(|_| {
+                println!("Clicked!");
+            });
+
+            widgets.insert("1", button);
+
+            window.show_all();
         }
 
         gtk::Continue(true)
