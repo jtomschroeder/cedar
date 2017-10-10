@@ -121,6 +121,35 @@ fn convert<T: Clone>(
     commands
 }
 
+#[derive(Default)]
+struct Phantom {}
+
+impl Phantom {
+    fn initialize<M, S>(
+        &self,
+        model: &M,
+        view: View<M, S>,
+    ) -> (dom::Object<S>, yoga::Node, Vec<Command>)
+    where
+        S: Clone + Send + 'static + PartialEq,
+        M: Send + 'static,
+    {
+        let mut dom = view(&model);
+
+        let (mut width, mut height) = (500., 500.);
+
+        let mut layout = yoga(&dom);
+        layout.calculuate(width, height);
+
+        // Create changeset: Create @ 'root'
+        let patch = vec![(tree::Path::new(), tree::Operation::Create)];
+
+        let commands = convert(&dom, &layout, patch);
+
+        (dom, layout, commands)
+    }
+}
+
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Clone + Send + 'static + PartialEq,
@@ -147,21 +176,17 @@ where
     // TODO: pass initial state to renderer
     // - e.g. initial width & height
 
+    let (mut width, mut height) = (500., 500.);
+
+    let phantom = Phantom::default();
+
     {
         let sender = renderer.incoming.clone();
         let receiver = renderer.outgoing.clone();
+
         thread::spawn(move || {
-            let mut dom = view(&model);
 
-            let (mut width, mut height) = (500., 500.);
-
-            let mut layout = yoga(&dom);
-            layout.calculuate(width, height);
-
-            // Create changeset: Create @ 'root'
-            let patch = vec![(tree::Path::new(), tree::Operation::Create)];
-
-            let commands = convert(&dom, &layout, patch);
+            let (mut dom, mut layout, commands) = phantom.initialize(&model, view);
 
             for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                 sender.push(event);
