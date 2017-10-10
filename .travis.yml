@@ -1,17 +1,19 @@
 
 sudo: true
-os:
-  - osx
-  - linux
-    addons:
-      apt:
-        sources:
-          - llvm-toolchain-trusty-5.0
-        packages:
-          - clang-5.0
 
 language: rust
 rust: stable
+
+matrix:
+  include:
+    - os: osx
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
 
 before_install:
   - |
