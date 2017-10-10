@@ -11,6 +11,7 @@ extern crate cocoa;
 
 #[macro_use]
 mod tree;
+mod phantom;
 mod program;
 
 pub mod dom;
