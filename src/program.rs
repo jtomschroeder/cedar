@@ -121,24 +121,25 @@ fn convert<T: Clone>(
     commands
 }
 
-#[derive(Default)]
-struct Phantom {}
+// #[derive(Default)]
+struct Phantom<S> {
+    dom: dom::Object<S>,
+    layout: yoga::Node,
+}
 
-impl Phantom {
-    fn initialize<M, S>(
-        &self,
-        model: &M,
-        view: View<M, S>,
-    ) -> (dom::Object<S>, yoga::Node, Vec<Command>)
-    where
-        S: Clone + Send + 'static + PartialEq,
-        M: Send + 'static,
-    {
-        let mut dom = view(&model);
+enum Action<S> {
+    Update(S),
+    Layout(f32, f32),
+}
 
-        let (mut width, mut height) = (500., 500.);
+impl<S> Phantom<S>
+where
+    S: Clone + Send + 'static + PartialEq,
+{
+    fn initialize<M>(model: &M, view: View<M, S>, width: f32, height: f32) -> (Self, Vec<Command>) {
+        let dom = view(&model);
 
-        let mut layout = yoga(&dom);
+        let layout = yoga(&dom);
         layout.calculuate(width, height);
 
         // Create changeset: Create @ 'root'
@@ -146,7 +147,71 @@ impl Phantom {
 
         let commands = convert(&dom, &layout, patch);
 
-        (dom, layout, commands)
+        (Phantom { dom, layout }, commands)
+    }
+
+    fn translate(&self, event: Event) -> Option<Action<S>> {
+        let ref dom = self.dom;
+        match event {
+            Event::Click { id } => {
+                let path =
+                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
+                dom.find(&path).and_then(|node| match node.widget {
+                    dom::Widget::Button(ref button) => button.click.clone().map(Action::Update),
+                    _ => None,
+                })
+            }
+
+            Event::Change { id, value } => {
+                let path =
+                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
+                dom.find(&path).and_then(|node| match node.widget {
+                    dom::Widget::Field(ref field) => {
+                        field.change.map(|c| c(value)).map(Action::Update)
+                    }
+                    _ => None,
+                })
+            }
+
+            Event::Resize { width, height } => Some(Action::Layout(width, height)),
+        }
+    }
+
+    fn update<M>(&mut self, model: &M, view: View<M, S>, width: f32, height: f32) -> Vec<Command> {
+        let (dom, layout, commands) = {
+            let ref old_dom = self.dom;
+            let new_dom = view(&model);
+
+            let changeset = dom::diff(old_dom, &new_dom);
+
+            let ref old_layout = self.layout;
+            let new_layout = yoga(&new_dom);
+            new_layout.calculuate(width, height);
+
+            let mut commands = convert(&new_dom, &new_layout, changeset);
+
+            let mut moves = vec![];
+            old_layout.merge(
+                &new_layout,
+                |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
+                    old.width() != new.width() ||
+                    old.height() != new.height()
+                {
+                    let id = path.to_string();
+                    let frame = (new.left(), new.top(), new.width(), new.height());
+                    moves.push((id, frame));
+                },
+            );
+
+            commands.push(Command::Move(moves));
+
+            (new_dom, new_layout, commands)
+        };
+
+        self.dom = dom;
+        self.layout = layout;
+
+        commands
     }
 }
 
@@ -178,15 +243,14 @@ where
 
     let (mut width, mut height) = (500., 500.);
 
-    let phantom = Phantom::default();
+    // let phantom = Phantom::default();
 
     {
         let sender = renderer.incoming.clone();
         let receiver = renderer.outgoing.clone();
 
         thread::spawn(move || {
-
-            let (mut dom, mut layout, commands) = phantom.initialize(&model, view);
+            let (mut phantom, commands) = Phantom::initialize(&model, view, width, height);
 
             for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                 sender.push(event);
@@ -208,38 +272,8 @@ where
                     }
                 };
 
-                enum Action<S> {
-                    Update(S),
-                    Layout(f32, f32),
-                }
-
-                let action = match event {
-                    Event::Click { id } => {
-                        let path = tree::Path::from_vec(
-                            id.split(".").filter_map(|s| s.parse().ok()).collect(),
-                        );
-                        dom.find(&path).and_then(|node| match node.widget {
-                            dom::Widget::Button(ref button) => {
-                                button.click.clone().map(Action::Update)
-                            }
-                            _ => None,
-                        })
-                    }
-
-                    Event::Change { id, value } => {
-                        let path = tree::Path::from_vec(
-                            id.split(".").filter_map(|s| s.parse().ok()).collect(),
-                        );
-                        dom.find(&path).and_then(|node| match node.widget {
-                            dom::Widget::Field(ref field) => {
-                                field.change.map(|c| c(value)).map(Action::Update)
-                            }
-                            _ => None,
-                        })
-                    }
-
-                    Event::Resize { width, height } => Some(Action::Layout(width, height)),
-                };
+                // translate events from backend renderer to actions
+                let action = phantom.translate(event);
 
                 let action = match action {
                     Some(a) => a,
@@ -257,33 +291,7 @@ where
                     }
                 }
 
-                let old = dom;
-                dom = view(&model);
-
-                let changeset = dom::diff(&old, &dom);
-
-                let old_layout = layout;
-                layout = yoga(&dom);
-                layout.calculuate(width, height);
-
-                let mut commands = convert(&dom, &layout, changeset);
-
-                {
-                    let mut moves = vec![];
-                    old_layout.merge(
-                        &layout,
-                        |path, old, new| if old.left() != new.left() || old.top() != new.top() ||
-                            old.width() != new.width() ||
-                            old.height() != new.height()
-                        {
-                            let id = path.to_string();
-                            let frame = (new.left(), new.top(), new.width(), new.height());
-                            moves.push((id, frame));
-                        },
-                    );
-
-                    commands.push(Command::Move(moves))
-                }
+                let commands = phantom.update(&model, view, width, height);
 
                 for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                     sender.push(event);
