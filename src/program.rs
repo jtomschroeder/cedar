@@ -178,17 +178,25 @@ where
     }
 
     fn update<M>(&mut self, model: &M, view: View<M, S>, width: f32, height: f32) -> Vec<Command> {
-        let (dom, layout, commands) = {
-            let ref old_dom = self.dom;
-            let new_dom = view(&model);
+        let dom = view(&model);
+        let changeset = dom::diff(&self.dom, &dom);
+        self.dom = dom;
 
-            let changeset = dom::diff(old_dom, &new_dom);
+        let command = self.layout(width, height);
+
+        let mut commands = convert(&self.dom, &self.layout, changeset);
+        commands.push(command);
+
+        commands
+    }
+
+    fn layout(&mut self, width: f32, height: f32) -> Command {
+        let (layout, command) = {
+            let ref dom = self.dom;
 
             let ref old_layout = self.layout;
-            let new_layout = yoga(&new_dom);
+            let new_layout = yoga(dom);
             new_layout.calculuate(width, height);
-
-            let mut commands = convert(&new_dom, &new_layout, changeset);
 
             let mut moves = vec![];
             old_layout.merge(
@@ -203,15 +211,11 @@ where
                 },
             );
 
-            commands.push(Command::Move(moves));
-
-            (new_dom, new_layout, commands)
+            (new_layout, Command::Move(moves))
         };
 
-        self.dom = dom;
         self.layout = layout;
-
-        commands
+        command
     }
 }
 
@@ -280,18 +284,22 @@ where
                     _ => continue,
                 };
 
-                match action {
+                let commands = match action {
                     Action::Update(message) => {
                         model = update(model, message);
+
+                        phantom.update(&model, view, width, height)
                     }
 
                     Action::Layout(w, h) => {
                         width = w;
                         height = h;
-                    }
-                }
 
-                let commands = phantom.update(&model, view, width, height);
+                        let cmd = phantom.layout(width, height);
+                        vec![cmd]
+                    }
+                };
+
 
                 for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                     sender.push(event);
