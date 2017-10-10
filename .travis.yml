@@ -1,15 +1,21 @@
 
 sudo: true
 os:
-  - linux
   - osx
+  - linux
+    addons:
+      apt:
+        sources:
+          - llvm-toolchain-trusty-5.0
+        packages:
+          - clang-5.0
 
 language: rust
 rust: stable
 
 before_install:
   - |
-    if [ $TRAVIS_OS_NAME = linux ]; then 
+    if [ $TRAVIS_OS_NAME = linux ]; then
       sudo apt-get -qq update
       sudo apt-get install -y libgtk-3-dev
     fi
@@ -17,3 +23,4 @@ before_install:
 notifications:
   email:
     on_success: never
+    on_failure: change

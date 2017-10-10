@@ -85,6 +85,7 @@ where
                     Action::Update(message) => {
                         model = update(model, message);
 
+                        // TODO: might be better to change Update to fn(Model, &Message)
                         // TODO: inject middleware here: middleware.handlers(&model, &message)
 
                         phantom.update(&model, view, width, height)
