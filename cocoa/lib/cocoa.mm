@@ -10,17 +10,17 @@
 
 using json = nlohmann::json;
 
-static void *interconnect = nullptr;
+static void *renderer = nullptr;
 extern "C" {
-void ic_send(void *, const char *);
+void renderer_send(void *, const char *);
 
-char *ic_recv(void *);
-void ic_string_drop(char *);
+char *renderer_recv(void *);
+void renderer_string_drop(char *);
 }
 
 template <class C>
 void send(const C &command) {
-    ic_send(interconnect, command.dump().c_str());
+    renderer_send(renderer, command.dump().c_str());
 }
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
@@ -102,10 +102,12 @@ void send(const C &command) {
 
 @end
 
-extern "C" void run(void *ic) {
+static void checks() {
     static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
+}
 
-    interconnect = ic;
+extern "C" void run(void *r) {
+    renderer = r;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -158,9 +160,9 @@ extern "C" void run(void *ic) {
         std::unordered_map<std::string, NSView *> widgets;
 
         while (true) {
-            auto s = ic_recv(interconnect);
+            auto s = renderer_recv(renderer);
             const auto &command = json::parse(s);
-            ic_string_drop(s);
+            renderer_string_drop(s);
 
             if (command.count("Create")) {
                 // std::cerr << command << std::endl;

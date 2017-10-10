@@ -132,20 +132,24 @@ where
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
 
-    let interconnect = cocoa::Interconnect::new();
+    // TODO: pass queues in as dependencies
+    let renderer = cocoa::Renderer::new();
 
     //
     // TODO: separate `model` and `update` from `view` and `renderer`
-    // - `model` & `view` => fluxion
-    // - `view` & `renderer` => shadow/facade
+    // - `model` & `update` => fluxion (flux)
+    // - `view` & `renderer` => phantom (i.e. shadow DOM)
     //
     // - use single (blocking) queue for events from backend & events from 'effects'
     //   - effects => commands, subscriptions
     //
 
+    // TODO: pass initial state to renderer
+    // - e.g. initial width & height
+
     {
-        let sender = interconnect.incoming.clone();
-        let receiver = interconnect.outgoing.clone();
+        let sender = renderer.incoming.clone();
+        let receiver = renderer.outgoing.clone();
         thread::spawn(move || {
             let mut dom = view(&model);
 
@@ -263,7 +267,7 @@ where
         });
     }
 
-    cocoa::run(interconnect) // ensure renderer is 'main' thread
+    cocoa::run(renderer) // ensure renderer is 'main' thread
 }
 
 fn yoga<T>(node: &dom::Object<T>) -> yoga::Node {
