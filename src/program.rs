@@ -247,8 +247,6 @@ where
 
     let (mut width, mut height) = (500., 500.);
 
-    // let phantom = Phantom::default();
-
     {
         let sender = renderer.incoming.clone();
         let receiver = renderer.outgoing.clone();
@@ -256,6 +254,7 @@ where
         thread::spawn(move || {
             let (mut phantom, commands) = Phantom::initialize(&model, view, width, height);
 
+            // TODO: make this `renderer.push`
             for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                 sender.push(event);
             }
@@ -288,6 +287,8 @@ where
                     Action::Update(message) => {
                         model = update(model, message);
 
+                        // TODO: inject middleware here: middleware.handlers(&model, &message)
+
                         phantom.update(&model, view, width, height)
                     }
 
@@ -301,6 +302,7 @@ where
                 };
 
 
+                // TODO: make this `renderer.push`
                 for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                     sender.push(event);
                 }
