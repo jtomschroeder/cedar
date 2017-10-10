@@ -156,6 +156,12 @@ extern "C" void run(void *r) {
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
+    // TODO: need to perform UI updates on main thread
+    //
+    // dispatch_async(dispatch_get_main_queue(), ^{
+    //     // perform UI updates
+    // });
+
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
 

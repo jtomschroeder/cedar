@@ -4,8 +4,10 @@ use std::thread;
 
 use serde_json as json;
 
+// use cocoa as renderer;
+use gtk as renderer;
+
 use dom;
-use cocoa;
 use phantom::Phantom;
 
 pub type Update<M, S> = fn(M, S) -> M;
@@ -15,6 +17,7 @@ pub enum Action<S> {
     Update(S),
     Layout(f32, f32),
 }
+
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -29,7 +32,7 @@ where
 
     // TODO: define generic `Renderer` trait for all backends
     // TODO: pass queues in as dependencies
-    let renderer = cocoa::Renderer::new();
+    let renderer = renderer::Renderer::new();
 
     //
     // TODO: separate `model` and `update` from `view` and `renderer`
@@ -109,5 +112,5 @@ where
         });
     }
 
-    cocoa::run(renderer) // ensure renderer is 'main' thread
+    renderer::run(renderer) // ensure renderer is 'main' thread
 }
