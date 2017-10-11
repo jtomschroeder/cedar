@@ -17,9 +17,6 @@ pub mod facade;
 // GTK
 
 #[cfg(any(feature = "gtk", not(target_os = "macos")))]
-extern crate gtk;
-
-#[cfg(any(feature = "gtk", not(target_os = "macos")))]
 #[path = "gtk/mod.rs"]
 mod facade;
 

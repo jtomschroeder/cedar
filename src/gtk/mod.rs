@@ -1,6 +1,5 @@
 
 extern crate gtk;
-extern crate crossbeam;
 
 use gtk::prelude::*;
 use gtk::{Button, Window, WindowType};
