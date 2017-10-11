@@ -25,3 +25,4 @@ serde_json = "1.0"
 [dependencies.gtk]
 version = "0.2.0"
 features = ["v3_10"]
+optional = true
