@@ -5,7 +5,8 @@ use std::thread;
 use serde_json as json;
 
 // use cocoa as renderer;
-use gtk as renderer;
+// use gnome as renderer;
+use facade;
 
 use dom;
 use phantom::Phantom;
@@ -17,7 +18,6 @@ pub enum Action<S> {
     Update(S),
     Layout(f32, f32),
 }
-
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -32,7 +32,7 @@ where
 
     // TODO: define generic `Renderer` trait for all backends
     // TODO: pass queues in as dependencies
-    let renderer = renderer::Renderer::new();
+    let renderer = facade::Renderer::new();
 
     //
     // TODO: separate `model` and `update` from `view` and `renderer`
@@ -103,7 +103,6 @@ where
                     }
                 };
 
-
                 // TODO: make this `renderer.push`
                 for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
                     sender.push(event);
@@ -112,5 +111,5 @@ where
         });
     }
 
-    renderer::run(renderer) // ensure renderer is 'main' thread
+    facade::run(renderer) // ensure renderer is 'main' thread
 }

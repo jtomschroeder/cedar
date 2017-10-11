@@ -45,6 +45,11 @@ pub fn run(interconnect: Renderer) {
     gtk::timeout_add(16, move || {
         if let Some(command) = interconnect.incoming.try_pop() {
             println!("Command: {:?}", command);
+
+            // TODO: handle commands
+            // - create
+            // - update
+            // - move
         }
 
         if widgets.is_empty() {
