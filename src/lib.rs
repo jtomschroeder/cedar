@@ -6,8 +6,6 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-extern crate yoga;
-
 // macOS
 
 #[cfg(all(target_os = "macos", not(feature = "gtk")))]
@@ -27,6 +25,7 @@ mod tree;
 mod phantom;
 mod program;
 mod renderer;
+mod yoga;
 
 pub mod dom;
 

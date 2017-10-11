@@ -22,10 +22,6 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 
-yoga = { path = "yoga" }
-# cocoa = { path = "cocoa" }
-# gtk = { path = "gtk" }
-
 [dependencies.gtk]
 version = "0.2.0"
 features = ["v3_10"]

@@ -1,8 +1,0 @@
-[package]
-name = "yoga"
-version = "0.1.0"
-authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
-
-[build-dependencies]
-cc = "1.0"
-

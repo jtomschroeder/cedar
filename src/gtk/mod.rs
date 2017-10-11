@@ -1,8 +1,8 @@
 
 extern crate gtk;
 
-use gtk::prelude::*;
-use gtk::{Button, Window, WindowType};
+use self::gtk::prelude::*;
+use self::gtk::{Button, Window, WindowType};
 
 use std::sync::Arc;
 use std::collections::HashMap;
