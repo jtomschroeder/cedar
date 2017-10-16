@@ -36,7 +36,7 @@ impl renderer::Renderer for Renderer {
     }
 }
 
-pub fn run(interconnect: Renderer) {
+pub fn run(renderer: Renderer) {
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -56,7 +56,7 @@ pub fn run(interconnect: Renderer) {
     let mut widgets = HashMap::new();
 
     gtk::timeout_add(16, move || {
-        if let Some(command) = interconnect.commands.try_pop() {
+        if let Some(command) = renderer.commands.try_pop() {
             println!("Command: {:?}", command);
 
             // TODO: handle commands

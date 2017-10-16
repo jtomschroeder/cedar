@@ -49,7 +49,7 @@ impl renderer::Renderer for Renderer {
     }
 }
 
-// TODO: handling dropping of interconnect instance
+// TODO: handling dropping of renderer instance
 
 #[no_mangle]
 pub extern "C" fn renderer_recv(renderer: *mut Renderer) -> *mut c_char {
@@ -76,7 +76,7 @@ pub extern "C" fn renderer_string_drop(s: *mut c_char) {
     let _ = unsafe { CString::from_raw(s) };
 }
 
-pub fn run(interconnect: Renderer) {
-    let interconnect = Box::new(interconnect);
-    unsafe { bindings::run(Box::into_raw(interconnect) as *mut c_void) }
+pub fn run(renderer: Renderer) {
+    let renderer = Box::new(renderer);
+    unsafe { bindings::run(Box::into_raw(renderer) as *mut c_void) }
 }
