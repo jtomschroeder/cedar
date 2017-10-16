@@ -154,6 +154,7 @@ extern "C" void run(void *r) {
     [window makeKeyAndOrderFront:nil];
 
     // Bring window to front
+    // NOTE: when Launch Services launches an .app bundle, it takes care of this automatically (?)
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 

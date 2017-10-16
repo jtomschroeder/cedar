@@ -19,12 +19,6 @@ where
     S: Clone + Send + 'static + PartialEq,
     M: Send + 'static,
 {
-    // TODO: use `spawn` and listen to stdin/stdout
-    // - implement 'quit' event (or just exit when process terminates)
-
-    // TODO: remove hard-coded path to UI subprocess exe
-    // - `fork` is another option - only *nix compatible, though.
-
     let renderer = facade::Renderer::new();
 
     //
