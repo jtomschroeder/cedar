@@ -1,6 +1,4 @@
 
-extern crate crossbeam;
-
 use std::os::raw::{c_void, c_char};
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
@@ -19,15 +17,15 @@ mod bindings {
 
 #[derive(Clone)]
 pub struct Renderer {
-    incoming: Arc<MsQueue<String>>,
-    outgoing: Arc<MsQueue<String>>,
+    commands: Arc<MsQueue<String>>,
+    events: Arc<MsQueue<String>>,
 }
 
 impl Renderer {
     pub fn new() -> Self {
         Renderer {
-            incoming: Arc::new(MsQueue::new()),
-            outgoing: Arc::new(MsQueue::new()),
+            commands: Arc::new(MsQueue::new()),
+            events: Arc::new(MsQueue::new()),
         }
     }
 }
@@ -35,12 +33,12 @@ impl Renderer {
 impl renderer::Renderer for Renderer {
     fn send(&self, cmd: Command) {
         let cmd = json::to_string(&cmd).unwrap();
-        self.incoming.push(cmd)
+        self.commands.push(cmd)
     }
 
     fn recv(&self) -> Event {
         loop {
-            let line = self.outgoing.pop();
+            let line = self.events.pop();
             match json::from_str(&line) {
                 Ok(event) => return event,
                 Err(err) => {
@@ -57,7 +55,7 @@ impl renderer::Renderer for Renderer {
 pub extern "C" fn renderer_recv(renderer: *mut Renderer) -> *mut c_char {
     let renderer: &Renderer = unsafe { &*renderer };
 
-    let input = renderer.incoming.pop(); // blocking!
+    let input = renderer.commands.pop(); // blocking!
 
     let string = CString::new(input.into_bytes()).unwrap();
     CString::into_raw(string)
@@ -70,7 +68,7 @@ pub extern "C" fn renderer_resp(renderer: *mut Renderer, s: *const c_char) {
     let s = unsafe { CStr::from_ptr(s) };
     let s = s.to_str().unwrap();
 
-    renderer.outgoing.push(s.into());
+    renderer.events.push(s.into());
 }
 
 #[no_mangle]

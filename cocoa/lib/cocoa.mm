@@ -102,12 +102,13 @@ void send(const C &command) {
 
 @end
 
-static void checks() {
-    static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
-}
-
 extern "C" void run(void *r) {
     renderer = r;
+
+    {
+        // compile-time checks
+        static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
+    }
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];

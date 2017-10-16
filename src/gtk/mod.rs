@@ -1,24 +1,38 @@
 
 extern crate gtk;
 
+use std::sync::Arc;
+use std::collections::HashMap;
+
 use self::gtk::prelude::*;
 use self::gtk::{Button, Window, WindowType};
 
-use std::sync::Arc;
-use std::collections::HashMap;
 use crossbeam::sync::MsQueue;
 
+use renderer::{self, Command, Event};
+
+#[derive(Clone)]
 pub struct Renderer {
-    pub incoming: Arc<MsQueue<String>>,
-    pub outgoing: Arc<MsQueue<String>>,
+    pub commands: Arc<MsQueue<Command>>,
+    pub events: Arc<MsQueue<Event>>,
 }
 
 impl Renderer {
     pub fn new() -> Self {
         Renderer {
-            incoming: Arc::new(MsQueue::new()),
-            outgoing: Arc::new(MsQueue::new()),
+            commands: Arc::new(MsQueue::new()),
+            events: Arc::new(MsQueue::new()),
         }
+    }
+}
+
+impl renderer::Renderer for Renderer {
+    fn send(&self, cmd: Command) {
+        self.commands.push(cmd)
+    }
+
+    fn recv(&self) -> Event {
+        self.events.pop()
     }
 }
 
@@ -42,7 +56,7 @@ pub fn run(interconnect: Renderer) {
     let mut widgets = HashMap::new();
 
     gtk::timeout_add(16, move || {
-        if let Some(command) = interconnect.incoming.try_pop() {
+        if let Some(command) = interconnect.commands.try_pop() {
             println!("Command: {:?}", command);
 
             // TODO: handle commands
