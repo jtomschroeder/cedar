@@ -11,7 +11,6 @@ pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
 pub enum Action<S> {
     Update(S),
-    Layout(f32, f32),
 }
 
 pub fn program<S, M>(mut model: M, update: Update<M, S>, view: View<M, S>)
@@ -30,16 +29,11 @@ where
     //   - effects => commands, subscriptions
     //
 
-    // TODO: pass initial state to renderer
-    // - e.g. initial width & height
-
-    let (mut width, mut height) = (500., 500.);
-
     {
         let renderer = renderer.clone();
 
         thread::spawn(move || {
-            let (mut phantom, commands) = Phantom::initialize(&model, view, width, height);
+            let (mut phantom, commands) = Phantom::initialize(&model, view);
 
             for event in commands.into_iter() {
                 renderer.send(event);
@@ -49,8 +43,6 @@ where
 
             loop {
                 let event = renderer.recv(); // blocking!
-
-                // println!("event: {:?}", event);
 
                 // translate events from backend renderer to actions
                 let action = phantom.translate(event);
@@ -69,15 +61,7 @@ where
                         // TODO: might be better to change Update to fn(Model, &Message)
                         // TODO: inject middleware here: middleware.handlers(&model, &message)
 
-                        phantom.update(&model, view, width, height)
-                    }
-
-                    Action::Layout(w, h) => {
-                        width = w;
-                        height = h;
-
-                        let cmd = phantom.layout(width, height);
-                        vec![cmd]
+                        phantom.update(&model, view)
                     }
                 };
 

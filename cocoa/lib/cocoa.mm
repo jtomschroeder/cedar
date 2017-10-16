@@ -23,22 +23,6 @@ void send(const C &command) {
     renderer_resp(renderer, command.dump().c_str());
 }
 
-@interface WindowDelegate : NSObject <NSWindowDelegate>
-@end
-
-@implementation WindowDelegate
-
-// - (void)windowDidResize:(NSNotification *)notification {
-//     NSWindow *window = [notification object];
-//     const auto frame = window.contentView.frame;
-
-//     auto command = json{{"Resize", {{"width", frame.size.width}, {"height",
-//     frame.size.height}}}};
-//     send(command);
-// }
-
-@end
-
 @interface Action : NSObject {
     std::string identifier;
 }
@@ -56,17 +40,6 @@ void send(const C &command) {
 - (void)click:(id)__unused sender {
     auto command = json{{"Click", {{"id", self->identifier}}}};
     send(command);
-}
-
-@end
-
-@interface View : NSView
-@end
-
-@implementation View
-
-- (BOOL)isFlipped {
-    return YES;
 }
 
 @end
@@ -146,9 +119,6 @@ extern "C" void run(void *r) {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
 
-    // [window setContentView:[[View alloc] init]];
-    // [window setDelegate:[[WindowDelegate alloc] init]];
-
     [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
     [window center];
     [window setTitle:@"** cedar **"];
@@ -161,15 +131,12 @@ extern "C" void run(void *r) {
 
     auto stack = [[NSStackView alloc] init];
 
-    [stack setWantsLayer:YES];
-    stack.layer.backgroundColor =
-        [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
-    // [stack.layer setBackgroundColor:[[NSColor redColor] CGColor]];
+    // Set background color of `stack` (for debugging)
+    // [stack setWantsLayer:YES];
+    // stack.layer.backgroundColor =
+    //     [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
 
-    // [stack setAutoresizingMask:NSViewHeightSizable];
     [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-    // [stack setAutoresizingMask:(NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
-    //                             NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin)];
 
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
     // [stack setSpacing:5.0];
@@ -183,7 +150,6 @@ extern "C" void run(void *r) {
                forOrientation:NSLayoutConstraintOrientationHorizontal];
 
     [stack setFrame:window.contentView.frame];
-    // [stack setFrame:frame];
     [window.contentView addSubview:stack];
 
     std::thread([&] {
@@ -200,14 +166,7 @@ extern "C" void run(void *r) {
                 auto &create = command["Create"];
                 auto &ident = create["id"];
                 auto &widget = create["kind"];
-                // auto &frame = create["frame"];
                 auto &attributes = create["attributes"];
-
-                // const float left = frame[0];
-                // const float top = frame[1];
-                // const float width = frame[2];
-                // const float height = frame[3];
-                // const auto rframe = NSMakeRect(left, top, width, height);
 
                 if (widget == "Button") {
                     auto button = [[NSButton alloc] init];
@@ -219,6 +178,13 @@ extern "C" void run(void *r) {
                     auto action = [[Action alloc] initWithID:ident];
                     [button setAction:@selector(click:)];
                     [button setTarget:action];
+
+                    {
+                        // Set 'minimum width' using anchor
+                        auto constraint =
+                            [button.widthAnchor constraintGreaterThanOrEqualToConstant:120.0];
+                        constraint.active = YES;
+                    }
 
                     widgets[ident] = button;
 
