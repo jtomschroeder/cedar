@@ -76,6 +76,36 @@ void send(const C &command) {
 
 @end
 
+void constrain(NSView *view) {
+    // Set 'minimum width' using anchor
+    auto constraint = [view.widthAnchor constraintGreaterThanOrEqualToConstant:120.0];
+    constraint.active = YES;
+}
+
+NSStackView *make_stack() {
+    auto stack = [[NSStackView alloc] init];
+
+    // Set background color of `stack` (for debugging)
+    // [stack setWantsLayer:YES];
+    // stack.layer.backgroundColor =
+    //     [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
+
+    [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+
+    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+    // [stack setSpacing:5.0];
+
+    [stack setDistribution:NSStackViewDistributionGravityAreas];
+    // [stack setDistribution:NSStackViewDistributionEqualSpacing];
+
+    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
+
+    [stack setHuggingPriority:NSLayoutPriorityWindowSizeStayPut
+               forOrientation:NSLayoutConstraintOrientationHorizontal];
+
+    return stack;
+}
+
 extern "C" void run(void *r) {
     renderer = r;
 
@@ -129,25 +159,7 @@ extern "C" void run(void *r) {
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-    auto stack = [[NSStackView alloc] init];
-
-    // Set background color of `stack` (for debugging)
-    // [stack setWantsLayer:YES];
-    // stack.layer.backgroundColor =
-    //     [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
-
-    [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    // [stack setSpacing:5.0];
-
-    [stack setDistribution:NSStackViewDistributionGravityAreas];
-    // [stack setDistribution:NSStackViewDistributionEqualSpacing];
-
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
-
-    [stack setHuggingPriority:NSLayoutPriorityWindowSizeStayPut
-               forOrientation:NSLayoutConstraintOrientationHorizontal];
+    auto stack = make_stack();
 
     [stack setFrame:window.contentView.frame];
     [window.contentView addSubview:stack];
@@ -179,13 +191,7 @@ extern "C" void run(void *r) {
                     [button setAction:@selector(click:)];
                     [button setTarget:action];
 
-                    {
-                        // Set 'minimum width' using anchor
-                        auto constraint =
-                            [button.widthAnchor constraintGreaterThanOrEqualToConstant:120.0];
-                        constraint.active = YES;
-                    }
-
+                    constrain(button);
                     widgets[ident] = button;
 
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -204,6 +210,7 @@ extern "C" void run(void *r) {
 
                     [label setAlignment:NSTextAlignmentCenter];
 
+                    constrain(label);
                     widgets[ident] = label;
 
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -222,6 +229,7 @@ extern "C" void run(void *r) {
                         [field setPlaceholderAttributedString:string];
                     }
 
+                    constrain(field);
                     widgets[ident] = field;
 
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -243,26 +251,6 @@ extern "C" void run(void *r) {
                       [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                     });
                 }
-            } else if (command.count("Move")) {
-                // auto &move = command["Move"];
-                // std::cerr << move << std::endl;
-
-                // for (auto &move : command["Move"]) {
-                //     auto ident = move[0];
-
-                //     auto widget = widgets.find(ident);
-                //     if (widget != widgets.end()) {
-                //         auto &frame = move[1];
-
-                //         const float left = frame[0];
-                //         const float top = frame[1];
-                //         const float width = frame[2];
-                //         const float height = frame[3];
-
-                //         [widget->second setFrame:NSMakeRect(left, top, width, height)];
-                //     }
-                // }
-
             } else {
                 std::cerr << "Unknown command: " << command << std::endl;
             }

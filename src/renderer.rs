@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 type Identifier = String;
 
+// TODO: `enum` for 'kind'
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Command {
     Create {

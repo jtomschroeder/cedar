@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use super::gtk;
 use super::gtk::prelude::*;
-use super::gtk::{Button, Window, WindowType, Container, Orientation, Label};
+use super::gtk::{Button, Window, WindowType, Orientation, Label};
 
 use crossbeam::sync::MsQueue;
 
@@ -38,6 +38,7 @@ impl renderer::Renderer for Renderer {
 enum Widget {
     Button(Button),
     Label(Label),
+    Field(gtk::Entry),
 }
 
 pub fn run(renderer: Renderer) {
@@ -51,7 +52,7 @@ pub fn run(renderer: Renderer) {
     window.set_default_size(500, 500);
 
     window.connect_delete_event(|_, _| {
-        println!("Quit!");
+        // println!("Quit!");
 
         gtk::main_quit();
         Inhibit(false)
@@ -64,13 +65,12 @@ pub fn run(renderer: Renderer) {
 
     gtk::timeout_add(16, move || {
         if let Some(command) = renderer.commands.try_pop() {
-            println!("Command: {:?}", command);
+            // println!("Command: {:?}", command);
 
             match command {
                 Command::Create {
                     id,
                     kind,
-                    frame,
                     attributes,
                 } => {
                     match kind.as_str() {
@@ -96,6 +96,32 @@ pub fn run(renderer: Renderer) {
                             widgets.insert(id, Widget::Label(label));
                         }
 
+                        "Field" => {
+                            let field = gtk::Entry::new();
+                            container.add(&field);
+
+                            if let Some(ref placeholder) = attributes.get("Placeholder") {
+                                field.set_placeholder_text(Some(placeholder.as_str()))
+                            }
+
+                            {
+                                let id = id.clone();
+                                let events = renderer.events.clone();
+                                field.connect_event(move |field, _| {
+                                    if let Some(ref text) = field.get_text() {
+                                        events.push(Event::Change {
+                                            id: id.clone(),
+                                            value: text.clone(),
+                                        });
+                                    }
+
+                                    gtk::Inhibit(false)
+                                });
+                            }
+
+                            widgets.insert(id, Widget::Field(field));
+                        }
+
                         _ => unimplemented!(),
                     }
                 }
@@ -104,11 +130,14 @@ pub fn run(renderer: Renderer) {
                     let ref widget = widgets[&id];
                     match widget {
                         &Widget::Label(ref label) if attribute == "Text" => label.set_label(&value),
+
+                        &Widget::Field(ref field) if attribute == "Placeholder" => {
+                            field.set_placeholder_text(Some(value.as_str()))
+                        }
+
                         _ => unimplemented!(),
                     }
                 }
-
-                Command::Move(_) => {}
 
                 _ => unimplemented!(),
             }
