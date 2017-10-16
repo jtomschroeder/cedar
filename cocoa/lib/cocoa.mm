@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 static void *renderer = nullptr;
 extern "C" {
-void renderer_send(void *, const char *);
+void renderer_resp(void *, const char *);
 
 char *renderer_recv(void *);
 void renderer_string_drop(char *);
@@ -20,7 +20,7 @@ void renderer_string_drop(char *);
 
 template <class C>
 void send(const C &command) {
-    renderer_send(renderer, command.dump().c_str());
+    renderer_resp(renderer, command.dump().c_str());
 }
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>

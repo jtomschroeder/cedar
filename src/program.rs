@@ -1,13 +1,10 @@
 
-use std::str;
 use std::thread;
 
-use serde_json as json;
-
 use facade;
-
 use dom;
 use phantom::Phantom;
+use renderer::Renderer;
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -28,8 +25,6 @@ where
     // TODO: remove hard-coded path to UI subprocess exe
     // - `fork` is another option - only *nix compatible, though.
 
-    // TODO: define generic `Renderer` trait for all backends
-    // TODO: pass queues in as dependencies
     let renderer = facade::Renderer::new();
 
     //
@@ -47,29 +42,19 @@ where
     let (mut width, mut height) = (500., 500.);
 
     {
-        let sender = renderer.incoming.clone();
-        let receiver = renderer.outgoing.clone();
+        let renderer = renderer.clone();
 
         thread::spawn(move || {
             let (mut phantom, commands) = Phantom::initialize(&model, view, width, height);
 
-            // TODO: make this `renderer.push`
-            for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
-                sender.push(event);
+            for event in commands.into_iter() {
+                renderer.send(event);
             }
 
             // Receive messages from 'renderer'
 
             loop {
-                let line = receiver.pop(); // blocking!
-
-                let event = match json::from_str(&line) {
-                    Ok(event) => event,
-                    Err(err) => {
-                        eprintln!("Failed to parse event: '{}' :: {:?}", line, err);
-                        continue;
-                    }
-                };
+                let event = renderer.recv(); // blocking!
 
                 // translate events from backend renderer to actions
                 let action = phantom.translate(event);
@@ -100,13 +85,12 @@ where
                     }
                 };
 
-                // TODO: make this `renderer.push`
-                for event in commands.into_iter().map(|e| json::to_string(&e).unwrap()) {
-                    sender.push(event);
+                for event in commands.into_iter() {
+                    renderer.send(event);
                 }
             }
         });
     }
 
-    facade::run(renderer) // ensure renderer is 'main' thread
+    facade::run(renderer) // run renderer on 'main' thread!
 }

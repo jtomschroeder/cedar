@@ -6,6 +6,9 @@ use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
+use serde_json as json;
+
+use renderer::{self, Command, Event};
 
 mod bindings {
     use super::*;
@@ -14,9 +17,10 @@ mod bindings {
     }
 }
 
+#[derive(Clone)]
 pub struct Renderer {
-    pub incoming: Arc<MsQueue<String>>,
-    pub outgoing: Arc<MsQueue<String>>,
+    incoming: Arc<MsQueue<String>>,
+    outgoing: Arc<MsQueue<String>>,
 }
 
 impl Renderer {
@@ -26,23 +30,28 @@ impl Renderer {
             outgoing: Arc::new(MsQueue::new()),
         }
     }
+}
 
-    // fn send(&self) {
-    //     eprintln!("HEY!");
-    // }
+impl renderer::Renderer for Renderer {
+    fn send(&self, cmd: Command) {
+        let cmd = json::to_string(&cmd).unwrap();
+        self.incoming.push(cmd)
+    }
+
+    fn recv(&self) -> Event {
+        loop {
+            let line = self.outgoing.pop();
+            match json::from_str(&line) {
+                Ok(event) => return event,
+                Err(err) => {
+                    eprintln!("Failed to parse event: '{}' :: {:?}", line, err);
+                }
+            }
+        }
+    }
 }
 
 // TODO: handling dropping of interconnect instance
-
-#[no_mangle]
-pub extern "C" fn renderer_send(renderer: *mut Renderer, s: *const c_char) {
-    let renderer: &Renderer = unsafe { &*renderer };
-
-    let s = unsafe { CStr::from_ptr(s) };
-    let s = s.to_str().unwrap();
-
-    renderer.outgoing.push(s.into());
-}
 
 #[no_mangle]
 pub extern "C" fn renderer_recv(renderer: *mut Renderer) -> *mut c_char {
@@ -52,6 +61,16 @@ pub extern "C" fn renderer_recv(renderer: *mut Renderer) -> *mut c_char {
 
     let string = CString::new(input.into_bytes()).unwrap();
     CString::into_raw(string)
+}
+
+#[no_mangle]
+pub extern "C" fn renderer_resp(renderer: *mut Renderer, s: *const c_char) {
+    let renderer: &Renderer = unsafe { &*renderer };
+
+    let s = unsafe { CStr::from_ptr(s) };
+    let s = s.to_str().unwrap();
+
+    renderer.outgoing.push(s.into());
 }
 
 #[no_mangle]

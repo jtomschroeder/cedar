@@ -27,3 +27,8 @@ pub enum Event {
 
     Resize { width: f32, height: f32 },
 }
+
+pub trait Renderer {
+    fn send(&self, Command);
+    fn recv(&self) -> Event;
+}
