@@ -4,8 +4,6 @@ use std::thread;
 
 use serde_json as json;
 
-// use cocoa as renderer;
-// use gnome as renderer;
 use facade;
 
 use dom;
@@ -65,19 +63,18 @@ where
             loop {
                 let line = receiver.pop(); // blocking!
 
-                // TODO: serialize ID as Path object to avoid parsing!
-                // - in both Command and Event
-
                 let event = match json::from_str(&line) {
                     Ok(event) => event,
                     Err(err) => {
-                        println!("Failed to parse event: '{}' :: {:?}", line, err);
+                        eprintln!("Failed to parse event: '{}' :: {:?}", line, err);
                         continue;
                     }
                 };
 
                 // translate events from backend renderer to actions
                 let action = phantom.translate(event);
+
+                // TODO: `translate` could return (Action?, Commands?) to decouple layout from message
 
                 let action = match action {
                     Some(a) => a,

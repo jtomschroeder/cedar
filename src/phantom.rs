@@ -118,6 +118,10 @@ where
     }
 
     pub fn translate(&self, event: Event) -> Option<Action<S>> {
+
+        // TODO: serialize ID as Path object to avoid parsing!
+        // - in both Command and Event
+
         let ref dom = self.dom;
         match event {
             Event::Click { id } => {
