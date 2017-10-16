@@ -50,6 +50,8 @@ where
             loop {
                 let event = renderer.recv(); // blocking!
 
+                // println!("event: {:?}", event);
+
                 // translate events from backend renderer to actions
                 let action = phantom.translate(event);
 

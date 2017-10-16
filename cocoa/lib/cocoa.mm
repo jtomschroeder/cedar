@@ -28,13 +28,14 @@ void send(const C &command) {
 
 @implementation WindowDelegate
 
-- (void)windowDidResize:(NSNotification *)notification {
-    NSWindow *window = [notification object];
-    const auto frame = window.contentView.frame;
+// - (void)windowDidResize:(NSNotification *)notification {
+//     NSWindow *window = [notification object];
+//     const auto frame = window.contentView.frame;
 
-    auto command = json{{"Resize", {{"width", frame.size.width}, {"height", frame.size.height}}}};
-    send(command);
-}
+//     auto command = json{{"Resize", {{"width", frame.size.width}, {"height",
+//     frame.size.height}}}};
+//     send(command);
+// }
 
 @end
 
@@ -80,8 +81,8 @@ void send(const C &command) {
 
 @implementation TextField
 
-- (id)initWithFrame:(NSRect)frame ID:(std::string)ident {
-    if (self = [super initWithFrame:frame]) {
+- (id)initWithID:(std::string)ident {
+    if (self = [super init]) {
         self->identifier = ident;
 
         [self setBezeled:YES];
@@ -130,7 +131,7 @@ extern "C" void run(void *r) {
         [app_menu_item setSubmenu:app_menu];
     }
 
-    auto frame = NSMakeRect(0, 0, 500, 500);
+    auto frame = NSMakeRect(0, 0, 250, 250);
 
 #ifdef MAC_OS_X_VERSION_10_12 // macOS >= 10.12 (for WindowMask deprecation)
     auto styleMask = NSWindowStyleMaskResizable | NSWindowStyleMaskTitled |
@@ -145,8 +146,8 @@ extern "C" void run(void *r) {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
 
-    [window setContentView:[[View alloc] init]];
-    [window setDelegate:[[WindowDelegate alloc] init]];
+    // [window setContentView:[[View alloc] init]];
+    // [window setDelegate:[[WindowDelegate alloc] init]];
 
     [window cascadeTopLeftFromPoint:NSMakePoint(0, 0)];
     [window center];
@@ -158,11 +159,32 @@ extern "C" void run(void *r) {
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-    // TODO: need to perform UI updates on main thread
-    //
-    // dispatch_async(dispatch_get_main_queue(), ^{
-    //     // perform UI updates
-    // });
+    auto stack = [[NSStackView alloc] init];
+
+    [stack setWantsLayer:YES];
+    stack.layer.backgroundColor =
+        [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
+    // [stack.layer setBackgroundColor:[[NSColor redColor] CGColor]];
+
+    // [stack setAutoresizingMask:NSViewHeightSizable];
+    [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+    // [stack setAutoresizingMask:(NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+    //                             NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin)];
+
+    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+    // [stack setSpacing:5.0];
+
+    [stack setDistribution:NSStackViewDistributionGravityAreas];
+    // [stack setDistribution:NSStackViewDistributionEqualSpacing];
+
+    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
+
+    [stack setHuggingPriority:NSLayoutPriorityWindowSizeStayPut
+               forOrientation:NSLayoutConstraintOrientationHorizontal];
+
+    [stack setFrame:window.contentView.frame];
+    // [stack setFrame:frame];
+    [window.contentView addSubview:stack];
 
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
@@ -178,18 +200,17 @@ extern "C" void run(void *r) {
                 auto &create = command["Create"];
                 auto &ident = create["id"];
                 auto &widget = create["kind"];
-                auto &frame = create["frame"];
+                // auto &frame = create["frame"];
                 auto &attributes = create["attributes"];
 
-                const float left = frame[0];
-                const float top = frame[1];
-                const float width = frame[2];
-                const float height = frame[3];
-
-                const auto rframe = NSMakeRect(left, top, width, height);
+                // const float left = frame[0];
+                // const float top = frame[1];
+                // const float width = frame[2];
+                // const float height = frame[3];
+                // const auto rframe = NSMakeRect(left, top, width, height);
 
                 if (widget == "Button") {
-                    auto button = [[NSButton alloc] initWithFrame:rframe];
+                    auto button = [[NSButton alloc] init];
                     button.bezelStyle = NSRoundedBezelStyle;
 
                     const std::string &text = attributes["Text"];
@@ -200,9 +221,12 @@ extern "C" void run(void *r) {
                     [button setTarget:action];
 
                     widgets[ident] = button;
-                    [window.contentView addSubview:button];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [stack addView:button inGravity:NSStackViewGravityTop];
+                    });
                 } else if (widget == "Label") {
-                    auto label = [[NSTextField alloc] initWithFrame:rframe];
+                    auto label = [[NSTextField alloc] init];
 
                     const std::string &text = attributes["Text"];
                     [label setStringValue:[NSString stringWithUTF8String:text.c_str()]];
@@ -215,9 +239,12 @@ extern "C" void run(void *r) {
                     [label setAlignment:NSTextAlignmentCenter];
 
                     widgets[ident] = label;
-                    [window.contentView addSubview:label];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [stack addView:label inGravity:NSStackViewGravityTop];
+                    });
                 } else if (widget == "Field") {
-                    auto field = [[TextField alloc] initWithFrame:rframe ID:ident];
+                    auto field = [[TextField alloc] initWithID:ident];
 
                     auto placeholder = attributes.find("Placeholder");
                     if (placeholder != attributes.end()) {
@@ -230,7 +257,10 @@ extern "C" void run(void *r) {
                     }
 
                     widgets[ident] = field;
-                    [window.contentView addSubview:field];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [stack addView:field inGravity:NSStackViewGravityTop];
+                    });
                 } else {
                     std::cerr << "Unknown widget: " << widget << std::endl;
                 }
@@ -243,27 +273,29 @@ extern "C" void run(void *r) {
 
                 if (attribute == "Text") {
                     auto field = (NSTextField *)(widgets[ident]);
-                    [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
+                    });
                 }
             } else if (command.count("Move")) {
                 // auto &move = command["Move"];
                 // std::cerr << move << std::endl;
 
-                for (auto &move : command["Move"]) {
-                    auto ident = move[0];
+                // for (auto &move : command["Move"]) {
+                //     auto ident = move[0];
 
-                    auto widget = widgets.find(ident);
-                    if (widget != widgets.end()) {
-                        auto &frame = move[1];
+                //     auto widget = widgets.find(ident);
+                //     if (widget != widgets.end()) {
+                //         auto &frame = move[1];
 
-                        const float left = frame[0];
-                        const float top = frame[1];
-                        const float width = frame[2];
-                        const float height = frame[3];
+                //         const float left = frame[0];
+                //         const float top = frame[1];
+                //         const float width = frame[2];
+                //         const float height = frame[3];
 
-                        [widget->second setFrame:NSMakeRect(left, top, width, height)];
-                    }
-                }
+                //         [widget->second setFrame:NSMakeRect(left, top, width, height)];
+                //     }
+                // }
 
             } else {
                 std::cerr << "Unknown command: " << command << std::endl;
