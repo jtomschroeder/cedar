@@ -44,6 +44,8 @@ where
             loop {
                 let event = renderer.recv(); // blocking!
 
+                eprintln!("event: {:?}", event);
+
                 // translate events from backend renderer to actions
                 let action = phantom.translate(event);
 
@@ -64,6 +66,8 @@ where
                         phantom.update(&model, view)
                     }
                 };
+
+                eprintln!("commands: {:?}", commands);
 
                 for event in commands.into_iter() {
                     renderer.send(event);

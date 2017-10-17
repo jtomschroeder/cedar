@@ -19,8 +19,10 @@ use cedar::dom;
 type Widget = dom::Object<Message>;
 
 fn words(line: &str) -> Vec<Widget> {
-    // TODO: split line on spaces and make label for each word
-    vec![]
+    line.split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|w| dom::label(w.into()))
+        .collect()
 }
 
 fn view(model: &Model) -> Widget {
@@ -34,5 +36,5 @@ fn view(model: &Model) -> Widget {
 }
 
 fn main() {
-    cedar::program("--".into(), update, view)
+    cedar::program("".into(), update, view)
 }

@@ -1,24 +1,25 @@
 
+use std::fmt;
 use tree;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub struct Button<S> {
     pub text: String,
     pub click: Option<S>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub struct Label {
     pub text: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub struct Field<S> {
     pub placeholder: Option<String>,
     pub change: Option<fn(String) -> S>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub enum Widget<S> {
     Stack,
     Button(Button<S>),
@@ -26,10 +27,34 @@ pub enum Widget<S> {
     Field(Field<S>),
 }
 
-#[derive(Debug)]
+impl<S> fmt::Debug for Widget<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::Widget::*;
+        write!(
+            f,
+            "{}",
+            match self {
+                &Stack => "Stack",
+                &Button(_) => "Button",
+                &Label(_) => "Label",
+                &Field(_) => "Field",
+            }
+        )
+    }
+}
+
 pub struct Object<S> {
     pub widget: Widget<S>,
     pub children: Vec<Object<S>>,
+}
+
+impl<S> fmt::Debug for Object<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Object")
+            .field("widget", &self.widget)
+            .field("children", &self.children)
+            .finish()
+    }
 }
 
 impl<T> tree::Vertex for Object<T> {

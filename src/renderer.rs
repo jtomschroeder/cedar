@@ -15,7 +15,7 @@ pub enum Command {
 
     Update(Identifier, String, String), // ID * Attribute * Value
 
-    Remove(Identifier), // ID
+    Remove(Identifier),
 }
 
 #[derive(Serialize, Deserialize, Debug)]

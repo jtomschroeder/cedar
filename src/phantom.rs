@@ -11,15 +11,22 @@ use program::{View, Action};
 fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command> {
     let mut commands = vec![];
 
-    fn expand<S>(_path: &tree::Path, node: &dom::Object<S>, commands: &mut Vec<Command>) {
+    fn expand<S>(root: &tree::Path, node: &dom::Object<S>, commands: &mut Vec<Command>) {
         // TODO: handle create path issue (vertex traversal assumes from root)
 
-        node.traverse(|path, node| {
+        node.traverse(root, |path, node| {
+            eprintln!("id: {:?} {:?}", root, path);
+
             let id = path.to_string();
 
             let mut attributes = HashMap::new();
 
             let kind = match node.widget {
+                dom::Widget::Stack => {
+                    // TODO: unimplemented!()
+                    None
+                }
+
                 dom::Widget::Label(ref label) => {
                     attributes.insert("Text".into(), label.text.clone());
                     Some("Label".into())
@@ -36,8 +43,6 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
                     }
                     Some("Field".into())
                 }
-
-                _ => None,
             };
 
             if let Some(kind) = kind {
@@ -51,22 +56,25 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
     }
 
     for (path, op) in set.into_iter() {
-        let node = dom.find(&path).expect("path in nodes");
+        let node = || dom.find(&path).expect("path in nodes");
+        let id = || path.to_string();
 
         match op {
-            tree::Operation::Create => expand(&path, node, &mut commands),
+            tree::Operation::Create => expand(&path, node(), &mut commands),
             tree::Operation::Update => {
-                let id = path.to_string();
+                let node = node();
                 match node.widget {
                     dom::Widget::Label(ref label) => {
-                        commands.push(Command::Update(id, "Text".into(), label.text.clone()))
+                        commands.push(Command::Update(id(), "Text".into(), label.text.clone()))
                     }
 
-                    _ => unimplemented!(),
+                    _ => panic!("`Update` not yet implemented for widget!"),
                 }
             }
 
-            _ => unimplemented!(),
+            tree::Operation::Delete => commands.push(Command::Remove(id())),
+
+            tree::Operation::Replace => panic!("`Replace` not yet implemented!"),
         }
     }
 
