@@ -251,6 +251,19 @@ extern "C" void run(void *r) {
                       [field setStringValue:[NSString stringWithUTF8String:value.c_str()]];
                     });
                 }
+            } else if (command.count("Remove")) {
+                auto ident = command["Remove"];
+
+                auto it = widgets.find(ident);
+                if (it != widgets.end()) {
+                    auto widget = it->second;
+                    widgets.erase(it);
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [widget removeFromSuperview];
+                      [widget release];
+                    });
+                }
             } else {
                 std::cerr << "Unknown command: " << command << std::endl;
             }
