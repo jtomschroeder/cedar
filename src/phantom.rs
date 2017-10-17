@@ -87,7 +87,7 @@ pub struct Phantom<S> {
 
 impl<S> Phantom<S>
 where
-    S: Clone + Send + 'static + PartialEq,
+    S: 'static + Clone + Send + PartialEq,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
