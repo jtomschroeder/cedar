@@ -41,6 +41,106 @@ enum Widget {
     Field(gtk::Entry),
 }
 
+#[derive(Default)]
+struct Updater {
+    widgets: HashMap<String, Widget>,
+}
+
+impl Updater {
+    fn update(
+        &mut self,
+        command: Command,
+        renderer: Renderer,
+        window: &Window,
+        container: &gtk::Box,
+    ) {
+        match command {
+            Command::Create {
+                id,
+                kind,
+                attributes,
+            } => {
+                match kind.as_str() {
+                    "Button" => {
+                        let button = Button::new_with_label(&attributes["Text"]);
+                        container.add(&button);
+
+                        {
+                            let id = id.clone();
+                            let events = renderer.events.clone();
+                            button.connect_clicked(
+                                move |_| events.push(Event::Click { id: id.clone() }),
+                            );
+                        }
+
+                        self.widgets.insert(id, Widget::Button(button));
+                    }
+
+                    "Label" => {
+                        let label = Label::new(Some(attributes["Text"].as_str()));
+                        container.add(&label);
+
+                        self.widgets.insert(id, Widget::Label(label));
+                    }
+
+                    "Field" => {
+                        let field = gtk::Entry::new();
+                        container.add(&field);
+
+                        if let Some(ref placeholder) = attributes.get("Placeholder") {
+                            field.set_placeholder_text(Some(placeholder.as_str()))
+                        }
+
+                        {
+                            let id = id.clone();
+                            let events = renderer.events.clone();
+                            field.connect_event(move |field, _| {
+                                if let Some(ref text) = field.get_text() {
+                                    events.push(Event::Change {
+                                        id: id.clone(),
+                                        value: text.clone(),
+                                    });
+                                }
+
+                                gtk::Inhibit(false)
+                            });
+                        }
+
+                        self.widgets.insert(id, Widget::Field(field));
+                    }
+
+                    _ => unimplemented!(),
+                }
+            }
+
+            Command::Update(id, attribute, value) => {
+                let ref widget = self.widgets[&id];
+                match widget {
+                    &Widget::Label(ref label) if attribute == "Text" => label.set_label(&value),
+
+                    &Widget::Field(ref field) if attribute == "Placeholder" => {
+                        field.set_placeholder_text(Some(value.as_str()))
+                    }
+
+                    _ => unimplemented!(),
+                }
+            }
+
+            Command::Remove(id) => {
+                if let Some(widget) = self.widgets.remove(&id) {
+                    match widget {
+                        Widget::Button(button) => button.destroy(),
+                        Widget::Label(label) => label.destroy(),
+                        Widget::Field(field) => field.destroy(),
+                    }
+                }
+            }
+        }
+
+        window.show_all();
+    }
+}
+
 pub fn run(renderer: Renderer) {
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
@@ -56,7 +156,8 @@ pub fn run(renderer: Renderer) {
         Inhibit(false)
     });
 
-    let mut widgets = HashMap::new();
+    // let mut widgets = HashMap::new();
+    let mut updater = Updater::default();
 
     let container = gtk::Box::new(Orientation::Vertical, 5);
     window.add(&container);
@@ -65,90 +166,7 @@ pub fn run(renderer: Renderer) {
         if let Some(command) = renderer.commands.try_pop() {
             // println!("Command: {:?}", command);
 
-            match command {
-                Command::Create {
-                    id,
-                    kind,
-                    attributes,
-                } => {
-                    match kind.as_str() {
-                        "Button" => {
-                            let button = Button::new_with_label(&attributes["Text"]);
-                            container.add(&button);
-
-                            {
-                                let id = id.clone();
-                                let events = renderer.events.clone();
-                                button.connect_clicked(
-                                    move |_| events.push(Event::Click { id: id.clone() }),
-                                );
-                            }
-
-                            widgets.insert(id, Widget::Button(button));
-                        }
-
-                        "Label" => {
-                            let label = Label::new(Some(attributes["Text"].as_str()));
-                            container.add(&label);
-
-                            widgets.insert(id, Widget::Label(label));
-                        }
-
-                        "Field" => {
-                            let field = gtk::Entry::new();
-                            container.add(&field);
-
-                            if let Some(ref placeholder) = attributes.get("Placeholder") {
-                                field.set_placeholder_text(Some(placeholder.as_str()))
-                            }
-
-                            {
-                                let id = id.clone();
-                                let events = renderer.events.clone();
-                                field.connect_event(move |field, _| {
-                                    if let Some(ref text) = field.get_text() {
-                                        events.push(Event::Change {
-                                            id: id.clone(),
-                                            value: text.clone(),
-                                        });
-                                    }
-
-                                    gtk::Inhibit(false)
-                                });
-                            }
-
-                            widgets.insert(id, Widget::Field(field));
-                        }
-
-                        _ => unimplemented!(),
-                    }
-                }
-
-                Command::Update(id, attribute, value) => {
-                    let ref widget = widgets[&id];
-                    match widget {
-                        &Widget::Label(ref label) if attribute == "Text" => label.set_label(&value),
-
-                        &Widget::Field(ref field) if attribute == "Placeholder" => {
-                            field.set_placeholder_text(Some(value.as_str()))
-                        }
-
-                        _ => unimplemented!(),
-                    }
-                }
-
-                Command::Remove(id) => {
-                    if let Some(widget) = widgets.remove(&id) {
-                        match widget {
-                            Widget::Button(button) => button.destroy(),
-                            Widget::Label(label) => label.destroy(),
-                            Widget::Field(field) => field.destroy(),
-                        }
-                    }
-                }
-            }
-
-            window.show_all();
+            updater.update(command, renderer.clone(), &window, &container);
         }
 
         gtk::Continue(true)
