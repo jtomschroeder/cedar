@@ -5,7 +5,6 @@ extern crate gtk;
 use std::thread;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-use std::cell::RefCell;
 
 use self::gtk::prelude::*;
 use self::gtk::{Button, Window, WindowType, Orientation, Label};
@@ -154,7 +153,7 @@ impl Updater {
 }
 
 thread_local!(
-    static GLOBAL: RefCell<Option<(Arc<MsQueue<Command>>, Updater)>> = RefCell::new(None)
+    static GLOBAL: Mutex<Option<(Arc<MsQueue<Command>>, Updater)>> = Mutex::new(None)
 );
 
 pub fn run(renderer: Renderer) {
@@ -181,7 +180,7 @@ pub fn run(renderer: Renderer) {
         let renderer = renderer.clone();
         let commands = commands.clone();
         GLOBAL.with(move |global| {
-            *global.borrow_mut() = Some((commands, Updater::new(window, container, renderer)))
+            *global.lock().unwrap() = Some((commands, Updater::new(window, container, renderer)))
         });
     }
 
@@ -189,13 +188,13 @@ pub fn run(renderer: Renderer) {
         // Push command to 'updater' to run on main (idle) thread
         commands.push(renderer.commands.pop());
 
-        // main thread!
+        // kick off to main thread!
         glib::idle_add(|| {
-            GLOBAL.with(|global| if let Some((ref mut commands,
-                                  ref mut updater)) =
-                *global.borrow_mut()
-            {
-                updater.update(commands.pop());
+            GLOBAL.with(|global| {
+                let mut global = global.lock().unwrap();
+                if let Some((ref mut commands, ref mut updater)) = *global {
+                    updater.update(commands.pop());
+                }
             });
 
             glib::Continue(false)
