@@ -7,9 +7,9 @@
 ![License](https://img.shields.io/crates/l/cedar.svg)
 [![Build Status](https://travis-ci.org/jtomschroeder/cedar.svg?branch=master)](https://travis-ci.org/jtomschroeder/cedar)
 
-**Note:** `cedar` is in the *experimental* stage and rapidly evolving -> not yet ready for prime-time.
+**Note:** `cedar` is in the *experimental* stage and rapidly evolving.
 
-### Creating buttons & *reactive* text :rocket:
+### Example: creating buttons & *reactive* text :rocket:
 
 ```rust
 extern crate cedar;
@@ -46,7 +46,15 @@ fn main() {
 
 ### Design
 
-A `cedar` application is composed of a *model*, *update*, and *view*. **TODO: expand on this....**
+A `cedar` application is composed of a *model*, *update*, and *view* - all declared up-front:
+
+- *model*: the state of our app
+- *update*: how to update our state based on a message (i.e. event)
+- *view*: how to transform our state into UI 'widgets'
+
+This architecture is powerful, yet simple. Using a declarative approach, we can achieve impressive reactivity without having to worry about threads, locks, event routing, or view controllers.
+
+Check out the examples!
 
 ### Credits
 
