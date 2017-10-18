@@ -1,10 +1,14 @@
 
-use std::sync::Arc;
-use std::collections::HashMap;
+extern crate glib;
+extern crate gtk;
 
-use super::gtk;
-use super::gtk::prelude::*;
-use super::gtk::{Button, Window, WindowType, Orientation, Label};
+use std::thread;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+use std::cell::RefCell;
+
+use self::gtk::prelude::*;
+use self::gtk::{Button, Window, WindowType, Orientation, Label};
 
 use crossbeam::sync::MsQueue;
 
@@ -41,19 +45,27 @@ enum Widget {
     Field(gtk::Entry),
 }
 
-#[derive(Default)]
+
 struct Updater {
     widgets: HashMap<String, Widget>,
+
+    window: Window,
+    container: gtk::Box,
+
+    renderer: Renderer,
 }
 
 impl Updater {
-    fn update(
-        &mut self,
-        command: Command,
-        renderer: Renderer,
-        window: &Window,
-        container: &gtk::Box,
-    ) {
+    fn new(window: Window, container: gtk::Box, renderer: Renderer) -> Self {
+        Updater {
+            widgets: HashMap::new(),
+            window,
+            container,
+            renderer,
+        }
+    }
+
+    fn update(&mut self, command: Command) {
         match command {
             Command::Create {
                 id,
@@ -63,11 +75,11 @@ impl Updater {
                 match kind.as_str() {
                     "Button" => {
                         let button = Button::new_with_label(&attributes["Text"]);
-                        container.add(&button);
+                        self.container.add(&button);
 
                         {
                             let id = id.clone();
-                            let events = renderer.events.clone();
+                            let events = self.renderer.events.clone();
                             button.connect_clicked(
                                 move |_| events.push(Event::Click { id: id.clone() }),
                             );
@@ -78,14 +90,14 @@ impl Updater {
 
                     "Label" => {
                         let label = Label::new(Some(attributes["Text"].as_str()));
-                        container.add(&label);
+                        self.container.add(&label);
 
                         self.widgets.insert(id, Widget::Label(label));
                     }
 
                     "Field" => {
                         let field = gtk::Entry::new();
-                        container.add(&field);
+                        self.container.add(&field);
 
                         if let Some(ref placeholder) = attributes.get("Placeholder") {
                             field.set_placeholder_text(Some(placeholder.as_str()))
@@ -93,7 +105,7 @@ impl Updater {
 
                         {
                             let id = id.clone();
-                            let events = renderer.events.clone();
+                            let events = self.renderer.events.clone();
                             field.connect_event(move |field, _| {
                                 if let Some(ref text) = field.get_text() {
                                     events.push(Event::Change {
@@ -137,9 +149,13 @@ impl Updater {
             }
         }
 
-        window.show_all();
+        self.window.show_all();
     }
 }
+
+thread_local!(
+    static GLOBAL: RefCell<Option<(Arc<MsQueue<Command>>, Updater)>> = RefCell::new(None)
+);
 
 pub fn run(renderer: Renderer) {
     if gtk::init().is_err() {
@@ -156,20 +172,34 @@ pub fn run(renderer: Renderer) {
         Inhibit(false)
     });
 
-    // let mut widgets = HashMap::new();
-    let mut updater = Updater::default();
-
     let container = gtk::Box::new(Orientation::Vertical, 5);
     window.add(&container);
 
-    gtk::timeout_add(16, move || {
-        if let Some(command) = renderer.commands.try_pop() {
-            // println!("Command: {:?}", command);
+    let commands = Arc::new(MsQueue::new());
 
-            updater.update(command, renderer.clone(), &window, &container);
-        }
+    {
+        let renderer = renderer.clone();
+        let commands = commands.clone();
+        GLOBAL.with(move |global| {
+            *global.borrow_mut() = Some((commands, Updater::new(window, container, renderer)))
+        });
+    }
 
-        gtk::Continue(true)
+    thread::spawn(move || loop {
+        // Push command to 'updater' to run on main (idle) thread
+        commands.push(renderer.commands.pop());
+
+        // main thread!
+        glib::idle_add(|| {
+            GLOBAL.with(|global| if let Some((ref mut commands,
+                                  ref mut updater)) =
+                *global.borrow_mut()
+            {
+                updater.update(commands.pop());
+            });
+
+            glib::Continue(false)
+        });
     });
 
     gtk::main();
