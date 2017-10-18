@@ -26,8 +26,6 @@ mod phantom;
 mod program;
 mod renderer;
 
-// mod yoga;
-
 pub mod dom;
 
 pub use program::program;

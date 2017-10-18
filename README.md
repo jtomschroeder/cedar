@@ -1,7 +1,7 @@
 
 # cedar :evergreen_tree:
 
-`cedar` is a `rust` framework for building functional-reactive applications.
+`cedar` is a Rust framework for building functional-reactive applications.
 
 [![crates.io](https://img.shields.io/crates/v/cedar.svg)](https://crates.io/crates/cedar)
 ![License](https://img.shields.io/crates/l/cedar.svg)
