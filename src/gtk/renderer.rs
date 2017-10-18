@@ -52,8 +52,6 @@ pub fn run(renderer: Renderer) {
     window.set_default_size(500, 500);
 
     window.connect_delete_event(|_, _| {
-        // println!("Quit!");
-
         gtk::main_quit();
         Inhibit(false)
     });
@@ -139,7 +137,15 @@ pub fn run(renderer: Renderer) {
                     }
                 }
 
-                _ => unimplemented!(),
+                Command::Remove(id) => {
+                    if let Some(widget) = widgets.remove(&id) {
+                        match widget {
+                            Widget::Button(button) => button.destroy(),
+                            Widget::Label(label) => label.destroy(),
+                            Widget::Field(field) => field.destroy(),
+                        }
+                    }
+                }
             }
 
             window.show_all();

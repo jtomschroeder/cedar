@@ -15,7 +15,7 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
         // TODO: handle create path issue (vertex traversal assumes from root)
 
         node.traverse(root, |path, node| {
-            eprintln!("id: {:?} {:?}", root, path);
+            // eprintln!("id: {:?} {:?}", root, path);
 
             let id = path.to_string();
 
