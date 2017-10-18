@@ -24,12 +24,9 @@ serde_json = "1.0"
 
 ## GTK
 
-[dependencies.glib]
-version = "0.3"
-# features = ["v3_10"]
-optional = true
+gtk = { version = "0.2", optional = true }
+glib = { version = "0.3", optional = true }
 
-[dependencies.gtk]
-version = "0.2"
-# features = ["v3_10"]
-optional = true
+[features]
+default = []
+gnome = ["gtk", "glib"]

@@ -4,13 +4,13 @@ extern crate cc;
 use std::env;
 
 fn main() {
-    cc::Build::new()
-        .flag("-std=c11")
-        .file("yoga/lib/YGEnums.c")
-        .file("yoga/lib/YGNodeList.c")
-        .file("yoga/lib/Yoga.c")
-        .include("yoga/lib")
-        .compile("libyoga.a");
+    // cc::Build::new()
+    //     .flag("-std=c11")
+    //     .file("yoga/lib/YGEnums.c")
+    //     .file("yoga/lib/YGNodeList.c")
+    //     .file("yoga/lib/Yoga.c")
+    //     .include("yoga/lib")
+    //     .compile("libyoga.a");
 
     let target = env::var("TARGET").unwrap();
     let gtk = env::var("CARGO_FEATURE_GTK").is_ok();

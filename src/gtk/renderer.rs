@@ -44,7 +44,6 @@ enum Widget {
     Field(gtk::Entry),
 }
 
-
 struct Updater {
     widgets: HashMap<String, Widget>,
 

@@ -6,4 +6,4 @@ dep:
 	curl -L {{CXX_JSON}} -o cocoa/ext/json/json.hpp
 
 example EXAMPLE:
-	RUST_BACKTRACE=1 cargo run --release --example {{EXAMPLE}}
+	RUST_BACKTRACE=full cargo run --release --example {{EXAMPLE}}
