@@ -62,4 +62,4 @@ Inspired by:
 - [elm-lang](http://elm-lang.org)
 - [shoes-rb](http://shoesrb.com)
 
-`cedar` is Copyright © Tom Schroeder <j.tom.schroeder@gmail.com> and released under MIT license.
+`cedar` is released under the MIT license.
