@@ -58,10 +58,10 @@ void send(const C &command) {
     if (self = [super init]) {
         self->identifier = ident;
 
-        [self setBezeled:YES];
-        [self setDrawsBackground:YES];
-        [self setEditable:YES];
-        [self setSelectable:YES];
+        // [self setBezeled:YES];
+        // [self setDrawsBackground:YES];
+        // [self setEditable:YES];
+        // [self setSelectable:YES];
 
         [self setDelegate:self];
     }
@@ -78,25 +78,28 @@ void send(const C &command) {
 
 void constrain(NSView *view) {
     // Set 'minimum width' using anchor
-    auto constraint = [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0];
-    constraint.active = YES;
+    [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0].active = YES;
 }
 
 auto Stack() {
     auto stack = [[NSStackView alloc] init];
 
     // Set background color of `stack` (for debugging)
-    // [stack setWantsLayer:YES];
-    // stack.layer.backgroundColor =
-    //     [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.5].CGColor;
+    [stack setWantsLayer:YES];
+    stack.layer.backgroundColor =
+        [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.25].CGColor;
 
     [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    // [stack setSpacing:5.0];
+    // [stack setSpacing:25.0];
 
-    [stack setDistribution:NSStackViewDistributionGravityAreas];
+    // [stack setDistribution:NSStackViewDistributionEqualCentering];
     // [stack setDistribution:NSStackViewDistributionEqualSpacing];
+    // [stack setDistribution:NSStackViewDistributionFill];
+    // [stack setDistribution:NSStackViewDistributionFillEqually];
+    // [stack setDistribution:NSStackViewDistributionFillProportionally];
+    [stack setDistribution:NSStackViewDistributionGravityAreas];
 
     [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)]; // (top, left, bottom, right)
 
@@ -147,6 +150,12 @@ auto Window() {
     return window;
 }
 
+void append(NSStackView *stack, NSView *view) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [stack addView:view inGravity:NSStackViewGravityTop];
+    });
+}
+
 extern "C" void run(void *r) {
     renderer = r;
 
@@ -182,18 +191,22 @@ extern "C" void run(void *r) {
                 // std::cerr << command << std::endl;
 
                 auto &create = command["Create"];
-                auto &ident = create["id"];
-                auto &parent = create["parent"];
+
+                const std::string &ident = create["id"];
+                const std::string &parent = create["parent"];
+
                 auto &widget = create["kind"];
                 auto &attributes = create["attributes"];
 
                 if (widget == "Stack") {
                     auto stack = Stack();
+                    // [stack setFrame:window.contentView.frame];
 
-                    // auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    // dispatch_async(dispatch_get_main_queue(), ^{
-                    //   [container addView:stack inGravity:NSStackViewGravityTop];
-                    // });
+                    widgets[ident] = stack;
+
+                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(stk, stack);
+
                 } else if (widget == "Button") {
                     auto button = [[NSButton alloc] init];
                     button.bezelStyle = NSRoundedBezelStyle;
@@ -209,9 +222,8 @@ extern "C" void run(void *r) {
                     widgets[ident] = button;
 
                     auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                      [container addView:button inGravity:NSStackViewGravityTop];
-                    });
+                    append(stk, button);
+
                 } else if (widget == "Label") {
                     auto label = [[NSTextField alloc] init];
 
@@ -228,9 +240,9 @@ extern "C" void run(void *r) {
                     constrain(label);
                     widgets[ident] = label;
 
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                      [container addView:label inGravity:NSStackViewGravityTop];
-                    });
+                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(stk, label);
+
                 } else if (widget == "Field") {
                     auto field = [[TextField alloc] initWithID:ident];
 
@@ -248,9 +260,8 @@ extern "C" void run(void *r) {
                     widgets[ident] = field;
 
                     auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                      [container addView:field inGravity:NSStackViewGravityTop];
-                    });
+                    append(stk, field);
+
                 } else {
                     std::cerr << "Unknown widget: " << widget << std::endl;
                 }
@@ -290,7 +301,7 @@ extern "C" void run(void *r) {
     {
         // TODO: reposition frame origin as well
         auto frame = window.frame;
-        frame.size = NSMakeSize(300, 300);
+        frame.size = NSMakeSize(250, 250);
         [window setFrame:frame display:YES animate:YES];
     }
 
