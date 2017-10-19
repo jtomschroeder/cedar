@@ -6,8 +6,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include <yoga/Yoga.h>
-
+#include "layout.h"
 #include "json/json.hpp"
 
 using json = nlohmann::json;
@@ -180,6 +179,8 @@ extern "C" void run(void *r) {
 
     [container setFrame:window.contentView.frame];
     [window.contentView addSubview:container];
+
+    std::cout << container.yoga.node << "\n";
 
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
