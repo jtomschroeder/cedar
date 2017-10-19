@@ -46,8 +46,10 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             };
 
             if let Some(kind) = kind {
+                let parent = "".into(); // TODO!
                 commands.push(Command::Create {
                     id,
+                    parent,
                     kind,
                     attributes,
                 })
@@ -65,14 +67,18 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
                 let node = node();
                 match node.widget {
                     dom::Widget::Label(ref label) => {
-                        commands.push(Command::Update(id(), "Text".into(), label.text.clone()))
+                        commands.push(Command::Update {
+                            id: id(),
+                            attribute: "Text".into(),
+                            value: label.text.clone(),
+                        })
                     }
 
                     _ => panic!("`Update` not yet implemented for widget!"),
                 }
             }
 
-            tree::Operation::Delete => commands.push(Command::Remove(id())),
+            tree::Operation::Delete => commands.push(Command::Remove { id: id() }),
 
             tree::Operation::Replace => panic!("`Replace` not yet implemented!"),
         }

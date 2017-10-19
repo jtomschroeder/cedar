@@ -241,9 +241,9 @@ extern "C" void run(void *r) {
 
             } else if (command.count("Update")) {
                 auto &update = command["Update"];
-                auto ident = update[0];
-                auto attribute = update[1];
-                std::string value = update[2];
+                auto &ident = update["id"];
+                auto &attribute = update["attribute"];
+                std::string value = update["value"];
 
                 if (attribute == "Text") {
                     auto field = (NSTextField *)(widgets[ident]);
@@ -252,7 +252,8 @@ extern "C" void run(void *r) {
                     });
                 }
             } else if (command.count("Remove")) {
-                auto ident = command["Remove"];
+                auto remove = command["Remove"];
+                auto &ident = remove["id"];
 
                 auto it = widgets.find(ident);
                 if (it != widgets.end()) {

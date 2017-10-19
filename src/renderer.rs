@@ -9,13 +9,18 @@ type Identifier = String;
 pub enum Command {
     Create {
         id: Identifier,
+        parent: Identifier,
         kind: String,
         attributes: HashMap<String, String>,
     },
 
-    Update(Identifier, String, String), // ID * Attribute * Value
+    Update {
+        id: Identifier,
+        attribute: String,
+        value: String,
+    },
 
-    Remove(Identifier),
+    Remove { id: Identifier },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
