@@ -22,10 +22,7 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             let mut attributes = HashMap::new();
 
             let kind = match node.widget {
-                dom::Widget::Stack => {
-                    // TODO: unimplemented!()
-                    None
-                }
+                dom::Widget::Stack => Some("Stack".into()),
 
                 dom::Widget::Label(ref label) => {
                     attributes.insert("Text".into(), label.text.clone());
@@ -46,7 +43,7 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             };
 
             if let Some(kind) = kind {
-                let parent = "".into(); // TODO!
+                let parent = path.parent().to_string();
                 commands.push(Command::Create {
                     id,
                     parent,

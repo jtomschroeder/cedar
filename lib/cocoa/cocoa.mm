@@ -78,11 +78,11 @@ void send(const C &command) {
 
 void constrain(NSView *view) {
     // Set 'minimum width' using anchor
-    auto constraint = [view.widthAnchor constraintGreaterThanOrEqualToConstant:120.0];
+    auto constraint = [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0];
     constraint.active = YES;
 }
 
-NSStackView *make_stack() {
+auto Stack() {
     auto stack = [[NSStackView alloc] init];
 
     // Set background color of `stack` (for debugging)
@@ -98,7 +98,7 @@ NSStackView *make_stack() {
     [stack setDistribution:NSStackViewDistributionGravityAreas];
     // [stack setDistribution:NSStackViewDistributionEqualSpacing];
 
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
+    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)]; // (top, left, bottom, right)
 
     [stack setHuggingPriority:NSLayoutPriorityWindowSizeStayPut
                forOrientation:NSLayoutConstraintOrientationHorizontal];
@@ -106,17 +106,7 @@ NSStackView *make_stack() {
     return stack;
 }
 
-extern "C" void run(void *r) {
-    renderer = r;
-
-    {
-        // compile-time checks
-        static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
-    }
-
-    [NSApplication sharedApplication];
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
+auto Window() {
     // build menu for window
     {
         auto menubar = [NSMenu new];
@@ -154,12 +144,28 @@ extern "C" void run(void *r) {
     [window setTitle:@"** cedar **"];
     [window makeKeyAndOrderFront:nil];
 
+    return window;
+}
+
+extern "C" void run(void *r) {
+    renderer = r;
+
+    {
+        // compile-time checks
+        static_assert(!__has_feature(objc_arc), "verify ARC is NOT enabled!");
+    }
+
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    auto window = Window();
+
     // Bring window to front
     // NOTE: when Launch Services launches an .app bundle, it takes care of this automatically (?)
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-    auto stack = make_stack();
+    auto stack = Stack();
 
     [stack setFrame:window.contentView.frame];
     [window.contentView addSubview:stack];
@@ -177,10 +183,18 @@ extern "C" void run(void *r) {
 
                 auto &create = command["Create"];
                 auto &ident = create["id"];
+                auto &parent = create["parent"];
                 auto &widget = create["kind"];
                 auto &attributes = create["attributes"];
 
-                if (widget == "Button") {
+                if (widget == "Stack") {
+                    auto stack = Stack();
+                    auto container = (parent.empty()) ? stack : (NSStackView *)widgets[parent];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [container addView:stack inGravity:NSStackViewGravityTop];
+                    });
+                } else if (widget == "Button") {
                     auto button = [[NSButton alloc] init];
                     button.bezelStyle = NSRoundedBezelStyle;
 
@@ -194,8 +208,10 @@ extern "C" void run(void *r) {
                     constrain(button);
                     widgets[ident] = button;
 
+                    auto container = (parent.empty()) ? stack : (NSStackView *)widgets[parent];
+
                     dispatch_async(dispatch_get_main_queue(), ^{
-                      [stack addView:button inGravity:NSStackViewGravityTop];
+                      [container addView:button inGravity:NSStackViewGravityTop];
                     });
                 } else if (widget == "Label") {
                     auto label = [[NSTextField alloc] init];
@@ -270,6 +286,13 @@ extern "C" void run(void *r) {
             }
         }
     }).detach();
+
+    {
+        // TODO: reposition frame origin as well
+        auto frame = window.frame;
+        frame.size = NSMakeSize(300, 300);
+        [window setFrame:frame display:YES animate:YES];
+    }
 
     [NSApp run];
 }
