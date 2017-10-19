@@ -24,6 +24,18 @@ void send(const C &command) {
     renderer_resp(renderer, command.dump().c_str());
 }
 
+@interface WindowDelegate : NSObject <NSWindowDelegate>
+@end
+
+@implementation WindowDelegate
+
+- (void)windowDidResize:(NSNotification *)notification {
+    NSWindow *window = [notification object];
+    [window.contentView.yoga calculate];
+}
+
+@end
+
 @interface Action : NSObject {
     std::string identifier;
 }
@@ -41,6 +53,23 @@ void send(const C &command) {
 - (void)click:(id)__unused sender {
     auto command = json{{"Click", {{"id", self->identifier}}}};
     send(command);
+}
+
+@end
+
+@interface View : NSView
+@end
+
+@implementation View
+
+- (id)initWithFrame:(NSRect)frame {
+    if (self = [super initWithFrame:frame]) {
+    }
+    return self;
+}
+
+- (BOOL)isFlipped {
+    return YES;
 }
 
 @end
@@ -79,35 +108,7 @@ void send(const C &command) {
 
 void constrain(NSView *view) {
     // Set 'minimum width' using anchor
-    [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0].active = YES;
-}
-
-auto Stack() {
-    auto stack = [[NSStackView alloc] init];
-
-    // Set background color of `stack` (for debugging)
-    [stack setWantsLayer:YES];
-    stack.layer.backgroundColor =
-        [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.25].CGColor;
-
-    [stack setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    // [stack setSpacing:25.0];
-
-    // [stack setDistribution:NSStackViewDistributionEqualCentering];
-    // [stack setDistribution:NSStackViewDistributionEqualSpacing];
-    // [stack setDistribution:NSStackViewDistributionFill];
-    // [stack setDistribution:NSStackViewDistributionFillEqually];
-    // [stack setDistribution:NSStackViewDistributionFillProportionally];
-    [stack setDistribution:NSStackViewDistributionGravityAreas];
-
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)]; // (top, left, bottom, right)
-
-    [stack setHuggingPriority:NSLayoutPriorityWindowSizeStayPut
-               forOrientation:NSLayoutConstraintOrientationHorizontal];
-
-    return stack;
+    // [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0].active = YES;
 }
 
 auto Window() {
@@ -148,12 +149,30 @@ auto Window() {
     [window setTitle:@"** cedar **"];
     [window makeKeyAndOrderFront:nil];
 
+    window.delegate = [[WindowDelegate alloc] init];
+
     return window;
 }
 
-void append(NSStackView *stack, NSView *view) {
+auto Stack() {
+    auto stack = [[View alloc] init];
+    YGNodeStyleSetFlexDirection(stack.yoga.node, YGFlexDirectionColumn);
+
+    // Set background color of `stack` (for debugging)
+    [stack setWantsLayer:YES];
+    stack.layer.backgroundColor =
+        [NSColor colorWithCalibratedRed:0.227f green:0.251f blue:0.667 alpha:0.25].CGColor;
+
+    return stack;
+}
+
+void append(NSView *container, NSView *view) {
+    std::cout << "append: " << container << " " << view << "\n";
+
+    [container.yoga insert:view];
+
     dispatch_async(dispatch_get_main_queue(), ^{
-      [stack addView:view inGravity:NSStackViewGravityTop];
+      [container addSubview:view];
     });
 }
 
@@ -175,12 +194,14 @@ extern "C" void run(void *r) {
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-    auto container = Stack();
+    window.contentView = [[View alloc] initWithFrame:window.contentView.frame];
+    auto container = window.contentView;
 
-    [container setFrame:window.contentView.frame];
-    [window.contentView addSubview:container];
+    // [container setFrame:window.contentView.frame];
+    // [window.contentView addSubview:container];
 
     std::cout << container.yoga.node << "\n";
+    // [container.yoga calculate];
 
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
@@ -190,8 +211,9 @@ extern "C" void run(void *r) {
             const auto &command = json::parse(s);
             renderer_string_drop(s);
 
+            std::cerr << command << std::endl;
+
             if (command.count("Create")) {
-                // std::cerr << command << std::endl;
 
                 auto &create = command["Create"];
 
@@ -207,8 +229,8 @@ extern "C" void run(void *r) {
 
                     widgets[ident] = stack;
 
-                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    append(stk, stack);
+                    auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(prnt, stack);
 
                 } else if (widget == "Button") {
                     auto button = [[NSButton alloc] init];
@@ -224,8 +246,8 @@ extern "C" void run(void *r) {
                     constrain(button);
                     widgets[ident] = button;
 
-                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    append(stk, button);
+                    auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(prnt, button);
 
                 } else if (widget == "Label") {
                     auto label = [[NSTextField alloc] init];
@@ -243,8 +265,8 @@ extern "C" void run(void *r) {
                     constrain(label);
                     widgets[ident] = label;
 
-                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    append(stk, label);
+                    auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(prnt, label);
 
                 } else if (widget == "Field") {
                     auto field = [[TextField alloc] initWithID:ident];
@@ -262,8 +284,8 @@ extern "C" void run(void *r) {
                     constrain(field);
                     widgets[ident] = field;
 
-                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
-                    append(stk, field);
+                    auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    append(prnt, field);
 
                 } else {
                     std::cerr << "Unknown widget: " << widget << std::endl;
@@ -298,6 +320,8 @@ extern "C" void run(void *r) {
             } else {
                 std::cerr << "Unknown command: " << command << std::endl;
             }
+
+            [container.yoga calculate];
         }
     }).detach();
 
