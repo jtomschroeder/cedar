@@ -13,14 +13,11 @@
     NSView *_view;
     YGNode *_node;
 
-    std::vector<NSView *> children;
+    std::vector<NSView *> _children;
 }
 
 @property(nonatomic, weak, readonly) NSView *view;
 @property(nonatomic, readonly) YGNode *node;
-// @property(nonatomic, readonly) std::vector<YGNode *> children;
-
-// - (void)calculate;
 
 @end
 
@@ -28,14 +25,6 @@
 
 @synthesize view = _view;
 @synthesize node = _node;
-// @synthesize children = _children;
-
-// + (void)initialize
-// {
-//   globalConfig = YGConfigNew();
-//   YGConfigSetExperimentalFeatureEnabled(globalConfig, YGExperimentalFeatureWebFlexBasis, true);
-//   YGConfigSetPointScaleFactor(globalConfig, [UIScreen mainScreen].scale);
-// }
 
 - (instancetype)initWithView:(NSView *)view {
     if (self = [super init]) {
@@ -85,8 +74,6 @@ static const void *kYGYogaAssociatedKey = &kYGYogaAssociatedKey;
     auto frame = self.view.frame;
     YGNodeCalculateLayout(self.node, frame.size.width, frame.size.height, YGDirectionInherit);
 
-    // printf("%f %f\n", YGNodeLayoutGetWidth(self.node), YGNodeLayoutGetHeight(self.node));
-
     // traverse subviews and 'update' frame
     dispatch_async(dispatch_get_main_queue(), ^{
       [self layout];
@@ -95,7 +82,7 @@ static const void *kYGYogaAssociatedKey = &kYGYogaAssociatedKey;
 
 - (void)insert:(NSView *)child {
     YGNodeInsertChild(self.node, child.yoga.node, YGNodeGetChildCount(self.node));
-    self->children.push_back(child);
+    _children.push_back(child);
 }
 
 - (void)layout {
@@ -104,7 +91,7 @@ static const void *kYGYogaAssociatedKey = &kYGYogaAssociatedKey;
 
     [self.view setFrame:frame];
 
-    for (auto child : self->children) {
+    for (auto child : _children) {
         [child.yoga layout];
     }
 }

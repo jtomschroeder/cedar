@@ -62,12 +62,6 @@ void send(const C &command) {
 
 @implementation View
 
-- (id)initWithFrame:(NSRect)frame {
-    if (self = [super initWithFrame:frame]) {
-    }
-    return self;
-}
-
 - (BOOL)isFlipped {
     return YES;
 }
@@ -88,10 +82,10 @@ void send(const C &command) {
     if (self = [super init]) {
         self->identifier = ident;
 
-        // [self setBezeled:YES];
-        // [self setDrawsBackground:YES];
-        // [self setEditable:YES];
-        // [self setSelectable:YES];
+        [self setBezeled:YES];
+        [self setDrawsBackground:YES];
+        [self setEditable:YES];
+        [self setSelectable:YES];
 
         [self setDelegate:self];
     }
@@ -105,11 +99,6 @@ void send(const C &command) {
 }
 
 @end
-
-void constrain(NSView *view) {
-    // Set 'minimum width' using anchor
-    // [view.widthAnchor constraintGreaterThanOrEqualToConstant:150.0].active = YES;
-}
 
 auto Window() {
     // build menu for window
@@ -167,8 +156,6 @@ auto Stack() {
 }
 
 void append(NSView *container, NSView *view) {
-    std::cout << "append: " << container << " " << view << "\n";
-
     [container.yoga insert:view];
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -197,12 +184,6 @@ extern "C" void run(void *r) {
     window.contentView = [[View alloc] initWithFrame:window.contentView.frame];
     auto container = window.contentView;
 
-    // [container setFrame:window.contentView.frame];
-    // [window.contentView addSubview:container];
-
-    std::cout << container.yoga.node << "\n";
-    // [container.yoga calculate];
-
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
 
@@ -225,10 +206,8 @@ extern "C" void run(void *r) {
 
                 if (widget == "Stack") {
                     auto stack = Stack();
-                    // [stack setFrame:window.contentView.frame];
 
                     widgets[ident] = stack;
-
                     auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     append(prnt, stack);
 
@@ -243,9 +222,7 @@ extern "C" void run(void *r) {
                     [button setAction:@selector(click:)];
                     [button setTarget:action];
 
-                    constrain(button);
                     widgets[ident] = button;
-
                     auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     append(prnt, button);
 
@@ -262,9 +239,7 @@ extern "C" void run(void *r) {
 
                     [label setAlignment:NSTextAlignmentCenter];
 
-                    constrain(label);
                     widgets[ident] = label;
-
                     auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     append(prnt, label);
 
@@ -281,9 +256,7 @@ extern "C" void run(void *r) {
                         [field setPlaceholderAttributedString:string];
                     }
 
-                    constrain(field);
                     widgets[ident] = field;
-
                     auto prnt = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     append(prnt, field);
 
@@ -306,6 +279,8 @@ extern "C" void run(void *r) {
             } else if (command.count("Remove")) {
                 auto remove = command["Remove"];
                 auto &ident = remove["id"];
+
+                // TODO: handle removing of yoga node from layout!
 
                 auto it = widgets.find(ident);
                 if (it != widgets.end()) {
