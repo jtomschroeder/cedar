@@ -165,10 +165,10 @@ extern "C" void run(void *r) {
     auto app = [NSRunningApplication currentApplication];
     [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
-    auto stack = Stack();
+    auto container = Stack();
 
-    [stack setFrame:window.contentView.frame];
-    [window.contentView addSubview:stack];
+    [container setFrame:window.contentView.frame];
+    [window.contentView addSubview:container];
 
     std::thread([&] {
         std::unordered_map<std::string, NSView *> widgets;
@@ -189,11 +189,11 @@ extern "C" void run(void *r) {
 
                 if (widget == "Stack") {
                     auto stack = Stack();
-                    auto container = (parent.empty()) ? stack : (NSStackView *)widgets[parent];
 
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                      [container addView:stack inGravity:NSStackViewGravityTop];
-                    });
+                    // auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
+                    // dispatch_async(dispatch_get_main_queue(), ^{
+                    //   [container addView:stack inGravity:NSStackViewGravityTop];
+                    // });
                 } else if (widget == "Button") {
                     auto button = [[NSButton alloc] init];
                     button.bezelStyle = NSRoundedBezelStyle;
@@ -208,8 +208,7 @@ extern "C" void run(void *r) {
                     constrain(button);
                     widgets[ident] = button;
 
-                    auto container = (parent.empty()) ? stack : (NSStackView *)widgets[parent];
-
+                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     dispatch_async(dispatch_get_main_queue(), ^{
                       [container addView:button inGravity:NSStackViewGravityTop];
                     });
@@ -230,7 +229,7 @@ extern "C" void run(void *r) {
                     widgets[ident] = label;
 
                     dispatch_async(dispatch_get_main_queue(), ^{
-                      [stack addView:label inGravity:NSStackViewGravityTop];
+                      [container addView:label inGravity:NSStackViewGravityTop];
                     });
                 } else if (widget == "Field") {
                     auto field = [[TextField alloc] initWithID:ident];
@@ -248,8 +247,9 @@ extern "C" void run(void *r) {
                     constrain(field);
                     widgets[ident] = field;
 
+                    auto stk = (parent.empty()) ? container : (NSStackView *)widgets[parent];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                      [stack addView:field inGravity:NSStackViewGravityTop];
+                      [container addView:field inGravity:NSStackViewGravityTop];
                     });
                 } else {
                     std::cerr << "Unknown widget: " << widget << std::endl;
