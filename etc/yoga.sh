@@ -10,9 +10,10 @@ tar -xf 1.6.0.tar.gz
 
 cd -
 
-mkdir -p yoga
-mv $TMP/yoga-1.6.0/yoga yoga/lib
+mkdir -p lib
+mv $TMP/yoga-1.6.0/yoga lib/yoga
+# mv $TMP/yoga-1.6.0/YogaKit/Source lib/YogaKit
 
 rm -rf $TMP
 
-bindgen --whitelist-function "^YG.*" yoga/lib/YGNodeList.h -o src/yoga/sys.rs
+bindgen --whitelist-function "^YG.*" lib/yoga/YGNodeList.h -o src/yoga/sys.rs

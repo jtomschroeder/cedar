@@ -6,6 +6,8 @@
 #include <thread>
 #include <unordered_map>
 
+#include <yoga/Yoga.h>
+
 #include "json/json.hpp"
 
 using json = nlohmann::json;
