@@ -5,9 +5,6 @@ extern crate cmake;
 use std::env;
 
 fn main() {
-    // let target = env::var("TARGET").unwrap();
-    // let gtk = env::var("CARGO_FEATURE_GTK").is_ok();
-
     cc::Build::new()
         .cpp(true)
         .flag("-std=c++14")
@@ -22,8 +19,8 @@ fn main() {
         .cpp(true)
         .flag("-std=c++14")
         .flag("-isystemlib/cef")
-        .file("lib/app/process_helper_mac.cc")
-        .compile("helper");
+        .file("lib/app/process_helper.cc")
+        .compile("libcedar-cef-helper.a");
 
     println!("cargo:rustc-link-lib=framework=Cocoa");
 
