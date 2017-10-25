@@ -15,6 +15,7 @@ public:
 
     // CefBrowserProcessHandler methods:
     void OnContextInitialized() override;
+    void OnRenderProcessThreadCreated(CefRefPtr<CefListValue>) override;
 
 private:
     IMPLEMENT_REFCOUNTING(SimpleApp);

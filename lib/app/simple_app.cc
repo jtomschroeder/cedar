@@ -1,6 +1,7 @@
 
 #include "simple_app.h"
 
+#include <iostream>
 #include <string>
 
 #include "include/cef_browser.h"
@@ -35,4 +36,8 @@ void SimpleApp::OnContextInitialized() {
 
     // Create the first browser window.
     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, NULL);
+}
+
+void SimpleApp::OnRenderProcessThreadCreated(CefRefPtr<CefListValue>) {
+    std::cout << "Hello from " << __FUNCTION__ << std::endl;
 }

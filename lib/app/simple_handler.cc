@@ -43,6 +43,9 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
     // Add to the list of existing browsers.
     browser_list_.push_back(browser);
+
+    auto frame = browser->GetMainFrame();
+    frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
