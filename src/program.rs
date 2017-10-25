@@ -1,10 +1,39 @@
 
 use std::thread;
 
-use facade;
+// use facade;
 use dom;
 use phantom::Phantom;
 use renderer::Renderer;
+
+mod facade {
+    use renderer::{self, Command, Event};
+
+    extern "C" {
+        fn cef_app_run();
+    }
+
+    #[derive(Clone)]
+    pub struct Renderer {}
+
+    impl Renderer {
+        pub fn new() -> Self {
+            Renderer {}
+        }
+    }
+
+    impl renderer::Renderer for Renderer {
+        fn send(&self, cmd: Command) {}
+
+        fn recv(&self) -> Event {
+            unimplemented!()
+        }
+    }
+
+    pub fn run(_: Renderer) {
+        unsafe { cef_app_run() }
+    }
+}
 
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -18,6 +47,8 @@ where
     S: Clone + Send + 'static + PartialEq,
     M: Send + 'static,
 {
+    println!("Hello, world!");
+
     let renderer = facade::Renderer::new();
 
     //

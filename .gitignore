@@ -1,2 +1,6 @@
+
 target
 Cargo.lock
+
+/lib/cef
+/cefsimple.app

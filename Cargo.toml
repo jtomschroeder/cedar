@@ -14,6 +14,7 @@ keywords = ["frp", "gui"]
 
 [build-dependencies]
 cc = "1.0"
+cmake = "0.1"
 
 [dependencies]
 crossbeam = "0.3"
@@ -21,12 +22,3 @@ crossbeam = "0.3"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-
-## GTK
-
-gtk = { version = "0.2", optional = true }
-glib = { version = "0.3", optional = true }
-
-[features]
-default = []
-gnome = ["gtk", "glib"]
