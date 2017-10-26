@@ -14,3 +14,13 @@ https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage#markdown-header-int
 
 A message sent from the browser process to the render process will arrive in `CefRenderProcessHandler::OnProcessMessageReceived()`
 A message sent from the render process to the browser process will arrive in `CefClient::OnProcessMessageReceived()`
+
+## `cedar` build tool
+
+`cedar {run,build,package/test/check/bench}`
+
+- wrapper around cargo
+- handles crate setup
+- installs CEF framework into ~/.cedar (somewhere...)
+- capable of build an .app bundle for macOS
+  - likely requires a TOML configuration file for plist's, etc. (might be able to use Cargo.toml to get info, though)

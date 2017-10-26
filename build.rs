@@ -5,6 +5,8 @@ extern crate cmake;
 use std::env;
 
 fn main() {
+    let manifest = env::var("CARGO_MANIFEST_DIR").unwrap();
+
     cc::Build::new()
         .cpp(true)
         .flag("-std=c++14")
@@ -18,8 +20,13 @@ fn main() {
 
     println!("cargo:rustc-link-lib=framework=Cocoa");
 
-    println!("cargo:rustc-link-search=framework=lib/cef/Release");
+    println!(
+        "cargo:rustc-link-search=framework={}/lib/cef/Release",
+        manifest
+    );
     println!("cargo:rustc-link-lib=framework=Chromium Embedded Framework");
+
+    // TODO: remove Ninja dependency?
 
     let dst = cmake::Config::new("lib/cef")
         .generator("Ninja")
