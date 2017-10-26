@@ -47,8 +47,21 @@
 - (void)createApplication:(id)__unused object {
     [NSApplication sharedApplication];
 
-    // TODO: create 'main menu' programmatically
-    // [[NSBundle mainBundle] loadNibNamed:@"MainMenu" owner:NSApp topLevelObjects:nil];
+    {
+        auto menubar = [NSMenu new];
+
+        auto app_menu_item = [NSMenuItem new];
+        [menubar addItem:app_menu_item];
+
+        [NSApp setMainMenu:menubar];
+
+        auto app_menu = [NSMenu new];
+        auto quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit"
+                                                    action:@selector(terminate:)
+                                             keyEquivalent:@"q"];
+        [app_menu addItem:quit_item];
+        [app_menu_item setSubmenu:app_menu];
+    }
 
     // Set the delegate for application events.
     [[NSApplication sharedApplication] setDelegate:self];
