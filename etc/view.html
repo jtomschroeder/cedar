@@ -45,11 +45,15 @@
                     node.onclick = window.on_click(id);
                 } else if (kind == "Input") {
                     node = document.createElement('input');
-                    Object.entries(attributes).forEach((name, value) => {
-                        if (name == "Placeholder") {
-                            node.placeholder = value;
-                        }
-                    })
+                    // Object.entries(attributes).forEach((name, value) => {
+                    //     if (name == "Placeholder") {
+                    //         node.placeholder = value;
+                    //     }
+                    // })
+
+                    if (attributes['Placeholder']) {
+                        node.placeholder = attributes['Placeholder'];
+                    }
 
                     node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
                 } else {
@@ -73,6 +77,11 @@
                 } else {
                     // Unsupported attribute!
                 }
+            } else if (cmd.hasOwnProperty('Remove')) {
+                var remove = cmd['Remove'];
+                var id = remove.id;
+
+                window.nodes[id].remove();
             }
         };
     })();
