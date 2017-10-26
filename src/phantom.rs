@@ -24,9 +24,9 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             let kind = match node.widget {
                 dom::Widget::Div => Some("Div".into()),
 
-                dom::Widget::Label(ref label) => {
-                    attributes.insert("Text".into(), label.text.clone());
-                    Some("Label".into())
+                dom::Widget::Text(ref text) => {
+                    attributes.insert("Text".into(), text.text.clone());
+                    Some("Text".into())
                 }
 
                 dom::Widget::Button(ref button) => {
@@ -63,11 +63,11 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             tree::Operation::Update => {
                 let node = node();
                 match node.widget {
-                    dom::Widget::Label(ref label) => {
+                    dom::Widget::Text(ref text) => {
                         commands.push(Command::Update {
                             id: id(),
                             attribute: "Text".into(),
-                            value: label.text.clone(),
+                            value: text.text.clone(),
                         })
                     }
 

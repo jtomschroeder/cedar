@@ -34,7 +34,7 @@ use cedar::dom;
 fn view(model: &Model) -> dom::Object<Message> {
     dom::div(vec![
         dom::button("+".into()).click(Message::Increment),
-        dom::label(model.to_string()),
+        dom::text(model.to_string()),
         dom::button("-".into()).click(Message::Decrement),
     ])
 }

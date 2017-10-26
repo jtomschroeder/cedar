@@ -2,6 +2,8 @@
 use std::fmt;
 use tree;
 
+// TODO: 'text' should no longer be an attribute (now a child node)
+
 #[derive(PartialEq)]
 pub struct Button<S> {
     pub text: String,
@@ -9,7 +11,7 @@ pub struct Button<S> {
 }
 
 #[derive(PartialEq)]
-pub struct Label {
+pub struct Text {
     pub text: String,
 }
 
@@ -23,7 +25,7 @@ pub struct Input<S> {
 pub enum Widget<S> {
     Div,
     Button(Button<S>),
-    Label(Label),
+    Text(Text),
     Input(Input<S>),
 }
 
@@ -36,7 +38,7 @@ impl<S> fmt::Debug for Widget<S> {
             match self {
                 &Div => "Div",
                 &Button(_) => "Button",
-                &Label(_) => "Label",
+                &Text(_) => "Text",
                 &Input(_) => "Input",
             }
         )
@@ -73,7 +75,7 @@ where
         } else {
             match (&self.widget, &other.widget) {
                 (&Widget::Button(_), &Widget::Button(_)) |
-                (&Widget::Label(_), &Widget::Label(_)) => Some(tree::Difference::Value),
+                (&Widget::Text(_), &Widget::Text(_)) => Some(tree::Difference::Value),
 
                 _ => Some(tree::Difference::Kind),
             }
@@ -119,12 +121,12 @@ impl<S> Object<S> {
 
 // <div>
 // <button></button>
-// <label></label>
+// <text></text>
 // <button></button>
 // </div>
 
 // or this?
-// (div [(button), (label), (button)])
+// (div [(button), (text), (button)])
 
 // or a la elm?
 // view model =
@@ -134,6 +136,8 @@ impl<S> Object<S> {
 //     , button [ onClick Increment ] [ text "+" ]
 //     ]
 
+// maybe just put these in a cedar::prelude::*?
+
 pub fn div<S>(children: Vec<Object<S>>) -> Object<S> {
     Object {
         widget: Widget::Div,
@@ -141,9 +145,9 @@ pub fn div<S>(children: Vec<Object<S>>) -> Object<S> {
     }
 }
 
-pub fn label<S>(text: String) -> Object<S> {
+pub fn text<S>(text: String) -> Object<S> {
     Object {
-        widget: Widget::Label(Label { text }),
+        widget: Widget::Text(Text { text }),
         children: vec![],
     }
 }

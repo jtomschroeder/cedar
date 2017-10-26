@@ -38,9 +38,7 @@ fn view(model: &Model) -> dom::Object<Message> {
         dom::input()
             .placeholder("Text to reverse!".into())
             .change(Message::NewContent),
-        dom::div(
-            vec![dom::label(model.chars().rev().collect())]
-        ),
+        dom::div(vec![dom::text(model.chars().rev().collect())]),
     ])
 }
 

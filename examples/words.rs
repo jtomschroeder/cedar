@@ -21,7 +21,7 @@ type Widget = dom::Object<Message>;
 fn words(line: &str) -> Vec<Widget> {
     line.split(' ')
         .filter(|s| !s.is_empty())
-        .map(|w| dom::div(vec![dom::label(w.into())]))
+        .map(|w| dom::div(vec![dom::text(w.into())]))
         .collect()
 }
 
