@@ -26,10 +26,7 @@ fn main() {
     );
     println!("cargo:rustc-link-lib=framework=Chromium Embedded Framework");
 
-    // TODO: remove Ninja dependency?
-
     let dst = cmake::Config::new("lib/cef")
-        .generator("Ninja")
         .build_target("libcef_dll_wrapper")
         .build();
 
