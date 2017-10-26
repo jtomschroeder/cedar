@@ -117,14 +117,14 @@ impl<S> Object<S> {
 
 // TODO: create macro language a la JSX in React for defining DOM
 
-// <stack>
+// <div>
 // <button></button>
-// <label></button>
+// <label></label>
 // <button></button>
-// </stack>
+// </div>
 
 // or this?
-// (stack [(button), (label), (button)])
+// (div [(button), (label), (button)])
 
 // or a la elm?
 // view model =
@@ -134,7 +134,7 @@ impl<S> Object<S> {
 //     , button [ onClick Increment ] [ text "+" ]
 //     ]
 
-pub fn stack<S>(children: Vec<Object<S>>) -> Object<S> {
+pub fn div<S>(children: Vec<Object<S>>) -> Object<S> {
     Object {
         widget: Widget::Div,
         children,

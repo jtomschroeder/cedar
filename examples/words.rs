@@ -26,12 +26,12 @@ fn words(line: &str) -> Vec<Widget> {
 }
 
 fn view(model: &Model) -> Widget {
-    dom::stack(vec![
+    dom::div(vec![
         dom::field().placeholder("Words!".into()).change(
             Message::NewContent
         ),
 
-        dom::stack(words(model)),
+        dom::div(words(model)),
     ])
 }
 

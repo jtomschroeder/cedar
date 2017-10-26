@@ -19,9 +19,9 @@ fn update(model: Model, message: Message) -> Model {
 use cedar::dom;
 
 fn view(model: &Model) -> dom::Object<Message> {
-    dom::stack(vec![
+    dom::div(vec![
         dom::button("+".into()).click(Message::Increment),
-        dom::label(model.to_string()),
+        dom::div(vec![dom::label(model.to_string())]),
         dom::button("-".into()).click(Message::Decrement),
     ])
 }

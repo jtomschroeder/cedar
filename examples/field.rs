@@ -16,8 +16,14 @@ fn update(_: Model, message: Message) -> Model {
 
 use cedar::dom;
 
+// view content =
+//   div []
+//     [ input [ placeholder "Text to reverse", onInput NewContent, myStyle ] []
+//     , div [ myStyle ] [ text (String.reverse content) ]
+//     ]
+
 fn view(model: &Model) -> dom::Object<Message> {
-    dom::stack(vec![
+    dom::div(vec![
         dom::field()
             .placeholder("Text to reverse!".into())
             .change(Message::NewContent),
