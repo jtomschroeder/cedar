@@ -14,7 +14,7 @@ pub struct Label {
 }
 
 #[derive(PartialEq)]
-pub struct Field<S> {
+pub struct Input<S> {
     pub placeholder: Option<String>,
     pub change: Option<fn(String) -> S>,
 }
@@ -24,7 +24,7 @@ pub enum Widget<S> {
     Div,
     Button(Button<S>),
     Label(Label),
-    Field(Field<S>),
+    Input(Input<S>),
 }
 
 impl<S> fmt::Debug for Widget<S> {
@@ -37,7 +37,7 @@ impl<S> fmt::Debug for Widget<S> {
                 &Div => "Div",
                 &Button(_) => "Button",
                 &Label(_) => "Label",
-                &Field(_) => "Field",
+                &Input(_) => "Input",
             }
         )
     }
@@ -101,15 +101,15 @@ impl<S> Object<S> {
     }
 
     pub fn placeholder(mut self, text: String) -> Self {
-        if let Widget::Field(ref mut field) = self.widget {
-            field.placeholder = Some(text);
+        if let Widget::Input(ref mut input) = self.widget {
+            input.placeholder = Some(text);
         }
         self
     }
 
     pub fn change(mut self, change: fn(String) -> S) -> Self {
-        if let Widget::Field(ref mut field) = self.widget {
-            field.change = Some(change);
+        if let Widget::Input(ref mut input) = self.widget {
+            input.change = Some(change);
         }
         self
     }
@@ -155,9 +155,9 @@ pub fn button<S>(text: String) -> Object<S> {
     }
 }
 
-pub fn field<S>() -> Object<S> {
+pub fn input<S>() -> Object<S> {
     Object {
-        widget: Widget::Field(Field {
+        widget: Widget::Input(Input {
             placeholder: None,
             change: None,
         }),

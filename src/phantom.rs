@@ -34,11 +34,11 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
                     Some("Button".into())
                 }
 
-                dom::Widget::Field(ref field) => {
-                    if let Some(ref placeholder) = field.placeholder {
+                dom::Widget::Input(ref input) => {
+                    if let Some(ref placeholder) = input.placeholder {
                         attributes.insert("Placeholder".into(), placeholder.clone());
                     }
-                    Some("Field".into())
+                    Some("Input".into())
                 }
             };
 
@@ -123,8 +123,8 @@ where
                 let path =
                     tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
                 dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Field(ref field) => {
-                        field.change.map(|c| c(value)).map(Action::Update)
+                    dom::Widget::Input(ref input) => {
+                        input.change.map(|c| c(value)).map(Action::Update)
                     }
                     _ => None,
                 })

@@ -27,7 +27,7 @@ fn words(line: &str) -> Vec<Widget> {
 
 fn view(model: &Model) -> Widget {
     dom::div(vec![
-        dom::field().placeholder("Words!".into()).change(
+        dom::input().placeholder("Words!".into()).change(
             Message::NewContent
         ),
 

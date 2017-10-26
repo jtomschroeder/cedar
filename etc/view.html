@@ -14,9 +14,14 @@
     (function () {
         window.nodes = { "": document.body };
 
-        window.on_click = (id) => (e) => {
-            var event = { "Click": { "id": id } };
-            console.log(JSON.stringify(event));
+        window.on_click = (id) => (event) => {
+            var click = { "Click": { "id": id } };
+            console.log(JSON.stringify(click));
+        };
+
+        window.on_change = (id, element) => (event) => {
+            var change = { "Change": { "id": id, "value": element.value } };
+            console.log(JSON.stringify(change));
         };
 
         window.on_command = (cmd) => {
@@ -38,6 +43,15 @@
                     node = document.createElement('button');
                     node.appendChild(document.createTextNode(attributes['Text']));
                     node.onclick = window.on_click(id);
+                } else if (kind == "Input") {
+                    node = document.createElement('input');
+                    Object.entries(attributes).forEach((name, value) => {
+                        if (name == "Placeholder") {
+                            node.placeholder = value;
+                        }
+                    })
+
+                    node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
                 } else {
                     node = document.createTextNode(attributes['Text']);
                 }
