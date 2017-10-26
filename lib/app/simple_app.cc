@@ -11,15 +11,13 @@
 
 #include "simple_handler.h"
 
-SimpleApp::SimpleApp() {}
-
 void SimpleApp::OnContextInitialized() {
     CEF_REQUIRE_UI_THREAD();
 
     auto command_line = CefCommandLine::GetGlobalCommandLine();
 
     // SimpleHandler implements browser-level callbacks.
-    CefRefPtr<SimpleHandler> handler(new SimpleHandler);
+    CefRefPtr<SimpleHandler> handler(new SimpleHandler(renderer));
 
     // Specify CEF browser settings here.
     CefBrowserSettings browser_settings;

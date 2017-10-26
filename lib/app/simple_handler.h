@@ -10,7 +10,7 @@ class SimpleHandler : public CefClient,
                       public CefLifeSpanHandler,
                       public CefLoadHandler {
 public:
-    explicit SimpleHandler();
+    explicit SimpleHandler(void *renderer);
     ~SimpleHandler();
 
     // Provide access to the single global instance of this object.
@@ -36,8 +36,9 @@ public:
     void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
     // CefLoadHandler methods:
-    void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
+    void OnLoadError(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, ErrorCode,
                      const CefString &errorText, const CefString &failedUrl) override;
+    void OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, int httpStatusCode) override;
 
     // Request that all existing browser windows close.
     void CloseAllBrowsers(bool force_close);
@@ -47,15 +48,13 @@ public:
     }
 
 private:
-    // Platform-specific implementation.
     void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title);
 
-    // List of existing browser windows. Only accessed on the CEF UI thread.
-    typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
+    using BrowserList = std::list<CefRefPtr<CefBrowser>>;
     BrowserList browser_list_;
 
+    void *renderer;
     bool is_closing_;
 
-    // Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(SimpleHandler);
 };

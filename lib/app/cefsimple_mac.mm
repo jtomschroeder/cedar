@@ -67,7 +67,7 @@
 @end
 
 // Entry point function for the browser process.
-extern "C" void cef_app_run() {
+extern "C" void cef_app_run(void *renderer) {
     CefMainArgs main_args(0, nullptr);
 
     NSAutoreleasePool *autopool = [[NSAutoreleasePool alloc] init];
@@ -79,7 +79,7 @@ extern "C" void cef_app_run() {
     // SimpleApp implements application-level callbacks for the browser process.
     // It will create the first browser instance in OnContextInitialized() after
     // CEF has initialized.
-    CefRefPtr<SimpleApp> app(new SimpleApp);
+    CefRefPtr<SimpleApp> app(new SimpleApp(renderer));
 
     // Initialize CEF for the browser process.
     CefInitialize(main_args, settings, app.get(), nullptr);

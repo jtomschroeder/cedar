@@ -6,20 +6,6 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-// // macOS
-
-// #[cfg(all(target_os = "macos", not(feature = "gtk")))]
-// #[path = "cocoa/mod.rs"]
-// pub mod facade;
-
-// // GTK
-
-// #[cfg(any(feature = "gtk", not(target_os = "macos")))]
-// #[path = "gtk/mod.rs"]
-// mod facade;
-
-// // ---
-
 #[macro_use]
 mod tree;
 mod phantom;
@@ -27,5 +13,6 @@ mod program;
 mod renderer;
 
 pub mod dom;
+pub mod facade;
 
 pub use program::program;

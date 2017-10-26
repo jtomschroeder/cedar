@@ -1,8 +1,10 @@
 
 #include "simple_handler.h"
 
+#include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
 
 #include "include/base/cef_bind.h"
 #include "include/cef_app.h"
@@ -17,9 +19,26 @@ SimpleHandler *g_instance = nullptr;
 
 } // namespace
 
-SimpleHandler::SimpleHandler() : is_closing_(false) {
+extern "C" {
+void renderer_resp(void *, const char *);
+
+char *renderer_recv(void *);
+void renderer_string_drop(char *);
+}
+
+SimpleHandler::SimpleHandler(void *renderer) : renderer(renderer), is_closing_(false) {
     DCHECK(!g_instance);
     g_instance = this;
+
+    // std::thread([] {
+    //     auto handler = SimpleHandler::GetInstance();
+    //     auto s = renderer_recv(handler->renderer);
+
+    //     std::cout << "Command: " << s << std::endl;
+    //     std::cout << "#B: " << handler->browser_list_.size() << std::endl;
+
+    //     renderer_string_drop(s);
+    // }).detach();
 }
 
 SimpleHandler::~SimpleHandler() {
@@ -44,8 +63,16 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     // Add to the list of existing browsers.
     browser_list_.push_back(browser);
 
-    auto frame = browser->GetMainFrame();
-    frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
+    // auto frame = browser->GetMainFrame();
+    // frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
+
+    // if (browser_list_.size() == 1) {
+    // std::thread([&] {
+    //     auto s = renderer_recv(renderer);
+    //     std::cout << "Command: " << s << std::endl;
+    //     renderer_string_drop(s);
+    // });
+    // }
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -99,6 +126,32 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFram
        << std::string(failedUrl) << " with error " << std::string(errorText) << " (" << errorCode
        << ").</h2></body></html>";
     frame->LoadString(ss.str(), failedUrl);
+}
+
+void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, int) {
+    std::cout << "Load end!\n";
+
+    if (frame->IsMain()) {
+        // Once the main frame is finished loaded, kick off command receiver.
+        std::thread([] {
+            auto handler = SimpleHandler::GetInstance();
+            auto s = renderer_recv(handler->renderer);
+
+            std::cout << "Command: " << s << std::endl;
+            std::cout << "#B: " << handler->browser_list_.size() << std::endl;
+
+            auto browser = handler->browser_list_.front();
+
+            auto frame = browser->GetMainFrame();
+            // frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
+            frame->ExecuteJavaScript("var d = document.createElement(\"div\");"
+                                     "d.appendChild(document.createTextNode(\"some text\"));"
+                                     "document.body.appendChild(d);",
+                                     frame->GetURL(), 0);
+
+            renderer_string_drop(s);
+        }).detach();
+    }
 }
 
 void SimpleHandler::CloseAllBrowsers(bool force_close) {

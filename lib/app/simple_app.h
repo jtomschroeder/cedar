@@ -6,7 +6,8 @@
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler {
 public:
-    SimpleApp();
+    SimpleApp(void *renderer) : renderer(renderer) {}
+    ~SimpleApp() = default;
 
     // CefApp methods:
     CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
@@ -18,5 +19,7 @@ public:
     void OnRenderProcessThreadCreated(CefRefPtr<CefListValue>) override;
 
 private:
+    void *renderer;
+
     IMPLEMENT_REFCOUNTING(SimpleApp);
 };
