@@ -22,7 +22,7 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             let mut attributes = HashMap::new();
 
             let kind = match node.widget {
-                dom::Widget::Stack => Some("Stack".into()),
+                dom::Widget::Div => Some("Div".into()),
 
                 dom::Widget::Label(ref label) => {
                     attributes.insert("Text".into(), label.text.clone());

@@ -21,7 +21,7 @@ pub struct Field<S> {
 
 #[derive(PartialEq)]
 pub enum Widget<S> {
-    Stack,
+    Div,
     Button(Button<S>),
     Label(Label),
     Field(Field<S>),
@@ -34,7 +34,7 @@ impl<S> fmt::Debug for Widget<S> {
             f,
             "{}",
             match self {
-                &Stack => "Stack",
+                &Div => "Div",
                 &Button(_) => "Button",
                 &Label(_) => "Label",
                 &Field(_) => "Field",
@@ -136,7 +136,7 @@ impl<S> Object<S> {
 
 pub fn stack<S>(children: Vec<Object<S>>) -> Object<S> {
     Object {
-        widget: Widget::Stack,
+        widget: Widget::Div,
         children,
     }
 }

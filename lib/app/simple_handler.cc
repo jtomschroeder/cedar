@@ -126,21 +126,21 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, 
         // Once the main frame is finished loaded, kick off command receiver.
         std::thread([] {
             auto handler = SimpleHandler::GetInstance();
-            auto s = renderer_recv(handler->renderer);
+            while (true) {
+                auto s = renderer_recv(handler->renderer);
+                std::string str{s};
+                renderer_string_drop(s);
 
-            std::cout << "Command: " << s << std::endl;
-            std::cout << "#B: " << handler->browser_list_.size() << std::endl;
+                std::cout << "Command: " << str << std::endl;
+                std::cout << "#B: " << handler->browser_list_.size() << std::endl;
 
-            auto browser = handler->browser_list_.front();
+                auto browser = handler->browser_list_.front();
 
-            auto frame = browser->GetMainFrame();
-            frame->ExecuteJavaScript("var d = document.createElement(\"div\");"
-                                     "d.appendChild(document.createTextNode(\"some text\"));"
-                                     "document.body.appendChild(d);"
-                                     "console.log('Hello from JS!');",
-                                     frame->GetURL(), 0);
+                auto frame = browser->GetMainFrame();
 
-            renderer_string_drop(s);
+                std::string code = "window.on_command('" + str + "');";
+                frame->ExecuteJavaScript(code, frame->GetURL(), 0);
+            }
         }).detach();
     }
 }
