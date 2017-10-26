@@ -55,9 +55,12 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString
     PlatformTitleChange(browser, title);
 }
 
-bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message,
-                                     const CefString &source, int line) {
+bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser>, const CefString &message,
+                                     const CefString &, int) {
     // HACK: as a temporary solution, let's commandeer `console.log` to send events from JS to cedar
+    //
+    // long term:
+    // - provide JS bindings from CEF renderer process and use IPC to talk to browser process
 
     auto msg = std::string{message};
     std::cout << ">> console: " << msg << std::endl;
@@ -72,7 +75,7 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     browser_list_.push_back(browser);
 }
 
-bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+bool SimpleHandler::DoClose(CefRefPtr<CefBrowser>) {
     CEF_REQUIRE_UI_THREAD();
 
     // Closing the main window requires special handling. See the DoClose()
@@ -106,7 +109,7 @@ void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     }
 }
 
-void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame,
                                 ErrorCode errorCode, const CefString &errorText,
                                 const CefString &failedUrl) {
     CEF_REQUIRE_UI_THREAD();

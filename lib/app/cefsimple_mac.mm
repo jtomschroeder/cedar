@@ -34,7 +34,7 @@
     [super sendEvent:event];
 }
 
-- (void)terminate:(id)sender {
+- (void)terminate:(id)__unused sender {
     SimpleAppDelegate *delegate = static_cast<SimpleAppDelegate *>([NSApp delegate]);
     [delegate tryToTerminateApplication:self];
     // Return, don't exit. The application is responsible for exiting on its own.
@@ -44,7 +44,7 @@
 @implementation SimpleAppDelegate
 
 // Create the application on the UI thread.
-- (void)createApplication:(id)object {
+- (void)createApplication:(id)__unused object {
     [NSApplication sharedApplication];
 
     // TODO: create 'main menu' programmatically
@@ -54,14 +54,14 @@
     [[NSApplication sharedApplication] setDelegate:self];
 }
 
-- (void)tryToTerminateApplication:(NSApplication *)app {
+- (void)tryToTerminateApplication:(NSApplication *)__unused app {
     SimpleHandler *handler = SimpleHandler::GetInstance();
     if (handler && !handler->IsClosing()) {
         handler->CloseAllBrowsers(false);
     }
 }
 
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)__unused sender {
     return NSTerminateNow;
 }
 @end
