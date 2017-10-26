@@ -52,27 +52,18 @@ SimpleHandler *SimpleHandler::GetInstance() {
 
 void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) {
     CEF_REQUIRE_UI_THREAD();
-
-    // Set the title of the window using platform APIs.
     PlatformTitleChange(browser, title);
+}
+
+bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message,
+                                     const CefString &source, int line) {
+    std::cout << ">> console: " << std::string{message} << std::endl;
+    return false;
 }
 
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
-
-    // Add to the list of existing browsers.
     browser_list_.push_back(browser);
-
-    // auto frame = browser->GetMainFrame();
-    // frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
-
-    // if (browser_list_.size() == 1) {
-    // std::thread([&] {
-    //     auto s = renderer_recv(renderer);
-    //     std::cout << "Command: " << s << std::endl;
-    //     renderer_string_drop(s);
-    // });
-    // }
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -143,10 +134,10 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, 
             auto browser = handler->browser_list_.front();
 
             auto frame = browser->GetMainFrame();
-            // frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');", frame->GetURL(), 0);
             frame->ExecuteJavaScript("var d = document.createElement(\"div\");"
                                      "d.appendChild(document.createTextNode(\"some text\"));"
-                                     "document.body.appendChild(d);",
+                                     "document.body.appendChild(d);"
+                                     "console.log('Hello from JS!');",
                                      frame->GetURL(), 0);
 
             renderer_string_drop(s);

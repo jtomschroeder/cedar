@@ -6,7 +6,7 @@
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler {
 public:
-    SimpleApp(void *renderer) : renderer(renderer) {}
+    SimpleApp(void *renderer, std::string resources) : renderer(renderer), resources(resources) {}
     ~SimpleApp() = default;
 
     // CefApp methods:
@@ -20,6 +20,7 @@ public:
 
 private:
     void *renderer;
+    std::string resources;
 
     IMPLEMENT_REFCOUNTING(SimpleApp);
 };

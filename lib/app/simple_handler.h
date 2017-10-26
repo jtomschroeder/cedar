@@ -29,6 +29,8 @@ public:
 
     // CefDisplayHandler methods:
     void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) override;
+    bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message,
+                          const CefString &source, int line) override;
 
     // CefLifeSpanHandler methods:
     void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;

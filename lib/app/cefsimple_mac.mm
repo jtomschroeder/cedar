@@ -76,10 +76,9 @@ extern "C" void cef_app_run(void *renderer) {
 
     CefSettings settings;
 
-    // SimpleApp implements application-level callbacks for the browser process.
-    // It will create the first browser instance in OnContextInitialized() after
-    // CEF has initialized.
-    CefRefPtr<SimpleApp> app(new SimpleApp(renderer));
+    auto resources = [[NSBundle mainBundle] resourcePath];
+
+    CefRefPtr<SimpleApp> app(new SimpleApp(renderer, [resources UTF8String]));
 
     // Initialize CEF for the browser process.
     CefInitialize(main_args, settings, app.get(), nullptr);

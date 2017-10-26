@@ -15,6 +15,7 @@ example EXAMPLE:
 
 	cp lib/app/mac/Info.plist {{APP}}/Contents/.
 	cp -a lib/app/mac/{Info.plist,*.icns,English.lproj} {{APP}}/Contents/Resources/.
+	cp etc/*.html {{APP}}/Contents/Resources/.
 
 	cp -a 'lib/cef/Release/Chromium Embedded Framework.framework' {{APP}}/Contents/Frameworks/.
 

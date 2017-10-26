@@ -1,25 +1,4 @@
 
-// use renderer::{self, Command, Event};
-// extern "C" {
-//     fn cef_app_run();
-// }
-// #[derive(Clone)]
-// pub struct Renderer {}
-// impl Renderer {
-//     pub fn new() -> Self {
-//         Renderer {}
-//     }
-// }
-// impl renderer::Renderer for Renderer {
-//     fn send(&self, cmd: Command) {}
-//     fn recv(&self) -> Event {
-//         unimplemented!()
-//     }
-// }
-// pub fn run(_: Renderer) {
-//     unsafe { cef_app_run() }
-// }
-
 use std::os::raw::{c_void, c_char};
 use std::ffi::{CStr, CString};
 use std::sync::Arc;

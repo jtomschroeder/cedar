@@ -16,15 +16,13 @@ void SimpleApp::OnContextInitialized() {
 
     auto command_line = CefCommandLine::GetGlobalCommandLine();
 
-    // SimpleHandler implements browser-level callbacks.
     CefRefPtr<SimpleHandler> handler(new SimpleHandler(renderer));
 
-    // Specify CEF browser settings here.
     CefBrowserSettings browser_settings;
 
-    const std::string url = "http://www.google.com";
+    // const std::string url = "http://www.google.com";
+    const std::string url = "file://" + resources + "/view.html";
 
-    // Information used when creating the native window.
     CefWindowInfo window_info;
 
 #if defined(OS_WIN)
@@ -32,7 +30,6 @@ void SimpleApp::OnContextInitialized() {
     window_info.SetAsPopup(nullptr, "cefsimple");
 #endif
 
-    // Create the first browser window.
     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, nullptr);
 }
 
