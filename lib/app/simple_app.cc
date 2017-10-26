@@ -31,11 +31,11 @@ void SimpleApp::OnContextInitialized() {
 
 #if defined(OS_WIN)
     // On Windows we need to specify certain flags that will be passed to CreateWindowEx().
-    window_info.SetAsPopup(NULL, "cefsimple");
+    window_info.SetAsPopup(nullptr, "cefsimple");
 #endif
 
     // Create the first browser window.
-    CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, NULL);
+    CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, nullptr);
 }
 
 void SimpleApp::OnRenderProcessThreadCreated(CefRefPtr<CefListValue>) {

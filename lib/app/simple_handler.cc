@@ -13,7 +13,7 @@
 
 namespace {
 
-SimpleHandler *g_instance = NULL;
+SimpleHandler *g_instance = nullptr;
 
 } // namespace
 
@@ -23,7 +23,7 @@ SimpleHandler::SimpleHandler() : is_closing_(false) {
 }
 
 SimpleHandler::~SimpleHandler() {
-    g_instance = NULL;
+    g_instance = nullptr;
 }
 
 // static

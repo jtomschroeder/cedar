@@ -82,7 +82,7 @@ extern "C" void cef_app_run() {
     CefRefPtr<SimpleApp> app(new SimpleApp);
 
     // Initialize CEF for the browser process.
-    CefInitialize(main_args, settings, app.get(), NULL);
+    CefInitialize(main_args, settings, app.get(), nullptr);
 
     // Create the application delegate.
     NSObject *delegate = [[SimpleAppDelegate alloc] init];

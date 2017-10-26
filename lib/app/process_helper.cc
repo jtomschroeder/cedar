@@ -7,5 +7,5 @@ extern "C" int cef_helper_run(int argc, char **argv) {
     CefMainArgs args(argc, argv);
 
     // Execute the sub-process.
-    return CefExecuteProcess(args, NULL, NULL);
+    return CefExecuteProcess(args, nullptr, nullptr);
 }
