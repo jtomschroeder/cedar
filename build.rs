@@ -13,14 +13,8 @@ fn main() {
         .file("lib/app/simple_app.cc")
         .file("lib/app/simple_handler_mac.mm")
         .file("lib/app/simple_handler.cc")
-        .compile("libcedar-cef.a");
-
-    cc::Build::new()
-        .cpp(true)
-        .flag("-std=c++14")
-        .flag("-isystemlib/cef")
         .file("lib/app/process_helper.cc")
-        .compile("libcedar-cef-helper.a");
+        .compile("libcedar-cef.a");
 
     println!("cargo:rustc-link-lib=framework=Cocoa");
 
