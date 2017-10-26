@@ -57,7 +57,13 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString
 
 bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message,
                                      const CefString &source, int line) {
-    std::cout << ">> console: " << std::string{message} << std::endl;
+    // HACK: as a temporary solution, let's commandeer `console.log` to send events from JS to cedar
+
+    auto msg = std::string{message};
+    std::cout << ">> console: " << msg << std::endl;
+
+    renderer_resp(renderer, msg.c_str());
+
     return false;
 }
 

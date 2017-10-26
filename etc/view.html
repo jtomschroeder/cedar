@@ -11,18 +11,15 @@
 </style>
 
 <script>
-    // a la https://github.com/jtomschroeder/cedar/blob/fa1345b9c35245f25546da5853073daa4dca7ec2/lib/cocoa/cocoa.mm
-
     (function () {
-        var root = document.createElement("div");
-        document.body.appendChild(root);
+        window.nodes = { "": document.body };
 
-        window.nodes = {};
-        window.nodes[""] = root;
+        window.on_click = (id) => (e) => {
+            var event = { "Click": { "id": id } };
+            console.log(JSON.stringify(event));
+        };
 
         window.on_command = (cmd) => {
-            // console.log(JSON.parse(cmd));
-
             var cmd = JSON.parse(cmd);
 
             if (cmd.hasOwnProperty('Create')) {
@@ -34,39 +31,35 @@
                 var kind = create.kind;
                 var attributes = create.attributes;
 
-                console.log(id);
-                console.log(parent);
-                console.log(kind);
-                console.log(attributes['Text']);
-
-                // EXAMPLE:
-                // var b = document.createElement('button');
-                // b.setAttribute('content', 'test content');
-                // b.setAttribute('class', 'btn');
-                // b.setAttribute('style', '??');
-                // b.innerHTML = 'test value';
-
                 var node = null;
                 if (kind == "Div") {
                     node = document.createElement("div");
                 } else if (kind == "Button") {
                     node = document.createElement('button');
                     node.appendChild(document.createTextNode(attributes['Text']));
-                    node.setAttribute('onclick', "window.on_click(this)");
+                    node.onclick = window.on_click(id);
                 } else {
                     node = document.createTextNode(attributes['Text']);
-
-                    // node = document.createElement("div");
-                    // node.appendChild(document.createTextNode(attributes['Text']));
                 }
 
                 var parent = window.nodes[parent];
                 parent.appendChild(node);
 
                 window.nodes[id] = node;
-            }
+            } else if (cmd.hasOwnProperty('Update')) {
+                var update = cmd['Update'];
 
-            window.on_click = (element) => { console.log("Click from " + element) };
+                var id = update.id;
+
+                var attribute = update.attribute;
+                var value = update.value;
+
+                if (attribute == "Text") {
+                    window.nodes[id].nodeValue = value;
+                } else {
+                    // Unsupported attribute!
+                }
+            }
         };
     })();
 </script>
