@@ -20,8 +20,10 @@
         };
 
         window.on_change = (id, element) => (event) => {
-            var change = { "Change": { "id": id, "value": element.value } };
-            console.log(JSON.stringify(change));
+            if (element.value) {
+                var change = { "Change": { "id": id, "value": element.value } };
+                console.log(JSON.stringify(change));
+            }
         };
 
         window.on_command = (cmd) => {
@@ -41,6 +43,8 @@
                 var node = kind == 'text' ? document.createTextNode(value) : document.createElement(kind);
 
                 // TODO: could use event-listeners instead of assigning functions?
+                // TODO: on_change get some duplicate events
+                // TODO: only register for nodes that need to?
                 node.onclick = window.on_click(id);
                 node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
 

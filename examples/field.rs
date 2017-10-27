@@ -1,5 +1,8 @@
 
+#[macro_use]
 extern crate cedar;
+
+use cedar::dom::{Object, text};
 
 type Model = String;
 
@@ -13,10 +16,6 @@ fn update(_: Model, message: Message) -> Model {
         Message::NewContent(content) => content,
     }
 }
-
-use cedar::dom;
-
-// => elements [ attributes ] [ children ]
 
 // view content =
 //   div []
@@ -33,13 +32,16 @@ use cedar::dom;
 //     , ("text-align", "center")
 //     ]
 
-fn view(model: &Model) -> dom::Object<Message> {
-    dom::div(vec![
-        dom::input()
-            .placeholder("Text to reverse!".into())
-            .change(Message::NewContent),
-        dom::div(vec![dom::text(model.chars().rev().collect())]),
-    ])
+fn view(model: &Model) -> Object<Message> {
+    div!(
+        [],
+        [
+            input!([], [])
+                .placeholder("Text to reverse!".into())
+                .change(Message::NewContent),
+            div!([], [text(model.chars().rev().collect::<String>())]),
+        ]
+    )
 }
 
 fn main() {

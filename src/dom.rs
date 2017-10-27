@@ -10,16 +10,6 @@ pub enum Element {
     Input,
 }
 
-// impl Element {
-//     pub fn div() -> Self {
-//         Element::Div
-//     }
-
-//     pub fn button() -> Self {
-//         Element::Button
-//     }
-// }
-
 impl fmt::Display for Element {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Element::*;
@@ -174,11 +164,14 @@ macro_rules! button {
     }}
 }
 
-pub fn div<S>(children: Vec<Object<S>>) -> Object<S> {
-    Object {
-        widget: Widget::new(Element::Div),
-        children,
-    }
+#[macro_export]
+macro_rules! input {
+    ([$($attrs:tt)*], [$($children:tt)*]) => {{
+        let widget = $crate::dom::Widget::new($crate::dom::Element::Input);
+        let children = vec![ $($children)* ];
+
+        $crate::dom::Object { widget, children }
+    }}
 }
 
 pub fn text<S, T: ToString>(text: T) -> Object<S> {
