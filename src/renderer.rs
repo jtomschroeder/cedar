@@ -11,6 +11,7 @@ pub enum Command {
         id: Identifier,
         parent: Identifier,
         kind: String,
+        value: Option<String>,
         attributes: HashMap<String, String>,
     },
 

@@ -24,8 +24,6 @@
             console.log(JSON.stringify(change));
         };
 
-        // TODO: could use event-listeners instead of assigning functions?
-
         window.on_command = (cmd) => {
             var cmd = JSON.parse(cmd);
 
@@ -36,25 +34,18 @@
                 var parent = create.parent;
 
                 var kind = create.kind;
+                var value = create.value;
+
                 var attributes = create.attributes;
 
-                var node = null;
-                if (kind == "Div") {
-                    node = document.createElement("div");
-                } else if (kind == "Button") {
-                    node = document.createElement('button');
-                    node.appendChild(document.createTextNode(attributes['Text']));
-                    node.onclick = window.on_click(id);
-                } else if (kind == "Input") {
-                    node = document.createElement('input');
+                var node = kind == 'text' ? document.createTextNode(value) : document.createElement(kind);
 
-                    if (attributes['Placeholder']) {
-                        node.placeholder = attributes['Placeholder'];
-                    }
+                // TODO: could use event-listeners instead of assigning functions?
+                node.onclick = window.on_click(id);
+                node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
 
-                    node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
-                } else {
-                    node = document.createTextNode(attributes['Text']);
+                for (attr in attributes) {
+                    node[attr] = attributes[attr];
                 }
 
                 var parent = window.nodes[parent];

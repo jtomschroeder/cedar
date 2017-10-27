@@ -21,36 +21,42 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
 
             let mut attributes = HashMap::new();
 
-            let kind = match node.widget {
-                dom::Widget::Div => Some("Div".into()),
+            // let kind = match node.widget {
+            //     dom::Widget::Div => Some("Div".into()),
 
-                dom::Widget::Text(ref text) => {
-                    attributes.insert("Text".into(), text.text.clone());
-                    Some("Text".into())
-                }
+            //     dom::Widget::Text(ref text) => {
+            //         attributes.insert("Text".into(), text.text.clone());
+            //         Some("Text".into())
+            //     }
 
-                dom::Widget::Button(ref button) => {
-                    attributes.insert("Text".into(), button.text.clone());
-                    Some("Button".into())
-                }
+            //     dom::Widget::Button(ref button) => {
+            //         attributes.insert("Text".into(), button.text.clone());
+            //         Some("Button".into())
+            //     }
 
-                dom::Widget::Input(ref input) => {
-                    if let Some(ref placeholder) = input.placeholder {
-                        attributes.insert("Placeholder".into(), placeholder.clone());
-                    }
-                    Some("Input".into())
-                }
-            };
+            //     dom::Widget::Input(ref input) => {
+            //         if let Some(ref placeholder) = input.placeholder {
+            //             attributes.insert("Placeholder".into(), placeholder.clone());
+            //         }
+            //         Some("Input".into())
+            //     }
+            // };
 
-            if let Some(kind) = kind {
-                let parent = path.parent().to_string();
-                commands.push(Command::Create {
-                    id,
-                    parent,
-                    kind,
-                    attributes,
-                })
+            let kind = node.widget.element.to_string();
+            let value = node.widget.value.clone();
+
+            if let Some(ref placeholder) = node.widget.placeholder {
+                attributes.insert("placeholder".into(), placeholder.clone());
             }
+
+            let parent = path.parent().to_string();
+            commands.push(Command::Create {
+                id,
+                parent,
+                kind,
+                value,
+                attributes,
+            })
         });
     }
 
@@ -62,12 +68,12 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             tree::Operation::Create => expand(&path, node(), &mut commands),
             tree::Operation::Update => {
                 let node = node();
-                match node.widget {
-                    dom::Widget::Text(ref text) => {
+                match node.widget.element {
+                    dom::Element::Text => {
                         commands.push(Command::Update {
                             id: id(),
                             attribute: "Text".into(),
-                            value: text.text.clone(),
+                            value: node.widget.value.clone().unwrap(),
                         })
                     }
 
@@ -108,25 +114,22 @@ where
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
+        let path =
+            |id: &str| tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
+
         let ref dom = self.dom;
         match event {
             Event::Click { id } => {
-                let path =
-                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
-                dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Button(ref button) => button.click.clone().map(Action::Update),
-                    _ => None,
+                let path = path(&id);
+                dom.find(&path).and_then(|node| {
+                    node.widget.click.clone().map(Action::Update)
                 })
             }
 
             Event::Change { id, value } => {
-                let path =
-                    tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
-                dom.find(&path).and_then(|node| match node.widget {
-                    dom::Widget::Input(ref input) => {
-                        input.change.map(|c| c(value)).map(Action::Update)
-                    }
-                    _ => None,
+                let path = path(&id);
+                dom.find(&path).and_then(|node| {
+                    node.widget.change.map(|c| c(value)).map(Action::Update)
                 })
             }
         }

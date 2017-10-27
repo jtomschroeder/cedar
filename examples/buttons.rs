@@ -1,5 +1,11 @@
 
+// #![feature(trace_macros)]
+// trace_macros!(true);
+
+#[macro_use]
 extern crate cedar;
+
+use cedar::dom::{Object, text};
 
 type Model = i32;
 
@@ -16,14 +22,33 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-use cedar::dom;
+fn view(model: &Model) -> Object<Message> {
+    // dom::div(vec![
+    //     dom::button("+".into()).click(Message::Increment),
+    //     dom::div(vec![dom::text(model.to_string())]),
+    //     dom::button("-".into()).click(Message::Decrement),
+    // ])
 
-fn view(model: &Model) -> dom::Object<Message> {
-    dom::div(vec![
-        dom::button("+".into()).click(Message::Increment),
-        dom::div(vec![dom::text(model.to_string())]),
-        dom::button("-".into()).click(Message::Decrement),
-    ])
+    // view!{};
+
+    // view! {
+    //     div => []
+    // }
+
+    // view! {
+    //     div => [
+    //         button => [],
+    //     ]
+    // }
+
+    div!(
+        [],
+        [
+            button!([], [text("+")]).click(Message::Increment),
+            div!([], [text(model)]),
+            button!([], [text("-")]).click(Message::Decrement),
+        ]
+    )
 }
 
 fn main() {
