@@ -19,35 +19,16 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
 
             let id = path.to_string();
 
-            let mut attributes = HashMap::new();
-
-            // let kind = match node.widget {
-            //     dom::Widget::Div => Some("Div".into()),
-
-            //     dom::Widget::Text(ref text) => {
-            //         attributes.insert("Text".into(), text.text.clone());
-            //         Some("Text".into())
-            //     }
-
-            //     dom::Widget::Button(ref button) => {
-            //         attributes.insert("Text".into(), button.text.clone());
-            //         Some("Button".into())
-            //     }
-
-            //     dom::Widget::Input(ref input) => {
-            //         if let Some(ref placeholder) = input.placeholder {
-            //             attributes.insert("Placeholder".into(), placeholder.clone());
-            //         }
-            //         Some("Input".into())
-            //     }
-            // };
-
             let kind = node.widget.element.to_string();
             let value = node.widget.value.clone();
 
-            if let Some(ref placeholder) = node.widget.placeholder {
-                attributes.insert("placeholder".into(), placeholder.clone());
-            }
+            let attributes = node.attributes
+                .iter()
+                .map(|attr| match attr {
+                    &dom::Attribute::Placeholder(ref p) => ("placeholder".into(), p.clone()),
+                    &dom::Attribute::Style(ref s) => ("style".into(), s.clone()),
+                })
+                .collect();
 
             let parent = path.parent().to_string();
             commands.push(Command::Create {

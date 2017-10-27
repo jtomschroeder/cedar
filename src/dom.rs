@@ -10,6 +10,12 @@ pub enum Element {
     Input,
 }
 
+#[derive(PartialEq, Debug)]
+pub enum Attribute {
+    Placeholder(String),
+    Style(String),
+}
+
 impl fmt::Display for Element {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Element::*;
@@ -31,9 +37,6 @@ pub struct Widget<S> {
     pub element: Element,
     pub value: Option<String>,
 
-    // Attributes
-    pub placeholder: Option<String>,
-
     // Events
     pub click: Option<S>,
     pub change: Option<fn(String) -> S>,
@@ -45,7 +48,6 @@ impl<S> Widget<S> {
             element,
 
             value: None,
-            placeholder: None,
             click: None,
             change: None,
         }
@@ -60,6 +62,7 @@ impl<S> fmt::Debug for Widget<S> {
 
 pub struct Object<S> {
     pub widget: Widget<S>,
+    pub attributes: Vec<Attribute>,
     pub children: Vec<Object<S>>,
 }
 
@@ -110,11 +113,6 @@ impl<S> Object<S> {
         self
     }
 
-    pub fn placeholder(mut self, text: String) -> Self {
-        self.widget.placeholder = Some(text);
-        self
-    }
-
     pub fn change(mut self, change: fn(String) -> S) -> Self {
         self.widget.change = Some(change);
         self
@@ -144,33 +142,41 @@ impl<S> Object<S> {
 
 // Incremental TT muncher macro!?
 
+// TODO: need to refactor the code redundancy here!
+
 #[macro_export]
 macro_rules! div {
-    ([$($attrs:tt)*], [$($children:tt)*]) => {{
+    ([$($attributes:tt)*], [$($children:tt)*]) => {{
         let widget = $crate::dom::Widget::new($crate::dom::Element::Div);
+
+        let attributes = vec![ $($attributes)* ];
         let children = vec![ $($children)* ];
 
-        $crate::dom::Object { widget, children }
+        $crate::dom::Object { widget, attributes, children }
     }}
 }
 
 #[macro_export]
 macro_rules! button {
-    ([$($attrs:tt)*], [$($children:tt)*]) => {{
+    ([$($attributes:tt)*], [$($children:tt)*]) => {{
         let widget = $crate::dom::Widget::new($crate::dom::Element::Button);
+
+        let attributes = vec![ $($attributes)* ];
         let children = vec![ $($children)* ];
 
-        $crate::dom::Object { widget, children }
+        $crate::dom::Object { widget, attributes, children }
     }}
 }
 
 #[macro_export]
 macro_rules! input {
-    ([$($attrs:tt)*], [$($children:tt)*]) => {{
+    ([$($attributes:tt)*], [$($children:tt)*]) => {{
         let widget = $crate::dom::Widget::new($crate::dom::Element::Input);
+
+        let attributes = vec![ $($attributes)* ];
         let children = vec![ $($children)* ];
 
-        $crate::dom::Object { widget, children }
+        $crate::dom::Object { widget, attributes, children }
     }}
 }
 
@@ -180,6 +186,33 @@ pub fn text<S, T: ToString>(text: T) -> Object<S> {
 
     Object {
         widget,
+        attributes: vec![],
         children: vec![],
     }
+}
+
+// Attributes
+
+pub fn placeholder<T: ToString>(text: T) -> Attribute {
+    Attribute::Placeholder(text.to_string())
+}
+
+pub fn style(mut attrs: Vec<(String, String)>) -> Attribute {
+    let style = attrs
+        .drain(..)
+        .map(|(name, value)| format!("{}: {}; ", name, value))
+        .fold(String::new(), |mut style, s| {
+            style += &s;
+            style
+        });
+
+    Attribute::Style(style)
+}
+
+#[macro_export]
+macro_rules! style {
+    ($(($name:expr, $value:expr)),*) => {{
+        let attrs = vec![$(($name.into(), $value.into())),*];
+        $crate::dom::style(attrs)
+    }}
 }

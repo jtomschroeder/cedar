@@ -4,6 +4,9 @@
 
 <body></body>
 
+<!-- <script src="http://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+    crossorigin="anonymous"></script> -->
+
 <style>
     div {
         display: block;
@@ -20,10 +23,9 @@
         };
 
         window.on_change = (id, element) => (event) => {
-            if (element.value) {
-                var change = { "Change": { "id": id, "value": element.value } };
-                console.log(JSON.stringify(change));
-            }
+            var value = element.value || '';
+            var change = { "Change": { "id": id, "value": value } };
+            console.log(JSON.stringify(change));
         };
 
         window.on_command = (cmd) => {
@@ -45,8 +47,21 @@
                 // TODO: could use event-listeners instead of assigning functions?
                 // TODO: on_change get some duplicate events
                 // TODO: only register for nodes that need to?
-                node.onclick = window.on_click(id);
-                node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
+
+                // node.onclick = window.on_click(id);
+                // node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
+
+                var click = window.on_click(id);
+                node.addEventListener("click", click);
+
+                var change = window.on_change(id, node);
+                node.addEventListener("change", change);
+                node.addEventListener("keypress", change);
+                node.addEventListener("input", change);
+                // node.addEventListener("cut", change);
+                node.addEventListener("paste", change);
+                // node.addEventListener("propertychange", change);
+                // node.addEventListener("keyup", change);
 
                 for (attr in attributes) {
                     node[attr] = attributes[attr];
