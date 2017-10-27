@@ -47,11 +47,6 @@
                     node.onclick = window.on_click(id);
                 } else if (kind == "Input") {
                     node = document.createElement('input');
-                    // Object.entries(attributes).forEach((name, value) => {
-                    //     if (name == "Placeholder") {
-                    //         node.placeholder = value;
-                    //     }
-                    // })
 
                     if (attributes['Placeholder']) {
                         node.placeholder = attributes['Placeholder'];
