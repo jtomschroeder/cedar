@@ -1,6 +1,4 @@
 
-CXX_JSON = "https://github.com/nlohmann/json/releases/download/v2.1.1/json.hpp"
-
 APP = "out/cefsimple.app"
 HELPER = "out/cefsimple.app/Contents/Frameworks/cefsimple Helper.app"
 CEF = "$HOME/.cedar/lib/Chromium Embedded Framework.framework"
@@ -10,10 +8,6 @@ setup:
 	cp -a "lib/cef/Release/Chromium Embedded Framework.framework" $HOME/.cedar/lib/.
 	install_name_tool -id "{{CEF}}/Chromium Embedded Framework" "{{CEF}}/Chromium Embedded Framework"
 
-dep:
-	mkdir -p cocoa/ext/json
-	curl -L {{CXX_JSON}} -o cocoa/ext/json/json.hpp
-
 example EXAMPLE:
 	mkdir -p {{APP}}/Contents/{Frameworks,MacOS,Resources}
 
@@ -22,6 +16,8 @@ example EXAMPLE:
 	cp etc/*.html {{APP}}/Contents/Resources/.
 
 	cp -a "{{CEF}}" {{APP}}/Contents/Frameworks/.
+	install_name_tool -id "@rpath/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" \
+						  "{{APP}}/Contents/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework"
 
 	mkdir -p "{{HELPER}}/Contents/MacOS"
 	cp lib/app/mac/helper-Info.plist "{{HELPER}}/Contents/Info.plist"
