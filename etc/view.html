@@ -15,20 +15,24 @@
 
 <script>
     (function () {
-        window.nodes = { "": document.body };
+        var cedar = window.cedar = {};
 
-        window.on_click = (id) => (event) => {
+        cedar.nodes = { "": document.body };
+
+        cedar.click = (id) => (event) => {
             var click = { "Click": { "id": id } };
             console.log(JSON.stringify(click));
         };
 
-        window.on_change = (id, element) => (event) => {
+        cedar.change = (id, element) => (event) => {
             var value = element.value || '';
             var change = { "Change": { "id": id, "value": value } };
             console.log(JSON.stringify(change));
         };
 
-        window.on_command = (cmd) => {
+        cedar.command = (cmd) => {
+            var cedar = window.cedar;
+
             var cmd = JSON.parse(cmd);
 
             if (cmd.hasOwnProperty('Create')) {
@@ -44,33 +48,26 @@
 
                 var node = kind == 'text' ? document.createTextNode(value) : document.createElement(kind);
 
-                // TODO: could use event-listeners instead of assigning functions?
-                // TODO: on_change get some duplicate events
                 // TODO: only register for nodes that need to?
+                // TODO: handle 'duplicate' events?
 
-                // node.onclick = window.on_click(id);
-                // node.onchange = node.onkeypress = node.onpaste = node.oninput = window.on_change(id, node);
-
-                var click = window.on_click(id);
+                var click = cedar.click(id);
                 node.addEventListener("click", click);
 
-                var change = window.on_change(id, node);
-                node.addEventListener("change", change);
-                node.addEventListener("keypress", change);
+                var change = cedar.change(id, node);
+                // node.addEventListener("change", change);
+                // node.addEventListener("keypress", change);
                 node.addEventListener("input", change);
-                // node.addEventListener("cut", change);
                 node.addEventListener("paste", change);
-                // node.addEventListener("propertychange", change);
-                // node.addEventListener("keyup", change);
 
                 for (attr in attributes) {
                     node[attr] = attributes[attr];
                 }
 
-                var parent = window.nodes[parent];
+                var parent = cedar.nodes[parent];
                 parent.appendChild(node);
 
-                window.nodes[id] = node;
+                cedar.nodes[id] = node;
             } else if (cmd.hasOwnProperty('Update')) {
                 var update = cmd['Update'];
 
@@ -80,7 +77,7 @@
                 var value = update.value;
 
                 if (attribute == "Text") {
-                    window.nodes[id].nodeValue = value;
+                    cedar.nodes[id].nodeValue = value;
                 } else {
                     // Unsupported attribute!
                 }
@@ -88,7 +85,7 @@
                 var remove = cmd['Remove'];
                 var id = remove.id;
 
-                window.nodes[id].remove();
+                cedar.nodes[id].remove();
             }
         };
     })();

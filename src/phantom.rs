@@ -1,6 +1,5 @@
 
 use std::str;
-use std::collections::HashMap;
 
 use dom;
 use tree::{self, Vertex};

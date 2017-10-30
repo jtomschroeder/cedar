@@ -117,6 +117,15 @@ impl<S> Object<S> {
         self.widget.change = Some(change);
         self
     }
+
+    pub fn attribute(mut self, attr: Attribute) -> Self {
+        self.attributes.push(attr);
+        self
+    }
+
+    pub fn placeholder(self, text: String) -> Self {
+        self.attribute(Attribute::Placeholder(text))
+    }
 }
 
 // TODO: create macro language a la JSX in React for defining DOM
@@ -215,4 +224,31 @@ macro_rules! style {
         let attrs = vec![$(($name.into(), $value.into())),*];
         $crate::dom::style(attrs)
     }}
+}
+
+
+// maybe just put these in a cedar::prelude::*?
+
+pub fn div<S>(children: Vec<Object<S>>) -> Object<S> {
+    Object {
+        widget: Widget::new(Element::Div),
+        attributes: vec![],
+        children,
+    }
+}
+
+pub fn button<S>() -> Object<S> {
+    Object {
+        widget: Widget::new(Element::Button),
+        attributes: vec![],
+        children: vec![],
+    }
+}
+
+pub fn input<S>() -> Object<S> {
+    Object {
+        widget: Widget::new(Element::Input),
+        attributes: vec![],
+        children: vec![],
+    }
 }

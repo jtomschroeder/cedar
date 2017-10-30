@@ -4,8 +4,13 @@ extern crate cmake;
 
 use std::env;
 
+// mkdir -p "$HOME/.cedar/lib"
+// cp -a lib/cef/Release/Chromium\ Embedded\ Framework.framework $HOME/.cedar/lib/.
+// install_name_tool -id "$HOME/.cedar/lib/Chromium Embedded Framework.framework/Chromium Embedded Framework" "$HOME/.cedar/lib/Chromium Embedded Framework.framework/Chromium Embedded Framework"
+
 fn main() {
-    let manifest = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let home = env::var("HOME").unwrap();
+    // let manifest = env::var("CARGO_MANIFEST_DIR").unwrap();
 
     cc::Build::new()
         .cpp(true)
@@ -20,19 +25,16 @@ fn main() {
 
     println!("cargo:rustc-link-lib=framework=Cocoa");
 
-    println!(
-        "cargo:rustc-link-search=framework={}/lib/cef/Release",
-        manifest
-    );
+    println!("cargo:rustc-link-search=framework={}/.cedar/lib", home);
     println!("cargo:rustc-link-lib=framework=Chromium Embedded Framework");
 
-    let dst = cmake::Config::new("lib/cef")
+    let cef = cmake::Config::new("lib/cef")
         .build_target("libcef_dll_wrapper")
         .build();
 
     println!(
         "cargo:rustc-link-search=native={}/build/libcef_dll_wrapper",
-        dst.display()
+        cef.display()
     );
     println!("cargo:rustc-link-lib=static=cef_dll_wrapper");
 }

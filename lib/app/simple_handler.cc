@@ -147,7 +147,7 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, 
 
                 auto frame = browser->GetMainFrame();
 
-                std::string code = "window.on_command('" + str + "');";
+                auto code = "window.cedar.command('" + str + "');";
                 frame->ExecuteJavaScript(code, frame->GetURL(), 0);
             }
         }).detach();
