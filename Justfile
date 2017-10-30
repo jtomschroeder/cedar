@@ -15,8 +15,6 @@ dep:
 	curl -L {{CXX_JSON}} -o cocoa/ext/json/json.hpp
 
 example EXAMPLE:
-	# cp -a lib/cef/build/tests/cefsimple/Release/cefsimple.app .
-
 	mkdir -p {{APP}}/Contents/{Frameworks,MacOS,Resources}
 
 	cp lib/app/mac/Info.plist {{APP}}/Contents/.

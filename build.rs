@@ -6,7 +6,11 @@ use std::env;
 
 fn main() {
     let home = env::var("HOME").unwrap();
-    // let manifest = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let target = env::var("TARGET").unwrap();
+
+    if !target.contains("apple") || !target.contains("x86_64") {
+        panic!("Only macOS supported!");
+    }
 
     cc::Build::new()
         .cpp(true)
