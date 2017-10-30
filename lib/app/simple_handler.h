@@ -38,25 +38,27 @@ public:
     void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
     // CefLoadHandler methods:
-    void OnLoadError(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, ErrorCode,
-                     const CefString &errorText, const CefString &failedUrl) override;
+    void OnLoadError(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, ErrorCode, const CefString &error,
+                     const CefString &failedUrl) override;
     void OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, int httpStatusCode) override;
 
     // Request that all existing browser windows close.
     void CloseAllBrowsers(bool force_close);
 
     bool IsClosing() const {
-        return is_closing_;
+        return closing;
     }
 
 private:
     void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title);
 
+    static SimpleHandler *instance;
+
     using BrowserList = std::list<CefRefPtr<CefBrowser>>;
-    BrowserList browser_list_;
+    BrowserList browsers;
 
     void *renderer;
-    bool is_closing_;
+    bool closing;
 
     IMPLEMENT_REFCOUNTING(SimpleHandler);
 };

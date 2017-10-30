@@ -4,10 +4,6 @@ extern crate cmake;
 
 use std::env;
 
-// mkdir -p "$HOME/.cedar/lib"
-// cp -a lib/cef/Release/Chromium\ Embedded\ Framework.framework $HOME/.cedar/lib/.
-// install_name_tool -id "$HOME/.cedar/lib/Chromium Embedded Framework.framework/Chromium Embedded Framework" "$HOME/.cedar/lib/Chromium Embedded Framework.framework/Chromium Embedded Framework"
-
 fn main() {
     let home = env::var("HOME").unwrap();
     // let manifest = env::var("CARGO_MANIFEST_DIR").unwrap();

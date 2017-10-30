@@ -13,12 +13,6 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
 
-namespace {
-
-SimpleHandler *g_instance = nullptr;
-
-} // namespace
-
 extern "C" {
 void renderer_resp(void *, const char *);
 
@@ -26,28 +20,19 @@ char *renderer_recv(void *);
 void renderer_string_drop(char *);
 }
 
-SimpleHandler::SimpleHandler(void *renderer) : renderer(renderer), is_closing_(false) {
-    DCHECK(!g_instance);
-    g_instance = this;
+SimpleHandler *SimpleHandler::instance = nullptr;
 
-    // std::thread([] {
-    //     auto handler = SimpleHandler::GetInstance();
-    //     auto s = renderer_recv(handler->renderer);
-
-    //     std::cout << "Command: " << s << std::endl;
-    //     std::cout << "#B: " << handler->browser_list_.size() << std::endl;
-
-    //     renderer_string_drop(s);
-    // }).detach();
+SimpleHandler::SimpleHandler(void *renderer) : renderer(renderer), closing(false) {
+    DCHECK(!instance);
+    instance = this;
 }
 
 SimpleHandler::~SimpleHandler() {
-    g_instance = nullptr;
+    instance = nullptr;
 }
 
-// static
 SimpleHandler *SimpleHandler::GetInstance() {
-    return g_instance;
+    return instance;
 }
 
 void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) {
@@ -63,7 +48,7 @@ bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser>, const CefString &mes
     // - provide JS bindings from CEF renderer process and use IPC to talk to browser process
 
     auto msg = std::string{message};
-    std::cout << ">> console: " << msg << std::endl;
+    // std::cout << ">> console: " << msg << std::endl;
 
     renderer_resp(renderer, msg.c_str());
 
@@ -72,7 +57,7 @@ bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser>, const CefString &mes
 
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
-    browser_list_.push_back(browser);
+    browsers.push_back(browser);
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser>) {
@@ -81,9 +66,9 @@ bool SimpleHandler::DoClose(CefRefPtr<CefBrowser>) {
     // Closing the main window requires special handling. See the DoClose()
     // documentation in the CEF header for a detailed destription of this
     // process.
-    if (browser_list_.size() == 1) {
+    if (browsers.size() == 1) {
         // Set a flag to indicate that the window close should be allowed.
-        is_closing_ = true;
+        closing = true;
     }
 
     // Allow the close. For windowed browsers this will result in the OS close
@@ -95,15 +80,15 @@ void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
 
     // Remove from the list of existing browsers.
-    BrowserList::iterator bit = browser_list_.begin();
-    for (; bit != browser_list_.end(); ++bit) {
-        if ((*bit)->IsSame(browser)) {
-            browser_list_.erase(bit);
+    auto it = browsers.begin();
+    for (; it != browsers.end(); ++it) {
+        if ((*it)->IsSame(browser)) {
+            browsers.erase(it);
             break;
         }
     }
 
-    if (browser_list_.empty()) {
+    if (browsers.empty()) {
         // All browser windows have closed. Quit the application message loop.
         CefQuitMessageLoop();
     }
@@ -129,7 +114,7 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame
 }
 
 void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, int) {
-    std::cout << "Load end!\n";
+    // std::cout << "Load end!\n";
 
     if (frame->IsMain()) {
         // Once the main frame is finished loaded, kick off command receiver.
@@ -140,14 +125,14 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, 
                 std::string str{s};
                 renderer_string_drop(s);
 
-                std::cout << "Command: " << str << std::endl;
-                std::cout << "#B: " << handler->browser_list_.size() << std::endl;
+                // std::cout << "Command: " << str << std::endl;
+                // std::cout << "#B: " << handler->browsers.size() << std::endl;
 
-                auto browser = handler->browser_list_.front();
+                auto browser = handler->browsers.front();
 
                 auto frame = browser->GetMainFrame();
 
-                auto code = "window.cedar.command('" + str + "');";
+                const auto code = "window.cedar.command('" + str + "');";
                 frame->ExecuteJavaScript(code, frame->GetURL(), 0);
             }
         }).detach();
@@ -156,17 +141,16 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame> frame, 
 
 void SimpleHandler::CloseAllBrowsers(bool force_close) {
     if (!CefCurrentlyOn(TID_UI)) {
-        // Execute on the UI thread.
         CefPostTask(TID_UI, base::Bind(&SimpleHandler::CloseAllBrowsers, this, force_close));
         return;
     }
 
-    if (browser_list_.empty()) {
+    if (browsers.empty()) {
         return;
     }
 
-    BrowserList::const_iterator it = browser_list_.begin();
-    for (; it != browser_list_.end(); ++it) {
+    auto it = browsers.begin();
+    for (; it != browsers.end(); ++it) {
         (*it)->GetHost()->CloseBrowser(force_close);
     }
 }
