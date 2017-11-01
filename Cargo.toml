@@ -16,9 +16,9 @@ keywords = ["frp", "gui"]
 name = "cedar"
 path = "src/tool/main.rs"
 
-[[bin]]
-name = "helper"
-path = "src/bin/helper.rs"
+# [[bin]]
+# name = "helper"
+# path = "src/bin/helper.rs"
 
 [build-dependencies]
 cc = "1.0"

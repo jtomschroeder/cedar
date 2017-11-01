@@ -1,0 +1,7 @@
+[package]
+name = "cedar-tool"
+version = "0.1.0"
+authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
+
+[dependencies]
+error-chain = "0.11"

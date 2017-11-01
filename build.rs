@@ -10,7 +10,7 @@ fn main() {
     let target = env::var("TARGET").unwrap();
 
     if !target.contains("apple") || !target.contains("x86_64") {
-        panic!("Only macOS supported (currently)!");
+        panic!("Only macOS supported! (currently)");
     }
 
     if !Path::new(&format!("{}/.cedar", home)).exists() {
