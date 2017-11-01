@@ -5,3 +5,4 @@ Cargo.lock
 /lib/cef
 /cefsimple.app
 /out
+/cedar-test/out

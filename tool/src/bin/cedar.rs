@@ -57,14 +57,35 @@ fn args() -> Option<Command> {
     None
 }
 
+macro_rules! sh {
+    ( $( $cmd:tt )* ) => {{
+        $crate::execute_with("sh", &format!($( $cmd )*))
+    }};
+}
+
+fn execute_with(shell: &str, cmd: &String) -> std::process::ExitStatus {
+    use std::process::{Command, Stdio};
+
+    let mut command = {
+        let mut command = Command::new(shell);
+        command.arg("-c").arg(cmd);
+        command.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+        command
+    };
+
+    let mut command = command.spawn().unwrap();
+    command.wait().unwrap()
+}
+
 fn run() -> Result<()> {
     let command = args().unwrap();
 
     let home = env::var("HOME").unwrap();
+    let vault = format!("{}/.cedar", home);
 
     match command {
         Command::Setup { force } => {
-            if !force && Path::new(&format!("{}/.cedar", home)).exists() {
+            if !force && Path::new(&vault).exists() {
                 println!("Already setup!");
                 return Ok(());
             }
@@ -76,7 +97,44 @@ fn run() -> Result<()> {
         }
 
         Command::Run { release } => {
-            // TODO: package .app
+            let app = "cedar-tool";
+
+            let cef = format!("{}/lib/'Chromium Embedded Framework.framework'", vault);
+            let pkg = format!("out/{}.app", app);
+            let helper = format!("{}/Contents/Frameworks/'cefsimple Helper.app'", pkg);
+
+
+            sh!("cargo build {}", if release { "--release" } else { "" });
+
+
+            sh!("mkdir -p {}/Contents/{{Frameworks,MacOS,Resources}}", pkg);
+
+            sh!("cp ../lib/app/mac/Info.plist {}/Contents/.", pkg);
+            sh!(
+                "cp -a ../lib/app/mac/{{Info.plist,*.icns,English.lproj}} {}/Contents/Resources/.",
+                pkg
+            );
+            sh!("cp ../etc/*.html {}/Contents/Resources/.", pkg);
+
+            sh!("cp -a {} {}/Contents/Frameworks/.", cef, pkg);
+            // install_name_tool -id "@rpath/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" \
+            // 					  "{{APP}}/Contents/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework"
+
+            sh!("mkdir -p {}/Contents/MacOS", helper);
+            sh!(
+                "cp ../lib/app/mac/helper-Info.plist {}/Contents/Info.plist",
+                helper
+            );
+
+            sh!("cp target/release/examples/{{EXAMPLE}} {{APP}}/Contents/MacOS/cefsimple");
+            // sh!("install_name_tool -add_rpath "@executable_path/.." {{APP}}/Contents/MacOS/cefsimple");
+
+            // sh!("cargo build --release --bin helper");
+
+            // sh!("cp target/release/helper '{{HELPER}}/Contents/MacOS/cefsimple Helper'");
+            // sh!("install_name_tool -add_rpath "@executable_path/../../../.." "{{HELPER}}/Contents/MacOS/cefsimple Helper"");
+
+            // sh!("./{{APP}}/Contents/MacOS/cefsimple");
         }
     }
 
