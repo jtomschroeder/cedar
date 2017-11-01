@@ -3,13 +3,18 @@ extern crate cc;
 extern crate cmake;
 
 use std::env;
+use std::path::Path;
 
 fn main() {
     let home = env::var("HOME").unwrap();
     let target = env::var("TARGET").unwrap();
 
     if !target.contains("apple") || !target.contains("x86_64") {
-        panic!("Only macOS supported!");
+        panic!("Only macOS supported (currently)!");
+    }
+
+    if !Path::new(&format!("{}/.cedar", home)).exists() {
+        panic!("cedar is not setup! Please run `cedar setup`");
     }
 
     cc::Build::new()
