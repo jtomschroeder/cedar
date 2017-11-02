@@ -122,22 +122,21 @@ fn run() -> Result<()> {
             let app = "cedar-test";
 
             let cef = format!("{}/lib/'Chromium Embedded Framework.framework'", vault);
+            let mac = format!("{}/etc/mac", vault);
+
             let pkg = format!("out/{}.app", app);
             let helper = format!("{}/Contents/Frameworks/'{} Helper.app'", pkg, app);
 
-            let build = if release {
-                "target/release"
-            } else {
-                "target/debug"
-            };
+            let build = format!("target/{}", if release { "release" } else { "debug" });
 
             sh!("cargo build {}", if release { "--release" } else { "" });
 
             sh!("mkdir -p {}/Contents/{{Frameworks,MacOS,Resources}}", pkg);
 
-            sh!("cp ../lib/app/mac/Info.plist {}/Contents/.", pkg);
+            sh!("cp {}/Info.plist {}/Contents/.", mac, pkg);
             sh!(
-                "cp -a ../lib/app/mac/{{Info.plist,*.icns,English.lproj}} {}/Contents/Resources/.",
+                "cp -a {}/{{Info.plist,*.icns,English.lproj}} {}/Contents/Resources/.",
+                mac,
                 pkg
             );
             sh!("cp ../etc/*.html {}/Contents/Resources/.", pkg);
@@ -154,7 +153,8 @@ fn run() -> Result<()> {
 
             sh!("mkdir -p {}/Contents/MacOS", helper);
             sh!(
-                "cp ../lib/app/mac/helper-Info.plist {}/Contents/Info.plist",
+                "cp {}/helper-Info.plist {}/Contents/Info.plist",
+                mac,
                 helper
             );
 
