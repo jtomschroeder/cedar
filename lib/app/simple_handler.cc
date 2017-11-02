@@ -58,13 +58,21 @@ bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser>, const CefString &mes
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
     browsers.push_back(browser);
+
+    // Load cedar front-end code.
+
+    // std::stringstream ss;
+    // ss << "<html><body bgcolor=\"white\">"
+    //       "<h2>Failed to load URL "
+    //    << "</h2></body></html>";
+    // browser->GetMainFrame()->LoadString(ss.str(), "cedar:home");
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser>) {
     CEF_REQUIRE_UI_THREAD();
 
     // Closing the main window requires special handling. See the DoClose()
-    // documentation in the CEF header for a detailed destription of this
+    // documentation in the CEF header for a detailed description of this
     // process.
     if (browsers.size() == 1) {
         // Set a flag to indicate that the window close should be allowed.

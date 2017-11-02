@@ -27,7 +27,7 @@ error_chain! {
 }
 
 enum Command {
-    Setup { force: bool },
+    Setup { force: bool, local: Option<String> },
     Run { release: bool },
 }
 
@@ -38,16 +38,28 @@ fn args() -> Option<Command> {
         .version("0.0")
         .author("Tom Schroeder")
         .about("TODO")
-        .subcommand(SubCommand::with_name("setup").about("TODO").arg(
-            Arg::with_name("force").long("force"),
-        ))
+        .subcommand(
+            SubCommand::with_name("setup")
+                .about("TODO")
+                .arg(Arg::with_name("force").long("force"))
+                .arg(
+                    Arg::with_name("local")
+                        .long("local")
+                        .help("TODO")
+                        .value_name("ARCHIVE")
+                        .takes_value(true),
+                ),
+        )
         .subcommand(SubCommand::with_name("run").about("TODO").arg(
             Arg::with_name("release").long("release"),
         ))
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("setup") {
-        return Some(Command::Setup { force: matches.is_present("force") });
+        return Some(Command::Setup {
+            force: matches.is_present("force"),
+            local: matches.value_of("local").map(String::from),
+        });
     }
 
     if let Some(matches) = matches.subcommand_matches("run") {
@@ -84,16 +96,26 @@ fn run() -> Result<()> {
     let vault = format!("{}/.cedar", home);
 
     match command {
-        Command::Setup { force } => {
+        Command::Setup { force, local } => {
             if !force && Path::new(&vault).exists() {
                 println!("Already setup!");
                 return Ok(());
             }
 
-            fs::create_dir_all(&format!("{}/.cedar/lib", home))?;
+            fs::create_dir_all(&vault)?;
 
-            // TODO: copy CEF.framework into .cedar/lib
-            // TODO: install_name_tool -id "{{CEF}}/Chromium Embedded Framework" "{{CEF}}/Chromium Embedded Framework"
+            let archive = match local {
+                Some(path) => path,
+                None => unimplemented!(),
+            };
+
+            sh!("tar -xf {} -C {}", archive, vault);
+
+            let cef = format!(
+                "{}/lib/'Chromium Embedded Framework.framework/Chromium Embedded Framework'",
+                vault
+            );
+            sh!("install_name_tool -id {} {}", cef, cef);
         }
 
         Command::Run { release } => {
