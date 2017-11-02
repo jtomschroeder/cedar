@@ -2,8 +2,5 @@
 target
 Cargo.lock
 
-/lib/cef
-/cefsimple.app
-/out
-/cedar-test/out
-/archive-mac.tar.gz
+out
+archive-mac.tar.gz
