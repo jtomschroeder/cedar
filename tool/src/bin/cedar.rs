@@ -97,15 +97,19 @@ fn run() -> Result<()> {
         }
 
         Command::Run { release } => {
-            let app = "cedar-tool";
+            let app = "cedar-test";
 
             let cef = format!("{}/lib/'Chromium Embedded Framework.framework'", vault);
             let pkg = format!("out/{}.app", app);
-            let helper = format!("{}/Contents/Frameworks/'cefsimple Helper.app'", pkg);
+            let helper = format!("{}/Contents/Frameworks/'{} Helper.app'", pkg, app);
 
+            let build = if release {
+                "target/release"
+            } else {
+                "target/debug"
+            };
 
             sh!("cargo build {}", if release { "--release" } else { "" });
-
 
             sh!("mkdir -p {}/Contents/{{Frameworks,MacOS,Resources}}", pkg);
 
@@ -117,8 +121,14 @@ fn run() -> Result<()> {
             sh!("cp ../etc/*.html {}/Contents/Resources/.", pkg);
 
             sh!("cp -a {} {}/Contents/Frameworks/.", cef, pkg);
-            // install_name_tool -id "@rpath/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" \
-            // 					  "{{APP}}/Contents/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework"
+
+            let libcef = "'Chromium Embedded Framework.framework/Chromium Embedded Framework'";
+            sh!(
+                "install_name_tool -id @rpath/Frameworks/{} {}/Contents/Frameworks/{}",
+                libcef,
+                pkg,
+                libcef
+            );
 
             sh!("mkdir -p {}/Contents/MacOS", helper);
             sh!(
@@ -126,15 +136,25 @@ fn run() -> Result<()> {
                 helper
             );
 
-            sh!("cp target/release/examples/{{EXAMPLE}} {{APP}}/Contents/MacOS/cefsimple");
-            // sh!("install_name_tool -add_rpath "@executable_path/.." {{APP}}/Contents/MacOS/cefsimple");
+            sh!("cp {}/{} {}/Contents/MacOS/{}", build, app, pkg, app);
+            sh!(
+                "install_name_tool -add_rpath '@executable_path/..' {}/Contents/MacOS/cedar-test",
+                pkg
+            );
 
-            // sh!("cargo build --release --bin helper");
+            sh!(
+                "cp {}/helper {}/Contents/MacOS/'{} Helper'",
+                build,
+                helper,
+                app
+            );
+            sh!(
+                "install_name_tool -add_rpath '@executable_path/../../../..' {}/Contents/MacOS/'cedar-test Helper'",
+                helper
+            );
 
-            // sh!("cp target/release/helper '{{HELPER}}/Contents/MacOS/cefsimple Helper'");
-            // sh!("install_name_tool -add_rpath "@executable_path/../../../.." "{{HELPER}}/Contents/MacOS/cefsimple Helper"");
-
-            // sh!("./{{APP}}/Contents/MacOS/cefsimple");
+            sh!("./{}/Contents/MacOS/{}", pkg, app);
+            // sh!("open {}", pkg);
         }
     }
 
