@@ -11,8 +11,10 @@ mod tree;
 mod phantom;
 mod program;
 mod renderer;
+mod helper;
 
 pub mod dom;
 pub mod facade;
 
 pub use program::program;
+pub use helper::helper;

@@ -1,6 +1,4 @@
 
-extern crate cedar;
-
 use std::ptr;
 use std::env;
 
@@ -10,9 +8,7 @@ extern "C" {
     fn cef_helper_run(argc: i32, argv: *const *const i8) -> i32;
 }
 
-fn main() {
-    // println!("Helper!");
-
+pub fn helper() {
     let args: Vec<_> = env::args().map(|arg| CString::new(arg).unwrap()).collect();
     let mut args: Vec<_> = args.iter().map(|arg| arg.as_ptr()).collect();
 

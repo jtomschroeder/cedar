@@ -1,7 +1,7 @@
 [package]
-name = "cedar-test"
+name = "field"
 version = "0.1.0"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 
 [dependencies]
-cedar = { path = ".." }
+cedar = { path = "../.." }

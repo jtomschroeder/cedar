@@ -23,12 +23,14 @@ error_chain! {
         Io(::std::io::Error) #[cfg(unix)];
     }
 
-    errors {}
+    errors {
+        Missing(e: String) {}
+    }
 }
 
 enum Command {
     Setup { force: bool, local: Option<String> },
-    Run { release: bool },
+    Run { release: bool, app: String },
 }
 
 fn args() -> Option<Command> {
@@ -50,9 +52,19 @@ fn args() -> Option<Command> {
                         .takes_value(true),
                 ),
         )
-        .subcommand(SubCommand::with_name("run").about("TODO").arg(
-            Arg::with_name("release").long("release"),
-        ))
+        .subcommand(
+            SubCommand::with_name("run")
+                .about("TODO")
+                .arg(Arg::with_name("release").long("release"))
+                .arg(
+                    Arg::with_name("app")
+                        .long("app")
+                        .help("TODO")
+                        .value_name("APP")
+                        .takes_value(true)
+                        .required(true),
+                ),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("setup") {
@@ -63,7 +75,10 @@ fn args() -> Option<Command> {
     }
 
     if let Some(matches) = matches.subcommand_matches("run") {
-        return Some(Command::Run { release: matches.is_present("release") });
+        return Some(Command::Run {
+            release: matches.is_present("release"),
+            app: matches.value_of("app").map(String::from).unwrap(),
+        });
     }
 
     None
@@ -75,7 +90,7 @@ macro_rules! sh {
     }};
 }
 
-fn execute_with(shell: &str, cmd: &String) -> std::process::ExitStatus {
+fn execute_with(shell: &str, cmd: &String) {
     use std::process::{Command, Stdio};
 
     let mut command = {
@@ -86,7 +101,10 @@ fn execute_with(shell: &str, cmd: &String) -> std::process::ExitStatus {
     };
 
     let mut command = command.spawn().unwrap();
-    command.wait().unwrap()
+    let status = command.wait().unwrap();
+    if !status.success() {
+        panic!("Command failed! `{}`", cmd);
+    }
 }
 
 fn run() -> Result<()> {
@@ -118,13 +136,15 @@ fn run() -> Result<()> {
             sh!("install_name_tool -id {} {}", cef, cef);
         }
 
-        Command::Run { release } => {
-            let app = "cedar-test";
+        Command::Run { release, app } => {
+            if !Path::new("src/bin/helper.rs").exists() {
+                bail!(ErrorKind::Missing("src/bin/helper.rs".into()));
+            }
 
             let cef = format!("{}/lib/'Chromium Embedded Framework.framework'", vault);
             let mac = format!("{}/etc/mac", vault);
 
-            let pkg = format!("out/{}.app", app);
+            let pkg = format!("target/cedar/{}.app", app);
             let helper = format!("{}/Contents/Frameworks/'{} Helper.app'", pkg, app);
 
             let build = format!("target/{}", if release { "release" } else { "debug" });
@@ -139,7 +159,7 @@ fn run() -> Result<()> {
                 mac,
                 pkg
             );
-            sh!("cp ../etc/*.html {}/Contents/Resources/.", pkg);
+            sh!("cp {}/etc/*.html {}/Contents/Resources/.", vault, pkg);
 
             sh!("cp -a {} {}/Contents/Frameworks/.", cef, pkg);
 
@@ -158,10 +178,11 @@ fn run() -> Result<()> {
                 helper
             );
 
-            sh!("cp {}/{} {}/Contents/MacOS/{}", build, app, pkg, app);
+            sh!("cp {}/{} {}/Contents/MacOS/.", build, app, pkg);
             sh!(
-                "install_name_tool -add_rpath '@executable_path/..' {}/Contents/MacOS/cedar-test",
-                pkg
+                "install_name_tool -add_rpath '@executable_path/..' {}/Contents/MacOS/{}",
+                pkg,
+                app
             );
 
             sh!(
@@ -171,8 +192,9 @@ fn run() -> Result<()> {
                 app
             );
             sh!(
-                "install_name_tool -add_rpath '@executable_path/../../../..' {}/Contents/MacOS/'cedar-test Helper'",
-                helper
+                "install_name_tool -add_rpath '@executable_path/../../../..' '{}/Contents/MacOS/{} Helper'",
+                helper,
+                app
             );
 
             sh!("./{}/Contents/MacOS/{}", pkg, app);
