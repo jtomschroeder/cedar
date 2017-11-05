@@ -256,22 +256,10 @@ fn view_controls_clear(num_completed: usize) -> Widget {
         .click(Message::DeleteComplete)
 }
 
-// infoFooter : Html msg
-// infoFooter =
-//     footer [ class "info" ]
-//         [ p [] [ text "Double-click to edit a todo" ]
-//         , p []
-//             [ text "Written by "
-//             , a [ href "https://github.com/jtomschroeder" ] [ text "Tom Schroeder" ]
-//             ]
-//         , p []
-//             [ text "Part of "
-//             , a [ href "http://todomvc.com" ] [ text "TodoMVC" ]
-//             ]
-//         ]
-
 fn info_footer() -> Widget {
-    footer().class("info")
+    footer().class("info").add(p().add(text(
+        "Written by Tom Schroeder using `cedar`!",
+    )))
 }
 
 fn main() {

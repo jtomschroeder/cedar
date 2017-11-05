@@ -18,6 +18,7 @@ pub enum Element {
     Ul,
     Li,
     A,
+    P,
 }
 
 impl fmt::Display for Element {
@@ -41,6 +42,7 @@ impl fmt::Display for Element {
                 &Ul => "ul",
                 &Li => "li",
                 &A => "a",
+                &P => "p",
             }
         )
     }
@@ -73,6 +75,7 @@ element!(h1 => H1);
 element!(ul => Ul);
 element!(li => Li);
 element!(a => A);
+element!(p => P);
 
 // TODO: {hidden, autofocus, checked} should be a Boolean in JS front-end!
 
