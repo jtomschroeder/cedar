@@ -146,3 +146,75 @@ where
 
     changeset
 }
+
+// TODO: REALLY need to build out these tests!
+
+#[cfg(test)]
+mod tests {
+    use tree;
+
+    #[derive(PartialEq, Debug)]
+    enum Kind {
+        This,
+        That,
+    }
+
+    #[derive(Debug)]
+    struct Object {
+        kind: Kind,
+        value: u32,
+
+        children: Vec<Object>,
+    }
+
+    fn this(value: u32, children: Vec<Object>) -> Object {
+        Object {
+            kind: Kind::This,
+            value,
+            children,
+        }
+    }
+
+    fn that(value: u32, children: Vec<Object>) -> Object {
+        Object {
+            kind: Kind::That,
+            value,
+            children,
+        }
+    }
+
+    impl tree::Vertex for Object {
+        fn children(&self) -> &[Self] {
+            &self.children
+        }
+    }
+
+    impl tree::Comparable for Object {
+        fn compare(&self, other: &Self) -> Option<tree::Difference> {
+            if self.kind != other.kind {
+                Some(tree::Difference::Kind)
+            } else if self.value != other.value {
+                Some(tree::Difference::Value)
+            } else {
+                None
+            }
+        }
+    }
+
+    #[test]
+    fn same_tree() {
+        let tree = that(0, vec![this(1, vec![]), this(2, vec![])]);
+
+        let changeset = tree::diff(&tree, &tree);
+        assert!(changeset.is_empty());
+    }
+
+    #[test]
+    fn tree() {
+        let left = that(0, vec![this(1, vec![]), this(2, vec![])]);
+        let right = that(0, vec![this(2, vec![])]);
+
+        let changeset = tree::diff(&left, &right);
+        println!("changeset: {:?}", changeset);
+    }
+}

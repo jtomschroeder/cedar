@@ -6,6 +6,12 @@ type Identifier = String;
 // TODO: `enum` for 'kind'
 
 #[derive(Serialize, Deserialize, Debug)]
+pub enum Update {
+    Text(String),
+    Attributes(HashMap<String, String>),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Command {
     Create {
         id: Identifier,
@@ -15,19 +21,15 @@ pub enum Command {
         attributes: HashMap<String, String>,
     },
 
-    Update {
-        id: Identifier,
-        attribute: String,
-        value: String,
-    },
-
+    Update { id: Identifier, value: Update },
     Remove { id: Identifier },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Event {
     Click { id: Identifier },
-    Change { id: Identifier, value: String },
+    Input { id: Identifier, value: String },
+    Keydown { id: Identifier, code: u32 },
 }
 
 pub trait Renderer {

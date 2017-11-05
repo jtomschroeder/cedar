@@ -13,11 +13,11 @@ tar -xf $CEF.tar.bz2
 
 cd -
 
-mkdir -p $ARC/{lib,etc}
+mkdir -p $ARC/{lib,etc,app}
 
 cp -a $TMP/$CEF/Release/'Chromium Embedded Framework.framework' $ARC/lib/.
 
-cp -a lib/app/mac $ARC/etc/.
+cp -a lib/app/mac $ARC/app/.
 cp -a lib/etc/*   $ARC/etc/.
 
 tar -czf archive-mac.tar.gz -C $ARC .

@@ -33,6 +33,9 @@ impl Renderer {
 impl renderer::Renderer for Renderer {
     fn send(&self, cmd: Command) {
         let cmd = json::to_string(&cmd).unwrap();
+
+        // println!("send: {}", cmd);
+
         self.commands.push(cmd)
     }
 

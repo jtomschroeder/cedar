@@ -30,11 +30,17 @@ error_chain! {
 
 enum Command {
     Setup { force: bool, local: Option<String> },
-    Run { release: bool, app: String },
+    Run {
+        release: bool,
+        app: String,
+        style: Option<String>,
+    },
 }
 
 fn args() -> Option<Command> {
     use clap::{Arg, App, SubCommand};
+
+    // TODO: add --style option for custom style.css
 
     let matches = App::new("cedar")
         .version("0.0")
@@ -63,6 +69,13 @@ fn args() -> Option<Command> {
                         .value_name("APP")
                         .takes_value(true)
                         .required(true),
+                )
+                .arg(
+                    Arg::with_name("style")
+                        .long("style")
+                        .help("TODO")
+                        .value_name("CSS")
+                        .takes_value(true),
                 ),
         )
         .get_matches();
@@ -78,6 +91,7 @@ fn args() -> Option<Command> {
         return Some(Command::Run {
             release: matches.is_present("release"),
             app: matches.value_of("app").map(String::from).unwrap(),
+            style: matches.value_of("style").map(String::from),
         });
     }
 
@@ -136,13 +150,17 @@ fn run() -> Result<()> {
             sh!("install_name_tool -id {} {}", cef, cef);
         }
 
-        Command::Run { release, app } => {
+        Command::Run {
+            release,
+            app,
+            style,
+        } => {
             if !Path::new("src/bin/helper.rs").exists() {
                 bail!(ErrorKind::Missing("src/bin/helper.rs".into()));
             }
 
             let cef = format!("{}/lib/'Chromium Embedded Framework.framework'", vault);
-            let mac = format!("{}/etc/mac", vault);
+            let mac = format!("{}/app/mac", vault);
 
             let pkg = format!("target/cedar/{}.app", app);
             let helper = format!("{}/Contents/Frameworks/'{} Helper.app'", pkg, app);
@@ -159,7 +177,11 @@ fn run() -> Result<()> {
                 mac,
                 pkg
             );
-            sh!("cp {}/etc/*.html {}/Contents/Resources/.", vault, pkg);
+            sh!("cp -a {}/{{app,etc}} {}/Contents/Resources/.", vault, pkg);
+
+            if let Some(style) = style {
+                sh!("cp {} {}/Contents/Resources/etc/style.css", style, pkg);
+            }
 
             sh!("cp -a {} {}/Contents/Frameworks/.", cef, pkg);
 
@@ -192,7 +214,7 @@ fn run() -> Result<()> {
                 app
             );
             sh!(
-                "install_name_tool -add_rpath '@executable_path/../../../..' '{}/Contents/MacOS/{} Helper'",
+                "install_name_tool -add_rpath '@executable_path/../../../..' {}/Contents/MacOS/{}' Helper'",
                 helper,
                 app
             );

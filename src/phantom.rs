@@ -1,13 +1,18 @@
 
 use std::str;
+use std::collections::HashMap;
 
 use dom;
 use tree::{self, Vertex};
-use renderer::{Command, Event};
+use renderer::{Command, Event, Update};
 use program::{View, Action};
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
-fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command> {
+fn commands<T>(
+    old: Option<&dom::Object<T>>,
+    dom: &dom::Object<T>,
+    set: dom::Changeset,
+) -> Vec<Command> {
     let mut commands = vec![];
 
     fn expand<S>(root: &tree::Path, node: &dom::Object<S>, commands: &mut Vec<Command>) {
@@ -21,13 +26,7 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
             let kind = node.widget.element.to_string();
             let value = node.widget.value.clone();
 
-            let attributes = node.attributes
-                .iter()
-                .map(|attr| match attr {
-                    &dom::Attribute::Placeholder(ref p) => ("placeholder".into(), p.clone()),
-                    &dom::Attribute::Style(ref s) => ("style".into(), s.clone()),
-                })
-                .collect();
+            let attributes = node.attributes.iter().map(|attr| attr.raw()).collect();
 
             let parent = path.parent().to_string();
             commands.push(Command::Create {
@@ -47,17 +46,37 @@ fn commands<T: Clone>(dom: &dom::Object<T>, set: dom::Changeset) -> Vec<Command>
         match op {
             tree::Operation::Create => expand(&path, node(), &mut commands),
             tree::Operation::Update => {
+                // TODO: are we missing an update to 'Text' attributes?
+
                 let node = node();
-                match node.widget.element {
-                    dom::Element::Text => {
+                let ref element = node.widget.element;
+                match element {
+                    &dom::Element::Text => {
+                        let value = node.widget.value.clone().unwrap();
                         commands.push(Command::Update {
                             id: id(),
-                            attribute: "Text".into(),
-                            value: node.widget.value.clone().unwrap(),
+                            value: Update::Text(value),
                         })
                     }
 
-                    _ => panic!("`Update` not yet implemented for widget!"),
+                    _ => {
+                        let mut attrs: HashMap<_, _> =
+                            node.attributes.iter().map(|attr| attr.raw()).collect();
+
+                        // Clear out any attributes that are no longer used.
+                        if let Some(old) = old {
+                            for (key, _) in old.attributes.iter().map(|attr| attr.raw()) {
+                                if !attrs.contains_key(&key) {
+                                    attrs.insert(key, "".into());
+                                }
+                            }
+                        }
+
+                        commands.push(Command::Update {
+                            id: id(),
+                            value: Update::Attributes(attrs),
+                        })
+                    }
                 }
             }
 
@@ -76,7 +95,7 @@ pub struct Phantom<S> {
 
 impl<S> Phantom<S>
 where
-    S: 'static + Clone + Send + PartialEq,
+    S: 'static + Send + PartialEq + Clone,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
@@ -84,7 +103,7 @@ where
         // Create changeset: Create @ 'root'
         let patch = vec![(tree::Path::new(), tree::Operation::Create)];
 
-        let commands = commands(&dom, patch);
+        let commands = commands(None, &dom, patch);
 
         (Phantom { dom }, commands)
     }
@@ -106,10 +125,21 @@ where
                 })
             }
 
-            Event::Change { id, value } => {
+            Event::Input { id, value } => {
                 let path = path(&id);
                 dom.find(&path).and_then(|node| {
-                    node.widget.change.map(|c| c(value)).map(Action::Update)
+                    node.widget.input.as_ref().map(|i| i(value)).map(
+                        Action::Update,
+                    )
+                })
+            }
+
+            Event::Keydown { id, code } => {
+                let path = path(&id);
+                dom.find(&path).and_then(|node| {
+                    node.widget.keydown.as_ref().and_then(|k| k(code)).map(
+                        Action::Update,
+                    )
                 })
             }
         }
@@ -119,9 +149,11 @@ where
         let dom = view(&model);
         let changeset = dom::diff(&self.dom, &dom);
 
+        let cmds = commands(Some(&self.dom), &dom, changeset);
+
         // Replace 'old' DOM with 'new' DOM
         self.dom = dom;
 
-        commands(&self.dom, changeset)
+        cmds
     }
 }

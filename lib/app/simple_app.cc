@@ -21,7 +21,7 @@ void SimpleApp::OnContextInitialized() {
     CefBrowserSettings browser_settings;
 
     // const std::string url = "http://www.google.com";
-    const std::string url = "file://" + resources + "/view.html";
+    const std::string url = "file://" + resources + "/etc/view.html";
 
     CefWindowInfo window_info;
 

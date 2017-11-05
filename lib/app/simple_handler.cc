@@ -48,6 +48,7 @@ bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser>, const CefString &mes
     // - provide JS bindings from CEF renderer process and use IPC to talk to browser process
 
     auto msg = std::string{message};
+
     // std::cout << ">> console: " << msg << std::endl;
 
     renderer_resp(renderer, msg.c_str());
