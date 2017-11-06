@@ -48,8 +48,6 @@ enum Command {
 fn args() -> Option<Command> {
     use clap::{Arg, App, SubCommand};
 
-    // TODO: add --style option for custom style.css
-
     let matches = App::new("cedar")
         .version("0.0")
         .author("Tom Schroeder")
@@ -135,9 +133,6 @@ fn render<M: serde::Serialize>(src: &str, dest: &str, model: &M) -> Result<()> {
     use handlebars::Handlebars;
 
     let mut registry = Handlebars::new();
-
-    println!("src: {:?}", src);
-    println!("dest: {:?}", dest);
 
     registry.register_template_file(src, src)?;
 
