@@ -3,6 +3,12 @@
 extern crate error_chain;
 extern crate clap;
 
+extern crate handlebars;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+
 use std::fs;
 use std::env;
 use std::path::Path;
@@ -21,6 +27,8 @@ error_chain! {
     foreign_links {
         Fmt(::std::fmt::Error);
         Io(::std::io::Error) #[cfg(unix)];
+        File(handlebars::TemplateFileError);
+        Render(handlebars::RenderError);
     }
 
     errors {
@@ -121,6 +129,24 @@ fn execute_with(shell: &str, cmd: &String) {
     }
 }
 
+fn render<M: serde::Serialize>(src: &str, dest: &str, model: &M) -> Result<()> {
+    use std::fs::File;
+    use std::io::prelude::*;
+    use handlebars::Handlebars;
+
+    let mut registry = Handlebars::new();
+
+    println!("src: {:?}", src);
+    println!("dest: {:?}", dest);
+
+    registry.register_template_file(src, src)?;
+
+    let mut file = File::create(dest)?;
+    file.write_all(&registry.render(src, &model)?.into_bytes())?;
+
+    Ok(())
+}
+
 fn run() -> Result<()> {
     let command = args().unwrap();
 
@@ -155,6 +181,18 @@ fn run() -> Result<()> {
             app,
             style,
         } => {
+
+            #[derive(Serialize)]
+            struct Model {
+                executable: String,
+                bundle: String,
+            }
+
+            let model = Model {
+                executable: app.clone(),
+                bundle: app.clone(),
+            };
+
             if !Path::new("src/bin/helper.rs").exists() {
                 bail!(ErrorKind::Missing("src/bin/helper.rs".into()));
             }
@@ -163,7 +201,7 @@ fn run() -> Result<()> {
             let mac = format!("{}/app/mac", vault);
 
             let pkg = format!("target/cedar/{}.app", app);
-            let helper = format!("{}/Contents/Frameworks/'{} Helper.app'", pkg, app);
+            let helper = format!("{}/Contents/Frameworks/{} Helper.app", pkg, app);
 
             let build = format!("target/{}", if release { "release" } else { "debug" });
 
@@ -171,13 +209,24 @@ fn run() -> Result<()> {
 
             sh!("mkdir -p {}/Contents/{{Frameworks,MacOS,Resources}}", pkg);
 
-            sh!("cp {}/Info.plist {}/Contents/.", mac, pkg);
             sh!(
-                "cp -a {}/{{Info.plist,*.icns,English.lproj}} {}/Contents/Resources/.",
+                "cp -a {}/{{*.icns,English.lproj}} {}/Contents/Resources/.",
                 mac,
                 pkg
             );
             sh!("cp -a {}/{{app,etc}} {}/Contents/Resources/.", vault, pkg);
+
+            render(
+                &format!("{}/Info.plist", mac),
+                &format!("{}/Contents/Info.plist", pkg),
+                &model,
+            )?;
+
+            render(
+                &format!("{}/Info.plist", mac),
+                &format!("{}/Contents/Resources/Info.plist", pkg),
+                &model,
+            )?;
 
             if let Some(style) = style {
                 sh!("cp {} {}/Contents/Resources/etc/style.css", style, pkg);
@@ -193,13 +242,7 @@ fn run() -> Result<()> {
                 libcef
             );
 
-            sh!("mkdir -p {}/Contents/MacOS", helper);
-            sh!(
-                "cp {}/helper-Info.plist {}/Contents/Info.plist",
-                mac,
-                helper
-            );
-
+            sh!("mkdir -p '{}'/Contents/MacOS", helper);
             sh!("cp {}/{} {}/Contents/MacOS/.", build, app, pkg);
             sh!(
                 "install_name_tool -add_rpath '@executable_path/..' {}/Contents/MacOS/{}",
@@ -207,20 +250,26 @@ fn run() -> Result<()> {
                 app
             );
 
+            render(
+                &format!("{}/helper-Info.plist", mac),
+                &format!("{}/Contents/Info.plist", helper),
+                &model,
+            )?;
+
             sh!(
-                "cp {}/helper {}/Contents/MacOS/'{} Helper'",
+                "cp {}/helper {:?}/Contents/MacOS/'{} Helper'",
                 build,
                 helper,
                 app
             );
             sh!(
-                "install_name_tool -add_rpath '@executable_path/../../../..' {}/Contents/MacOS/{}' Helper'",
+                "install_name_tool -add_rpath '@executable_path/../../../..' '{}/Contents/MacOS/{} Helper'",
                 helper,
                 app
             );
 
-            sh!("./{}/Contents/MacOS/{}", pkg, app);
-            // sh!("open {}", pkg);
+            // sh!("./{}/Contents/MacOS/{}", pkg, app);
+            sh!("open {}", pkg);
         }
     }
 
