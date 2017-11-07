@@ -21,18 +21,16 @@ type Widget = dom::Object<Message>;
 fn words(line: &str) -> Vec<Widget> {
     line.split(' ')
         .filter(|s| !s.is_empty())
-        .map(|w| dom::div(vec![dom::text(w)]))
+        .map(|w| dom::div().add(dom::text(w)))
         .collect()
 }
 
 fn view(model: &Model) -> Widget {
-    dom::div(vec![
-        dom::input().placeholder("Words!".into()).change(
-            Message::NewContent
-        ),
-
-        dom::div(words(model)),
-    ])
+    dom::div()
+        .add(dom::input().placeholder("Words!").input(
+            Message::NewContent,
+        ))
+        .add(dom::div().children(words(model)))
 }
 
 fn main() {

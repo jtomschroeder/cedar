@@ -31,7 +31,7 @@ fn view(model: &Model) -> Object<Message> {
     div!(
         [],
         [
-            input!([placeholder("Text to reverse!"), style()], []).change(Message::NewContent),
+            input!([placeholder("Text to reverse!"), style()], []).input(Message::NewContent),
             div!([style()], [text(model.chars().rev().collect::<String>())]),
         ]
     )
