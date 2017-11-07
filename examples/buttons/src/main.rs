@@ -1,8 +1,7 @@
 
-#[macro_use]
 extern crate cedar;
 
-use cedar::dom::{Object, text};
+use cedar::dom::*;
 
 type Model = i32;
 
@@ -20,14 +19,11 @@ fn update(model: Model, message: Message) -> Model {
 }
 
 fn view(model: &Model) -> Object<Message> {
-    div!(
-        [],
-        [
-            button!([], [text("+")]).click(Message::Increment),
-            div!([], [text(model)]),
-            button!([], [text("-")]).click(Message::Decrement),
-        ]
-    )
+    div().children(vec![
+        button().add(text("+").click(Message::Increment)),
+        div().add(text(model)),
+        button().add(text("-").click(Message::Decrement)),
+    ])
 }
 
 fn main() {

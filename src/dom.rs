@@ -288,42 +288,6 @@ impl<S> Object<S> {
 
 // TODO: need to refactor the code redundancy here!
 
-#[macro_export]
-macro_rules! div {
-    ([$($attributes:tt)*], [$($children:tt)*]) => {{
-        let widget = $crate::dom::Widget::new($crate::dom::Element::Div);
-
-        let attributes = vec![ $($attributes)* ];
-        let children = vec![ $($children)* ];
-
-        $crate::dom::Object { widget, attributes, children }
-    }}
-}
-
-#[macro_export]
-macro_rules! button {
-    ([$($attributes:tt)*], [$($children:tt)*]) => {{
-        let widget = $crate::dom::Widget::new($crate::dom::Element::Button);
-
-        let attributes = vec![ $($attributes)* ];
-        let children = vec![ $($children)* ];
-
-        $crate::dom::Object { widget, attributes, children }
-    }}
-}
-
-#[macro_export]
-macro_rules! input {
-    ([$($attributes:tt)*], [$($children:tt)*]) => {{
-        let widget = $crate::dom::Widget::new($crate::dom::Element::Input);
-
-        let attributes = vec![ $($attributes)* ];
-        let children = vec![ $($children)* ];
-
-        $crate::dom::Object { widget, attributes, children }
-    }}
-}
-
 pub fn text<S, T: ToString>(text: T) -> Object<S> {
     let mut widget = Widget::new(Element::Text);
     widget.value = Some(text.to_string());

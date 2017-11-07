@@ -1,5 +1,4 @@
 
-#[macro_use]
 extern crate cedar;
 
 use cedar::dom::*;
@@ -17,24 +16,27 @@ fn update(_: Model, message: Message) -> Model {
     }
 }
 
-fn style() -> Attribute {
-    style!
-    ( ("width", "100%")
-    , ("height", "40px")
-    , ("padding", "10px 0")
-    , ("font-size", "2em")
-    , ("text-align", "center")
-    )
-}
-
 fn view(model: &Model) -> Object<Message> {
-    div!(
-        [],
-        [
-            input!([placeholder("Text to reverse!"), style()], []).input(Message::NewContent),
-            div!([style()], [text(model.chars().rev().collect::<String>())]),
-        ]
-    )
+    let style = vec![
+        ("width", "100%"),
+        ("height", "40px"),
+        ("padding", "10px 0"),
+        ("font-size", "2em"),
+        ("text-align", "center"),
+    ];
+
+    div().children(vec![
+        input()
+            .placeholder("Text to reverse!")
+            .style(style.clone())
+            .input(Message::NewContent),
+        div().style(style).add(text(
+            model
+                .chars()
+                .rev()
+                .collect::<String>(),
+        )),
+    ])
 }
 
 fn main() {
