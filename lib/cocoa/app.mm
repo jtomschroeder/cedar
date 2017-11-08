@@ -30,13 +30,12 @@ void renderer_string_drop(char *);
 
     auto webview = [[WKWebView alloc] initWithFrame:frame configuration:config];
     webview.navigationDelegate = self;
-    // auto url = [NSURL URLWithString:@"http://www.apple.com"];
-    // auto url =
-    //     [NSURL URLWithString:@"file:///Users/jtomschroeder/Code/WebKitPlayground/index.html"];
 
-    auto url = [NSURL URLWithString:@"file:///Users/jtomschroeder/Code/cedar/lib/etc/view.html"];
+    // auto url = @"http://www.apple.com";
+    // auto url = @"file:///Users/jtomschroeder/Code/WebKitPlayground/index.html";
+    auto url = @"file:///Users/jtomschroeder/Code/cedar/lib/etc/view.html";
 
-    auto req = [NSURLRequest requestWithURL:url];
+    auto req = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
     [webview loadRequest:req];
 
     self.view = webview;
@@ -48,14 +47,7 @@ void renderer_string_drop(char *);
 
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
-    // NSLog(@"%@", message.body);
-
-    // auto msg = std::string{[[message.body description] UTF8String]};
-
     auto msg = [[message.body description] UTF8String];
-
-    // std::cout << ">> console: " << msg << std::endl;
-
     renderer_resp(renderer, msg);
 }
 
@@ -66,29 +58,11 @@ void renderer_string_drop(char *);
             std::string str{s};
             renderer_string_drop(s);
 
-            // std::cout << "Command: " << str << std::endl;
-
-            // [webView evaluateJavaScript:@"window.webkit.messageHandlers.test.postMessage(123)"
-            //           completionHandler:nil];
-
             const auto code = "window.cedar.command('" + str + "');";
-            // const auto code = "window.value('" + str + "');";
-            // frame->ExecuteJavaScript(code, frame->GetURL(), 0);
+            auto js = [[NSString stringWithUTF8String:code.c_str()] autorelease];
 
             dispatch_async(dispatch_get_main_queue(), ^{
-              [webView evaluateJavaScript:[NSString stringWithUTF8String:code.c_str()]
-                        completionHandler:nil];
-
-              //   [webView evaluateJavaScript:
-              //                @"document.body.appendChild(document.createTextNode(\"value\"))"
-              //             completionHandler:nil];
-
-              //   [webView evaluateJavaScript:
-              //                @"window.webkit.messageHandlers.test.postMessage(window.value())"
-              //             completionHandler:nil];
-
-              //   [webView evaluateJavaScript:@"window.cedar(null)" completionHandler:nil];
-
+              [webView evaluateJavaScript:js completionHandler:nil];
             });
         }
     }).detach();
