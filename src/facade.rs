@@ -11,7 +11,7 @@ use renderer::{self, Command, Event};
 mod bindings {
     use super::*;
     extern "C" {
-        pub fn cef_app_run(renderer: *mut c_void);
+        pub fn cocoa_app_run(renderer: *mut c_void);
     }
 }
 
@@ -81,5 +81,5 @@ pub extern "C" fn renderer_string_drop(s: *mut c_char) {
 
 pub fn run(renderer: Renderer) {
     let renderer = Box::new(renderer);
-    unsafe { bindings::cef_app_run(Box::into_raw(renderer) as *mut c_void) }
+    unsafe { bindings::cocoa_app_run(Box::into_raw(renderer) as *mut c_void) }
 }

@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- <link rel="stylesheet" href="file:///Users/jtomschroeder/Code/cedar/examples/todo/etc/style.css"> -->
     <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="../../examples/todo/etc/style.css"> -->
 </head>
 
 <body></body>
@@ -14,20 +16,22 @@
 
         cedar.nodes = { "": document.body };
 
+        var post = (msg) => window.webkit.messageHandlers.test.postMessage(msg);
+
         cedar.click = (id) => (event) => {
             var click = { "Click": { "id": id } };
-            console.log(JSON.stringify(click));
+            post(JSON.stringify(click));
         };
 
         cedar.input = (id, element) => (event) => {
             var value = element.value || '';
             var input = { Input: { id: id, value: value } };
-            console.log(JSON.stringify(input));
+            post(JSON.stringify(input));
         };
 
         cedar.keydown = (id, element) => (e) => {
             var input = { Keydown: { id: id, code: (e.keyCode ? e.keyCode : e.which) } };
-            console.log(JSON.stringify(input));
+            post(JSON.stringify(input));
         };
 
         cedar.attributes = (node, attributes) => {
@@ -92,7 +96,7 @@
                 } else if (value.hasOwnProperty('Attributes')) {
                     cedar.attributes(node, value.Attributes);
                 } else {
-                    console.log("Unsupported value!");
+                    // console.log("Unsupported value!");
                 }
             } else if (cmd.hasOwnProperty('Remove')) {
                 var remove = cmd.Remove;
