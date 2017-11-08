@@ -7,7 +7,7 @@ rust: stable
 matrix:
   include:
     - os: osx
-    - os: linux
+    # - os: linux
 
 before_install:
   - |
