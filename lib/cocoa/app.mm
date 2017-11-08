@@ -45,13 +45,13 @@ void renderer_string_drop(char *);
     [super viewDidLoad];
 }
 
-- (void)userContentController:(WKUserContentController *)userContentController
+- (void)userContentController:(WKUserContentController *)__unused userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
     auto msg = [[message.body description] UTF8String];
     renderer_resp(renderer, msg);
 }
 
-- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)__unused navigation {
     std::thread([webView] {
         while (true) {
             auto s = renderer_recv(renderer);
@@ -105,7 +105,8 @@ extern "C" void cocoa_app_run(void *r) {
 
     window.contentViewController = [[ViewController alloc] init];
 
-    [window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
+    // [window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
+    [window center];
     [window setTitle:appName];
     [window makeKeyAndOrderFront:nil];
 
