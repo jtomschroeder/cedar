@@ -1,2 +1,6 @@
+
 target
 Cargo.lock
+
+out
+archive-mac.tar.gz

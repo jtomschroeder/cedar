@@ -1,12 +1,11 @@
 
 extern crate cedar;
 
-use cedar::dom;
-use cedar::dom::Builder;
+use cedar::dom::*;
 
 type Model = i32;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Clone)]
 enum Message {
     Increment,
     Decrement,
@@ -19,11 +18,12 @@ fn update(model: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> dom::Object<Message> {
-    dom::stack()
-        .add(dom::button().text("+".into()).click(Message::Increment))
-        .add(dom::label().text(model.to_string()))
-        .add(dom::button().text("-".into()).click(Message::Decrement))
+fn view(model: &Model) -> Object<Message> {
+    div().children(vec![
+        button().add(text("+")).click(Message::Increment),
+        div().add(text(model)),
+        button().add(text("-")).click(Message::Decrement),
+    ])
 }
 
 fn main() {

@@ -1,12 +1,11 @@
 
 extern crate cedar;
 
-use cedar::dom;
-use cedar::dom::Builder;
+use cedar::dom::*;
 
 type Model = String;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 enum Message {
     NewContent(String),
 }
@@ -17,15 +16,29 @@ fn update(_: Model, message: Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> dom::Object<Message> {
-    use cedar::dom;
-    dom::stack()
-        .add(dom::field()
-                 .placeholder("Text to reverse!".into())
-                 .change(Message::NewContent))
-        .add(dom::label().text(model.chars().rev().collect()))
+fn view(model: &Model) -> Object<Message> {
+    let style = vec![
+        ("width", "100%"),
+        ("height", "40px"),
+        ("padding", "10px 0"),
+        ("font-size", "2em"),
+        ("text-align", "center"),
+    ];
+
+    div().children(vec![
+        input()
+            .placeholder("Text to reverse!")
+            .style(style.clone())
+            .input(Message::NewContent),
+        div().style(style).add(text(
+            model
+                .chars()
+                .rev()
+                .collect::<String>(),
+        )),
+    ])
 }
 
 fn main() {
-    cedar::program("--".into(), update, view)
+    cedar::program("".into(), update, view)
 }
