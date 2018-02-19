@@ -1,4 +1,3 @@
-
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -33,7 +32,9 @@ impl Path {
     }
 
     pub fn parent(&self) -> PathRef {
-        PathRef { path: &self.path[..self.len() - 1] }
+        PathRef {
+            path: &self.path[..self.len() - 1],
+        }
     }
 
     pub fn reference(&self) -> PathRef {
@@ -53,9 +54,9 @@ impl<'p> fmt::Display for PathRef<'p> {
             p if p.is_empty() => write!(f, ""),
             p if p.len() == 1 => write!(f, "{}", p[0]),
             p => {
-                let id = (&p[1..]).iter().fold(p[0].to_string(), |id, n| {
-                    id + &format!(".{}", n)
-                });
+                let id = (&p[1..])
+                    .iter()
+                    .fold(p[0].to_string(), |id, n| id + &format!(".{}", n));
                 write!(f, "{}", id)
             }
         }

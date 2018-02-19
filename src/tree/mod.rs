@@ -1,4 +1,3 @@
-
 mod path;
 mod zipper;
 
@@ -27,11 +26,9 @@ pub trait Vertex {
 
                 1 if i == path[0] => return Some(node),
 
-                _ if i == path[0] => {
-                    for (n, child) in node.children().iter().enumerate() {
-                        queue.push_back((&path[1..], n, child));
-                    }
-                }
+                _ if i == path[0] => for (n, child) in node.children().iter().enumerate() {
+                    queue.push_back((&path[1..], n, child));
+                },
 
                 _ => {}
             }
@@ -115,7 +112,6 @@ where
 
     while let Some((old, new, path)) = queue.pop_front() {
         for (n, pair) in zip(old, new).enumerate() {
-
             // Add current location to path
             let mut path = path.clone();
             path.push(n);

@@ -1,4 +1,3 @@
-
 use std::collections::HashMap;
 
 type Identifier = String;
@@ -21,8 +20,13 @@ pub enum Command {
         attributes: HashMap<String, String>,
     },
 
-    Update { id: Identifier, value: Update },
-    Remove { id: Identifier },
+    Update {
+        id: Identifier,
+        value: Update,
+    },
+    Remove {
+        id: Identifier,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

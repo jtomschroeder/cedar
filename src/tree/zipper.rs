@@ -1,4 +1,3 @@
-
 pub enum Pair<T, U> {
     Left(T),
     Both(T, U),
