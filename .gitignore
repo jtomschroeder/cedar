@@ -4,5 +4,7 @@ Cargo.lock
 
 out
 archive-mac.tar.gz
+
 /.idea
 /cedar.iml
+/lib/wasm/*.wasm

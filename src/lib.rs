@@ -1,4 +1,3 @@
-/// cedar
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -13,7 +12,7 @@ mod renderer;
 pub mod dom;
 pub mod facade;
 
-pub use program::program;
+pub use program::{program, process};
 
 pub mod browser {
     mod ffi {
