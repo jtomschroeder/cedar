@@ -46,7 +46,7 @@ where
 }
 
 trait Processor {
-    fn process(&mut self);
+    fn process(&mut self, s: String);
 }
 
 impl<M, S> Processor for Program<M, S>
@@ -54,8 +54,8 @@ where
     S: Clone + Send + 'static + PartialEq,
     M: Send + 'static,
 {
-    fn process(&mut self) {
-        browser::log("Processor!!");
+    fn process(&mut self, s: String) {
+        browser::log(&format!("Processor!!: {}", s));
 
         //        let event = renderer.recv(); // blocking!
         //
@@ -94,13 +94,18 @@ where
 
 static mut PROCESSOR: Option<Box<Processor>> = None;
 
+use std::ffi::CString;
+
 #[no_mangle]
-pub fn process(x: i32) {
+pub extern "C" fn process(x: i32, s: *mut i8) {
     browser::log(&format!("process: {:?}", x));
 
     unsafe {
+        let s = CString::from_raw(s);
+        let s = s.into_string().unwrap();
+
         if let Some(ref mut processor) = PROCESSOR {
-            processor.process();
+            processor.process(s);
         }
     }
 }
