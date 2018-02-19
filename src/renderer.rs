@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 type Identifier = String;
 
-// TODO: `enum` for 'kind'
+// TODO: `enum` for kind?
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Update {
@@ -30,9 +30,4 @@ pub enum Event {
     Click { id: Identifier },
     Input { id: Identifier, value: String },
     Keydown { id: Identifier, code: u32 },
-}
-
-pub trait Renderer {
-    fn send(&self, Command);
-    fn recv(&self) -> Event;
 }

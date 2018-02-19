@@ -10,17 +10,13 @@ mod program;
 mod renderer;
 
 pub mod dom;
-pub mod facade;
 
 pub use program::{process, program};
 
 pub mod browser {
     mod ffi {
         extern "C" {
-            pub fn alert(s: *const u8, len: u32);
             pub fn log(s: *const u8, len: u32);
-
-            // Specific to cedar!
             pub fn command(s: *const u8, len: u32);
         }
     }

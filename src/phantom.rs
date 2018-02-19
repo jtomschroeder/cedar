@@ -1,11 +1,10 @@
-
 use std::str;
 use std::collections::HashMap;
 
 use dom;
 use tree::{self, Vertex};
 use renderer::{Command, Event, Update};
-use program::{View, Action};
+use program::{Action, View};
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
 fn commands<T>(
@@ -109,7 +108,6 @@ where
     }
 
     pub fn translate(&self, event: Event) -> Option<Action<S>> {
-
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
@@ -120,26 +118,29 @@ where
         match event {
             Event::Click { id } => {
                 let path = path(&id);
-                dom.find(&path).and_then(|node| {
-                    node.widget.click.clone().map(Action::Update)
-                })
+                dom.find(&path)
+                    .and_then(|node| node.widget.click.clone().map(Action::Update))
             }
 
             Event::Input { id, value } => {
                 let path = path(&id);
                 dom.find(&path).and_then(|node| {
-                    node.widget.input.as_ref().map(|i| i(value)).map(
-                        Action::Update,
-                    )
+                    node.widget
+                        .input
+                        .as_ref()
+                        .map(|i| i(value))
+                        .map(Action::Update)
                 })
             }
 
             Event::Keydown { id, code } => {
                 let path = path(&id);
                 dom.find(&path).and_then(|node| {
-                    node.widget.keydown.as_ref().and_then(|k| k(code)).map(
-                        Action::Update,
-                    )
+                    node.widget
+                        .keydown
+                        .as_ref()
+                        .and_then(|k| k(code))
+                        .map(Action::Update)
                 })
             }
         }

@@ -1,9 +1,9 @@
+use std::ffi::CString;
 use serde_json as json;
 
-use facade;
 use dom;
 use phantom::Phantom;
-use renderer::{self, Renderer};
+use renderer;
 use browser;
 
 pub type Update<M, S> = fn(M, S) -> M;
@@ -90,10 +90,8 @@ where
 
 static mut PROCESSOR: Option<Box<Processor>> = None;
 
-use std::ffi::CString;
-
 #[no_mangle]
-pub extern "C" fn process(x: i32, s: *mut i8) {
+pub extern "C" fn process(s: *mut i8) {
     unsafe {
         let s = CString::from_raw(s);
         let s = s.into_string().unwrap();
