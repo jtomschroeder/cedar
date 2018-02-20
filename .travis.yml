@@ -7,14 +7,10 @@ rust: stable
 matrix:
   include:
     - os: osx
-    # - os: linux
 
-before_install:
-  - |
-    if [ $TRAVIS_OS_NAME = linux ]; then
-      sudo apt-get -qq update
-      sudo apt-get install -y libgtk-3-dev
-    fi
+branches:
+  except:
+  - wasm
 
 notifications:
   email:
