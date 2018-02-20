@@ -18,8 +18,6 @@ fn commands<T>(
         // TODO: handle create path issue (vertex traversal assumes from root)
 
         node.traverse(root, |path, node| {
-            // eprintln!("id: {:?} {:?}", root, path);
-
             let id = path.to_string();
 
             let kind = node.widget.element();
@@ -48,7 +46,7 @@ fn commands<T>(
                 // TODO: are we missing an update to 'Text' attributes?
 
                 let node = node();
-                if  node.widget.is_text() {
+                if node.widget.is_text() {
                     let value = node.widget.value.clone().unwrap();
                     commands.push(Command::Update {
                         id: id(),
