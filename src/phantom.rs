@@ -22,7 +22,7 @@ fn commands<T>(
 
             let id = path.to_string();
 
-            let kind = node.widget.element.to_string();
+            let kind = node.widget.element();
             let value = node.widget.value.clone();
 
             let attributes = node.attributes.iter().map(|attr| attr.raw()).collect();
@@ -48,34 +48,29 @@ fn commands<T>(
                 // TODO: are we missing an update to 'Text' attributes?
 
                 let node = node();
-                let ref element = node.widget.element;
-                match element {
-                    &dom::Element::Text => {
-                        let value = node.widget.value.clone().unwrap();
-                        commands.push(Command::Update {
-                            id: id(),
-                            value: Update::Text(value),
-                        })
-                    }
+                if  node.widget.is_text() {
+                    let value = node.widget.value.clone().unwrap();
+                    commands.push(Command::Update {
+                        id: id(),
+                        value: Update::Text(value),
+                    })
+                } else {
+                    let mut attrs: HashMap<_, _> =
+                        node.attributes.iter().map(|attr| attr.raw()).collect();
 
-                    _ => {
-                        let mut attrs: HashMap<_, _> =
-                            node.attributes.iter().map(|attr| attr.raw()).collect();
-
-                        // Clear out any attributes that are no longer used.
-                        if let Some(old) = old {
-                            for (key, _) in old.attributes.iter().map(|attr| attr.raw()) {
-                                if !attrs.contains_key(&key) {
-                                    attrs.insert(key, "".into());
-                                }
+                    // Clear out any attributes that are no longer used.
+                    if let Some(old) = old {
+                        for (key, _) in old.attributes.iter().map(|attr| attr.raw()) {
+                            if !attrs.contains_key(&key) {
+                                attrs.insert(key, "".into());
                             }
                         }
-
-                        commands.push(Command::Update {
-                            id: id(),
-                            value: Update::Attributes(attrs),
-                        })
                     }
+
+                    commands.push(Command::Update {
+                        id: id(),
+                        value: Update::Attributes(attrs),
+                    })
                 }
             }
 

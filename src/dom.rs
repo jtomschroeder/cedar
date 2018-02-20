@@ -1,59 +1,13 @@
 use std::fmt::{self, Display};
 use tree;
 
-#[derive(PartialEq, Debug)]
-pub enum Element {
-    Text,
-    Div,
-    Button,
-    Input,
-    Label,
-    Section,
-    Header,
-    Footer,
-    Span,
-    Strong,
-    H1,
-    Ul,
-    Li,
-    A,
-    P,
-}
-
-impl fmt::Display for Element {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::Element::*;
-        write!(
-            f,
-            "{}",
-            match self {
-                &Text => "text",
-                &Div => "div",
-                &Button => "button",
-                &Input => "input",
-                &Label => "label",
-                &Section => "section",
-                &Header => "header",
-                &Footer => "footer",
-                &Span => "span",
-                &Strong => "strong",
-                &H1 => "h1",
-                &Ul => "ul",
-                &Li => "li",
-                &A => "a",
-                &P => "p",
-            }
-        )
-    }
-}
-
-// maybe just put these in a cedar::prelude::*?
+pub type Element = String;
 
 macro_rules! element {
-    ($name:ident => $elmt:ident) => {
+    ($name:ident) => {
         pub fn $name<S>() -> Object<S> {
             Object {
-                widget: Widget::new(Element::$elmt),
+                widget: Widget::new(String::from(stringify!($name))),
                 attributes: vec![],
                 children: vec![],
             }
@@ -61,20 +15,20 @@ macro_rules! element {
     }
 }
 
-element!(div => Div);
-element!(button => Button);
-element!(input => Input);
-element!(label => Label);
-element!(section => Section);
-element!(header => Header);
-element!(footer => Footer);
-element!(span => Span);
-element!(strong => Strong);
-element!(h1 => H1);
-element!(ul => Ul);
-element!(li => Li);
-element!(a => A);
-element!(p => P);
+element!(div);
+element!(button);
+element!(input);
+element!(label);
+element!(section);
+element!(header);
+element!(footer);
+element!(span);
+element!(strong);
+element!(h1);
+element!(ul);
+element!(li);
+element!(a);
+element!(p);
 
 // TODO: {hidden, autofocus, checked} should be a Boolean in JS front-end!
 
@@ -110,7 +64,7 @@ macro_rules! attribute {
 }
 
 pub struct Widget<S> {
-    pub element: Element,
+    element: Element,
     pub value: Option<String>,
 
     // Events
@@ -136,6 +90,14 @@ impl<S> Widget<S> {
             input: None,
             keydown: None,
         }
+    }
+
+    pub fn is_text(&self)->bool {
+        self.element == "text"
+    }
+
+    pub fn element(&self)-> String {
+        self.element.clone()
     }
 }
 
@@ -259,36 +221,8 @@ impl<S> Object<S> {
     }
 }
 
-// TODO: create macro language a la JSX in React for defining DOM
-
-// <div>
-// <button></button>
-// <text></text>
-// <button></button>
-// </div>
-
-// or this?
-// (div [(button), (text), (button)])
-
-// or a la elm?
-// view model =
-//   div []
-//     [ button [ onClick Decrement ] [ text "-" ]
-//     , div [] [ text (toString model) ]
-//     , button [ onClick Increment ] [ text "+" ]
-//     ]
-
-// maybe just put these in a cedar::prelude::*?
-
-// Incremental TT muncher macro!?
-
-// Procedural macro?!
-// - https://github.com/dtolnay/proc-macro-hack
-
-// TODO: need to refactor the code redundancy here!
-
 pub fn text<S, T: ToString>(text: T) -> Object<S> {
-    let mut widget = Widget::new(Element::Text);
+    let mut widget = Widget::new("text".into());
     widget.value = Some(text.to_string());
 
     Object {
