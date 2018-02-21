@@ -1,20 +1,19 @@
-
 extern crate cedar;
 
 use cedar::dom::*;
 
 type Model = i32;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 enum Message {
     Increment,
     Decrement,
 }
 
-fn update(model: Model, message: Message) -> Model {
+fn update(model: Model, message: &Message) -> Model {
     match message {
-        Message::Increment => model + 1,
-        Message::Decrement => model - 1,
+        &Message::Increment => model + 1,
+        &Message::Decrement => model - 1,
     }
 }
 

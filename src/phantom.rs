@@ -1,6 +1,8 @@
 use std::str;
 use std::collections::HashMap;
 
+use boo::Boo;
+
 use dom;
 use tree::{self, Vertex};
 use renderer::{Command, Event, Update};
@@ -87,7 +89,7 @@ pub struct Phantom<S> {
 
 impl<S> Phantom<S>
 where
-    S: 'static + Send + PartialEq + Clone,
+    S: 'static + Send + PartialEq,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
@@ -101,7 +103,7 @@ where
     }
 
     /// Find the message associated with an event (by looking up node in DOM)
-    pub fn translate(&self, event: Event) -> Option<S> {
+    pub fn translate(&self, event: Event) -> Option<Boo<S>> {
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
@@ -114,19 +116,25 @@ where
         match event {
             Event::Click { id } => {
                 let path = path(&id);
-                dom.find(&path).and_then(|node| node.widget.click.clone())
+                dom.find(&path)
+                    .and_then(|node| node.widget.click.as_ref().map(Boo::Borrowed))
             }
 
             Event::Input { id, value } => {
                 let path = path(&id);
                 dom.find(&path)
-                    .and_then(|node| node.widget.input.as_ref().map(|i| i(value)))
+                    .and_then(|node| node.widget.input.as_ref().map(|i| i(value)).map(Boo::Owned))
             }
 
             Event::Keydown { id, code } => {
                 let path = path(&id);
-                dom.find(&path)
-                    .and_then(|node| node.widget.keydown.as_ref().and_then(|k| k(code)))
+                dom.find(&path).and_then(|node| {
+                    node.widget
+                        .keydown
+                        .as_ref()
+                        .and_then(|k| k(code))
+                        .map(Boo::Owned)
+                })
             }
         }
     }

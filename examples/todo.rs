@@ -41,7 +41,7 @@ impl Entry {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 enum Message {
     UpdateField(String),
     UpdateEntry(u32, String),
@@ -53,9 +53,9 @@ enum Message {
     ChangeVisibility(String),
 }
 
-fn update(mut model: Model, message: Message) -> Model {
+fn update(mut model: Model, message: &Message) -> Model {
     match message {
-        Message::Add => {
+        &Message::Add => {
             let uid = model.uid;
             let field = model.field.split_off(0);
 
@@ -66,38 +66,38 @@ fn update(mut model: Model, message: Message) -> Model {
             model.uid += 1;
         }
 
-        Message::UpdateField(s) => {
-            model.field = s;
+        &Message::UpdateField(ref s) => {
+            model.field = s.clone();
         }
 
-        Message::UpdateEntry(id, task) => {
+        &Message::UpdateEntry(id, ref task) => {
             if let Some(entry) = model.entries.iter_mut().find(|e| e.id == id) {
-                entry.description = task;
+                entry.description = task.clone();
             }
         }
 
-        Message::Delete(id) => {
+        &Message::Delete(id) => {
             model.entries.retain(|e| e.id != id);
         }
 
-        Message::DeleteComplete => {
+        &Message::DeleteComplete => {
             model.entries.retain(|e| !e.completed);
         }
 
-        Message::Check(id, completed) => {
+        &Message::Check(id, completed) => {
             if let Some(entry) = model.entries.iter_mut().find(|e| e.id == id) {
                 entry.completed = completed;
             }
         }
 
-        Message::CheckAll(completed) => {
+        &Message::CheckAll(completed) => {
             for entry in model.entries.iter_mut() {
                 entry.completed = completed;
             }
         }
 
-        Message::ChangeVisibility(visibility) => {
-            model.visibility = visibility;
+        &Message::ChangeVisibility(ref visibility) => {
+            model.visibility = visibility.clone();
         }
     }
 

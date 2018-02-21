@@ -6,7 +6,7 @@ use phantom::Phantom;
 use renderer;
 use browser;
 
-pub type Update<M, S> = fn(M, S) -> M;
+pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
 fn send(commands: Vec<renderer::Command>) {
@@ -25,7 +25,7 @@ struct Program<M, S> {
 
 impl<M, S> Program<M, S>
 where
-    S: Clone + Send + 'static + PartialEq,
+    S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
     pub fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
@@ -48,23 +48,24 @@ trait Processor {
 
 impl<M, S> Processor for Program<M, S>
 where
-    S: Clone + Send + 'static + PartialEq,
+    S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
     fn process(&mut self, s: String) {
         let event: renderer::Event = json::from_str(&s).unwrap();
 
-        // translate events from backend renderer to actions
-        let message = match self.phantom.translate(event) {
-            Some(m) => m,
-            _ => return,
+        let model = {
+            // translate events from backend renderer to actions
+            let message = match self.phantom.translate(event) {
+                Some(m) => m,
+                _ => return,
+            };
+
+            let model = self.model.take().unwrap();
+            (self.update)(model, &message)
         };
 
         let commands = {
-            let model = self.model.take().unwrap();
-            let model = (self.update)(model, message);
-
-            // TODO: might be better to change Update to fn(Model, &Message)
             // TODO: inject middleware here: middleware.handlers(&model, &message)
 
             let commands = self.phantom.update(&model, self.view);
@@ -92,7 +93,7 @@ pub extern "C" fn process(s: *mut i8) {
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
-    S: Clone + Send + 'static + PartialEq,
+    S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
     let program = Program::new(model, update, view);

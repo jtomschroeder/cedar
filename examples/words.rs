@@ -1,16 +1,15 @@
-
 extern crate cedar;
 
 type Model = String;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 enum Message {
     NewContent(String),
 }
 
-fn update(_: Model, message: Message) -> Model {
+fn update(_: Model, message: &Message) -> Model {
     match message {
-        Message::NewContent(content) => content,
+        &Message::NewContent(ref content) => content.clone(),
     }
 }
 
@@ -27,9 +26,11 @@ fn words(line: &str) -> Vec<Widget> {
 
 fn view(model: &Model) -> Widget {
     dom::div()
-        .add(dom::input().placeholder("Words!").input(
-            Message::NewContent,
-        ))
+        .add(
+            dom::input()
+                .placeholder("Words!")
+                .input(Message::NewContent),
+        )
         .add(dom::div().children(words(model)))
 }
 
