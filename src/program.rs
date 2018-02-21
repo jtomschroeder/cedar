@@ -9,10 +9,6 @@ use browser;
 pub type Update<M, S> = fn(M, S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
-pub enum Action<S> {
-    Update(S),
-}
-
 fn send(commands: Vec<renderer::Command>) {
     for cmd in commands.into_iter() {
         let cmd = json::to_string(&cmd).unwrap();
@@ -59,29 +55,21 @@ where
         let event: renderer::Event = json::from_str(&s).unwrap();
 
         // translate events from backend renderer to actions
-        let action = self.phantom.translate(event);
-
-        // TODO: `translate` could return (Action?, Commands?) to decouple layout from message
-
-        let action = match action {
-            Some(a) => a,
+        let message = match self.phantom.translate(event) {
+            Some(m) => m,
             _ => return,
         };
 
-        let commands = match action {
-            Action::Update(message) => {
-                let model = self.model.take().unwrap();
-                let model = (self.update)(model, message);
+        let commands = {
+            let model = self.model.take().unwrap();
+            let model = (self.update)(model, message);
 
-                // TODO: might be better to change Update to fn(Model, &Message)
-                // TODO: inject middleware here: middleware.handlers(&model, &message)
+            // TODO: might be better to change Update to fn(Model, &Message)
+            // TODO: inject middleware here: middleware.handlers(&model, &message)
 
-                let commands = self.phantom.update(&model, self.view);
-
-                self.model = Some(model);
-
-                commands
-            }
+            let commands = self.phantom.update(&model, self.view);
+            self.model = Some(model);
+            commands
         };
 
         send(commands);

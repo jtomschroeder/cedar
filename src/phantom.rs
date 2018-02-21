@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use dom;
 use tree::{self, Vertex};
 use renderer::{Command, Event, Update};
-use program::{Action, View};
+use program::View;
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
 fn commands<T>(
@@ -100,41 +100,33 @@ where
         (Phantom { dom }, commands)
     }
 
-    pub fn translate(&self, event: Event) -> Option<Action<S>> {
+    /// Find the message associated with an event (by looking up node in DOM)
+    pub fn translate(&self, event: Event) -> Option<S> {
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
-        let path =
-            |id: &str| tree::Path::from_vec(id.split(".").filter_map(|s| s.parse().ok()).collect());
+        let path = |id: &str| {
+            let path = id.split(".").filter_map(|s| s.parse().ok()).collect();
+            tree::Path::from_vec(path)
+        };
 
         let ref dom = self.dom;
         match event {
             Event::Click { id } => {
                 let path = path(&id);
-                dom.find(&path)
-                    .and_then(|node| node.widget.click.clone().map(Action::Update))
+                dom.find(&path).and_then(|node| node.widget.click.clone())
             }
 
             Event::Input { id, value } => {
                 let path = path(&id);
-                dom.find(&path).and_then(|node| {
-                    node.widget
-                        .input
-                        .as_ref()
-                        .map(|i| i(value))
-                        .map(Action::Update)
-                })
+                dom.find(&path)
+                    .and_then(|node| node.widget.input.as_ref().map(|i| i(value)))
             }
 
             Event::Keydown { id, code } => {
                 let path = path(&id);
-                dom.find(&path).and_then(|node| {
-                    node.widget
-                        .keydown
-                        .as_ref()
-                        .and_then(|k| k(code))
-                        .map(Action::Update)
-                })
+                dom.find(&path)
+                    .and_then(|node| node.widget.keydown.as_ref().and_then(|k| k(code)))
             }
         }
     }
