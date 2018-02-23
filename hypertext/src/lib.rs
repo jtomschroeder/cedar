@@ -1,13 +1,12 @@
 #![feature(proc_macro)]
 
-extern crate proc_macro;
+extern crate proc_macro as pm;
 
+mod element;
 mod parser;
 
-use proc_macro::TokenStream;
-
 #[proc_macro]
-pub fn hypertext(input: TokenStream) -> TokenStream {
+pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
     let input = input.to_string();
     format!("::browser::log(\"Hello, world: '{}'\")", input)
         .parse()
@@ -20,9 +19,10 @@ mod tests {
 
     #[test]
     fn parser() {
-        assert!(parser::parse_Term("22").is_ok());
-        assert!(parser::parse_Term("(22)").is_ok());
-        assert!(parser::parse_Term("((((22))))").is_ok());
-        assert!(parser::parse_Term("((22)").is_err());
+        assert!(parser::parse_Element("--").is_err());
+        assert!(parser::parse_Element("<div></div>").is_ok());
+        assert!(parser::parse_Element("<div>Hello, world!</div>").is_ok());
+
+        println!("{:?}", parser::parse_Element("<div></div>"));
     }
 }
