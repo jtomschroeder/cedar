@@ -2,6 +2,8 @@
 
 extern crate proc_macro;
 
+mod parser;
+
 use proc_macro::TokenStream;
 
 #[proc_macro]
@@ -14,8 +16,13 @@ pub fn hypertext(input: TokenStream) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
+    use parser;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn parser() {
+        assert!(parser::parse_Term("22").is_ok());
+        assert!(parser::parse_Term("(22)").is_ok());
+        assert!(parser::parse_Term("((((22))))").is_ok());
+        assert!(parser::parse_Term("((22)").is_err());
     }
 }

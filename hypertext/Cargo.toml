@@ -3,7 +3,14 @@ name = "hypertext"
 version = "0.1.0"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 
+build = "build.rs"
+
 [lib]
 proc-macro = true
 
+[build-dependencies]
+lalrpop = "0.14"
+
 [dependencies]
+lalrpop-util = "0.14"
+regex = "0.2"
