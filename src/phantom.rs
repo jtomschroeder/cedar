@@ -14,8 +14,6 @@ fn commands<T>(
     dom: &dom::Object<T>,
     set: dom::Changeset,
 ) -> Vec<Command> {
-    let mut commands = vec![];
-
     fn expand<S>(root: &tree::Path, node: &dom::Object<S>, commands: &mut Vec<Command>) {
         // TODO: handle create path issue (vertex traversal assumes from root)
 
@@ -37,6 +35,8 @@ fn commands<T>(
             })
         });
     }
+
+    let mut commands = vec![];
 
     for (path, op) in set.into_iter() {
         let node = || dom.find(&path).expect("path in nodes");
