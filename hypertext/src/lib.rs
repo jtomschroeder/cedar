@@ -132,14 +132,19 @@ impl<'s> Parsee<'s> {
     }
 }
 
-fn parse(input: &str) -> Result<Vec<Element>, ()> {
-    let (parsee, element) = Parsee(input).parse()?;
-
-    println!("{:#?}", element);
+fn parse(input: &str) -> Result<Element, ()> {
+    let (parsee, mut elements) = Parsee(input).parse()?;
 
     if !parsee.0.is_empty() {
+        return Err(()); // only one root element allowed! (must parse all input)
+    }
+
+    if elements.len() != 1 {
         return Err(()); // only one root element allowed!
     }
+
+    let element = elements.remove(0);
+    println!("{:#?}", element);
 
     Ok(element)
 }
