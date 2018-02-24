@@ -17,6 +17,12 @@ fn update(model: Model, message: &Message) -> Model {
     }
 }
 
+// <div>
+//   <button click={Message::Increment}>+</button>
+//   <div>{model}</div>
+//   <button click={Message::Decrement}>-</button>
+// </div>
+
 fn view(model: &Model) -> Object<Message> {
     div().children(vec![
         button().add(text("+")).click(Message::Increment),
