@@ -91,15 +91,11 @@ pub extern "C" fn process(s: *mut i8) {
     }
 }
 
-use hypertext::hypertext;
-
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
-    hypertext!();
-
     let program = Program::new(model, update, view);
     unsafe { PROCESSOR = Some(Box::new(program)) };
 }

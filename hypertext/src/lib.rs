@@ -3,22 +3,26 @@
 
 extern crate proc_macro as pm;
 
+#[macro_use]
+extern crate quote;
+extern crate syn;
+
 #[proc_macro]
 pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
-    let input = input.to_string();
-    format!("::browser::log(\"Hello, world: '{}'\")", input)
-        .parse()
-        .unwrap()
-}
+    let ident: syn::Ident = syn::parse(input).unwrap();
 
-//#[derive(Debug)]
-//struct Element {
-//    pub name: String,
-//    pub leading_text: Option<String>,
-//    pub text: Option<String>,
-//    pub children: Vec<Element>,
-//    pub trailing_text: Option<String>,
-//}
+    // Return closure as workaround for https://github.com/rust-lang/rust/issues/46489
+
+    let tokens = quote! {
+        |#ident| div().children(vec![
+            button().add(text("+")).click(Message::Increment),
+            div().add(text(#ident)),
+            button().add(text("-")).click(Message::Decrement),
+        ])
+    };
+
+    tokens.into()
+}
 
 #[derive(Debug)]
 enum Element {
@@ -111,8 +115,6 @@ impl<'s> Parsee<'s> {
 
         let (parsee, close) = parsee.close_tag()?;
 
-        let (parsee, trailing_text) = parsee.text();
-
         assert_eq!(name, close); // TODO: return Err()
 
         elements.push(Element::Element {
@@ -120,6 +122,7 @@ impl<'s> Parsee<'s> {
             children,
         });
 
+        let (parsee, trailing_text) = parsee.text();
         if let Some(text) = trailing_text {
             elements.push(Element::Text(text.into()));
         }
@@ -154,7 +157,7 @@ mod tests {
     use parse;
 
     #[test]
-    fn parser() {
+    fn basic_parse() {
         assert!(parse("--").is_err());
         assert!(parse("<div></div>").is_ok());
         assert!(parse("<div>Hello, world!</div>").is_ok());
@@ -187,4 +190,15 @@ mod tests {
             parse("<div> text <div>Hello!</div> more text <div>Test!</div> more </div>").is_ok()
         );
     }
+
+    //    #[test]
+    //    fn attributes() {
+    //        assert!(parse(r#"<div attr1="" attr2=""></div>"#).is_ok());
+    //        //        assert!(parse(r#"<div attr1={rust code}></div>"#).is_ok());
+    //    }
+
+    //    #[test]
+    //    fn self_closing_tag() {
+    //        assert!(parse("<div />").is_ok());
+    //    }
 }

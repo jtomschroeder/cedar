@@ -17,6 +17,7 @@ mod renderer;
 
 pub mod dom;
 
+pub use hypertext::hypertext;
 pub use program::{process, program};
 
 pub mod browser;
