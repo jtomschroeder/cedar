@@ -14,9 +14,13 @@ pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
 #[derive(Debug)]
 struct Element {
     pub name: String,
+    pub leading_text: Option<String>,
+    pub text: Option<String>,
+    pub children: Vec<Element>,
+    pub trailing_text: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Parsee<'s>(&'s str);
 
 impl<'s> Parsee<'s> {
@@ -39,32 +43,78 @@ impl<'s> Parsee<'s> {
         }
     }
 
-    fn text(self) -> Result<(Self, &'s str), ()> {
+    fn text(self) -> (Self, Option<&'s str>) {
         let count = self.0.chars().take_while(|&c| c != '<').count();
-        Ok((Parsee(&self.0[count..]), &self.0[..count]))
+
+        let text = self.0[..count].trim();
+        let text = if text.is_empty() { None } else { Some(text) };
+
+        (Parsee(&self.0[count..]), text)
+    }
+
+    fn open_tag(self) -> Result<(Self, &'s str), ()> {
+        let (parsee, name) = self.spaces().tag("<")?.identifier()?;
+        let parsee = parsee.tag(">")?;
+        Ok((parsee, name))
+    }
+
+    fn close_tag(self) -> Result<(Self, &'s str), ()> {
+        let (parsee, name) = self.spaces().tag("</")?.identifier()?;
+        let parsee = parsee.tag(">")?.spaces();
+        Ok((parsee, name))
+    }
+
+    fn elements(self) -> (Self, Vec<Element>) {
+        let mut children = vec![];
+        let mut parsee = self;
+        loop {
+            let p = parsee.clone();
+            match p.element() {
+                Ok((p, element)) => {
+                    children.push(element);
+                    parsee = p
+                }
+                Err(()) => break,
+            }
+        }
+
+        (parsee, children)
     }
 
     fn element(self) -> Result<(Self, Element), ()> {
-        let (parsee, name) = self.spaces().tag("<")?.identifier()?;
-        let (parsee, text) = parsee.tag(">")?.text()?;
+        let parsee = self;
 
-        let text = text.trim();
+        let (parsee, leading_text) = parsee.text();
+
+        let (parsee, name) = parsee.open_tag()?;
+
+        let (parsee, text) = parsee.text();
 
         // try! parser-combinator pattern
-        let p = parsee.0;
-        let (parsee, child) = match parsee.parse() {
-            Ok((parsee, element)) => (parsee, Some(element)),
-            Err(()) => (Parsee(p), None),
-        };
+        // let p = parsee.0;
+        // let (parsee, _child) = match parsee.element() {
+        //     Ok((parsee, element)) => (parsee, Some(element)),
+        //     Err(()) => (Parsee(p), None),
+        // };
 
-        let (parsee, closing) = parsee.spaces().tag("</")?.identifier()?;
-        let parsee = parsee.tag(">")?.spaces();
+        let (parsee, children) = parsee.elements();
 
-        assert_eq!(name, closing); // TODO: return Err()
+        let (parsee, close) = parsee.close_tag()?;
 
-        println!("{:?}", (name, text, child, closing));
+        let (parsee, trailing_text) = parsee.text();
 
-        Ok((parsee, Element { name: name.into() }))
+        assert_eq!(name, close); // TODO: return Err()
+
+        Ok((
+            parsee,
+            Element {
+                name: name.into(),
+                leading_text: leading_text.map(String::from),
+                text: text.map(String::from),
+                children,
+                trailing_text: trailing_text.map(String::from),
+            },
+        ))
     }
 
     fn parse(self) -> Result<(Self, Element), ()> {
@@ -75,9 +125,11 @@ impl<'s> Parsee<'s> {
 fn parse(input: &str) -> Result<Element, ()> {
     let (parsee, element) = Parsee(input).parse()?;
 
-    println!("{:?} {:?}", element, parsee);
+    println!("{:#?}", element);
 
-    assert!(parsee.0.is_empty());
+    if !parsee.0.is_empty() {
+        return Err(()); // only one root element allowed!
+    }
 
     Ok(element)
 }
@@ -93,22 +145,31 @@ mod tests {
         assert!(parse("<div>Hello, world!</div>").is_ok());
         assert!(parse("<div>Hello, world! <div></div> </div>").is_ok());
 
-        //        assert!(
-        //            parse(
-        //                "<div></div>
-        //                 <div></div>"
-        //            ).is_ok()
-        //        );
+        assert!(
+            parse(
+                "<div></div>
+                 <div></div>"
+            ).is_err()
+        );
+    }
 
-        //        assert!(
-        //            parse(
-        //                "<div></div>
-        //                   <div></div>
-        //                   <div></div>
-        //                 <div></div>"
-        //            ).is_ok()
-        //        );
+    #[test]
+    fn nested() {
+        assert!(
+            parse(
+                "<div> text
+                   <div>Hello!</div>
+                   <div>Test</div>
+                 </div>"
+            ).is_ok()
+        );
+    }
 
-        println!("{:?}", parse("<div></div>"));
+    #[test]
+    fn text_around_child() {
+        assert!(parse("<div> text <div>Hello!</div> more text </div>").is_ok());
+        assert!(
+            parse("<div> text <div>Hello!</div> more text <div>Hello!</div> more </div>").is_ok()
+        );
     }
 }
