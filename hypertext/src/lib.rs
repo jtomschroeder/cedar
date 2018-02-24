@@ -11,13 +11,23 @@ pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
         .unwrap()
 }
 
+//#[derive(Debug)]
+//struct Element {
+//    pub name: String,
+//    pub leading_text: Option<String>,
+//    pub text: Option<String>,
+//    pub children: Vec<Element>,
+//    pub trailing_text: Option<String>,
+//}
+
 #[derive(Debug)]
-struct Element {
-    pub name: String,
-    pub leading_text: Option<String>,
-    pub text: Option<String>,
-    pub children: Vec<Element>,
-    pub trailing_text: Option<String>,
+enum Element {
+    Element {
+        name: String,
+        children: Vec<Element>,
+    },
+
+    Text(String),
 }
 
 #[derive(Clone, Debug)]
@@ -70,8 +80,8 @@ impl<'s> Parsee<'s> {
         loop {
             let p = parsee.clone();
             match p.element() {
-                Ok((p, element)) => {
-                    children.push(element);
+                Ok((p, elements)) => {
+                    children.extend(elements);
                     parsee = p
                 }
                 Err(()) => break,
@@ -81,23 +91,23 @@ impl<'s> Parsee<'s> {
         (parsee, children)
     }
 
-    fn element(self) -> Result<(Self, Element), ()> {
+    fn element(self) -> Result<(Self, Vec<Element>), ()> {
         let parsee = self;
 
+        let mut elements = vec![];
+
         let (parsee, leading_text) = parsee.text();
+        if let Some(text) = leading_text {
+            elements.push(Element::Text(text.into()));
+        }
 
         let (parsee, name) = parsee.open_tag()?;
 
         let (parsee, text) = parsee.text();
-
-        // try! parser-combinator pattern
-        // let p = parsee.0;
-        // let (parsee, _child) = match parsee.element() {
-        //     Ok((parsee, element)) => (parsee, Some(element)),
-        //     Err(()) => (Parsee(p), None),
-        // };
-
-        let (parsee, children) = parsee.elements();
+        let (parsee, mut children) = parsee.elements();
+        if let Some(text) = text {
+            children.insert(0, Element::Text(text.into()));
+        }
 
         let (parsee, close) = parsee.close_tag()?;
 
@@ -105,24 +115,24 @@ impl<'s> Parsee<'s> {
 
         assert_eq!(name, close); // TODO: return Err()
 
-        Ok((
-            parsee,
-            Element {
-                name: name.into(),
-                leading_text: leading_text.map(String::from),
-                text: text.map(String::from),
-                children,
-                trailing_text: trailing_text.map(String::from),
-            },
-        ))
+        elements.push(Element::Element {
+            name: name.into(),
+            children,
+        });
+
+        if let Some(text) = trailing_text {
+            elements.push(Element::Text(text.into()));
+        }
+
+        Ok((parsee, elements))
     }
 
-    fn parse(self) -> Result<(Self, Element), ()> {
+    fn parse(self) -> Result<(Self, Vec<Element>), ()> {
         self.element()
     }
 }
 
-fn parse(input: &str) -> Result<Element, ()> {
+fn parse(input: &str) -> Result<Vec<Element>, ()> {
     let (parsee, element) = Parsee(input).parse()?;
 
     println!("{:#?}", element);
@@ -169,7 +179,7 @@ mod tests {
     fn text_around_child() {
         assert!(parse("<div> text <div>Hello!</div> more text </div>").is_ok());
         assert!(
-            parse("<div> text <div>Hello!</div> more text <div>Hello!</div> more </div>").is_ok()
+            parse("<div> text <div>Hello!</div> more text <div>Test!</div> more </div>").is_ok()
         );
     }
 }
