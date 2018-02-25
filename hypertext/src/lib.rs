@@ -50,6 +50,10 @@ impl parser::Element {
             parser::Element::Text(text) => {
                 quote! { ::cedar::dom::text(#text) }
             }
+
+            parser::Element::Block(text) => {
+                quote! {}
+            }
         }
     }
 }

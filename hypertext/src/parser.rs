@@ -13,12 +13,17 @@ pub enum Element {
     },
 
     Text(String),
+    Block(String),
 }
 
 #[derive(Clone, Debug)]
 struct Parsee<'s>(&'s str);
 
 impl<'s> Parsee<'s> {
+    fn peek(&self) -> char {
+        self.0.chars().next().unwrap()
+    }
+
     fn spaces(self) -> Self {
         Parsee(self.0.trim_left())
     }
@@ -38,8 +43,29 @@ impl<'s> Parsee<'s> {
         }
     }
 
+    fn content(self) -> (Self, Vec<Element>) {
+        let parsee = self.spaces();
+
+        let mut elements = vec![];
+        let parsee = match parsee.peek() {
+            '{' => {
+                let (parsee, block) = parsee.block().unwrap();
+                elements.push(Element::Block(block.into()));
+                parsee
+            }
+
+            '<' => parsee,
+
+            _ => parsee,
+        };
+
+        println!("content: {:#?}", elements);
+
+        (parsee, elements)
+    }
+
     fn text(self) -> (Self, Option<&'s str>) {
-        let count = self.0.chars().take_while(|&c| c != '<').count();
+        let count = self.0.chars().take_while(|&c| c != '<' || c != '{').count();
 
         let text = self.0[..count].trim();
         let text = if text.is_empty() { None } else { Some(text) };
@@ -102,8 +128,9 @@ impl<'s> Parsee<'s> {
     }
 
     fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>), ()> {
+        println!("HEY!");
         let (parsee, name) = self.spaces().tag("<")?.spaces().identifier()?;
-
+        
         let (parsee, attrs) = parsee.attributes();
 
         let parsee = parsee.spaces().tag(">")?;
@@ -148,13 +175,18 @@ impl<'s> Parsee<'s> {
             elements.push(Element::Text(text.into()));
         }
 
+
         let (parsee, name, attrs) = parsee.open_tag()?;
 
-        let (parsee, text) = parsee.text();
-        let (parsee, mut children) = parsee.elements();
-        if let Some(text) = text {
-            children.insert(0, Element::Text(text.into()));
-        }
+
+        let (parsee, mut content) = parsee.content();
+        let (parsee, children) = parsee.elements();
+        //        if let Some(text) = text {
+        //            children.insert(0, Element::Text(text.into()));
+        //        }
+
+        content.extend(children);
+        let children = content;
 
         let (parsee, close) = parsee.close_tag()?;
 
@@ -191,14 +223,14 @@ pub fn parse(input: &str) -> Result<Element, ()> {
     }
 
     let element = elements.remove(0);
-    //    println!("{:#?}", element);
+    println!("{:#?}", element);
 
     Ok(element)
 }
 
 #[cfg(test)]
 mod tests {
-    use parse;
+    use parser::parse;
 
     #[test]
     fn basic_parse() {
@@ -260,5 +292,10 @@ mod tests {
 
         assert!(parse("< div > < / div >").is_ok());
         assert!(parse("< div > < button click = { Message :: Increment } > + < / button > < div > { model } < / div > < button click = { Message :: Decrement } > - < / button > < / div >").is_ok());
+    }
+
+    #[test]
+    fn embedded_block() {
+        assert!(parse("<div>{model}</div>").is_ok());
     }
 }
