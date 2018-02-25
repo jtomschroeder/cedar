@@ -20,8 +20,8 @@ pub enum Element {
 struct Parsee<'s>(&'s str);
 
 impl<'s> Parsee<'s> {
-    fn peek(&self) -> char {
-        self.0.chars().next().unwrap()
+    fn peek(&self) -> Option<char> {
+        self.0.chars().next()
     }
 
     fn spaces(self) -> Self {
@@ -32,7 +32,6 @@ impl<'s> Parsee<'s> {
         if self.0.starts_with(text) {
             Ok(Parsee(&self.0[text.len()..]))
         } else {
-
             Err(())
         }
     }
@@ -42,29 +41,6 @@ impl<'s> Parsee<'s> {
             0 => Err(()),
             count => Ok((Parsee(&self.0[count..]), &self.0[..count])),
         }
-    }
-
-    fn content(self) -> (Self, Vec<Element>) {
-        let parsee = self.spaces();
-
-        let mut elements = vec![];
-        let parsee = match parsee.peek() {
-            '{' => {
-                let (parsee, block) = parsee.block().unwrap();
-                elements.push(Element::Block(block.into()));
-                parsee
-            }
-
-            '<' => parsee,
-
-            _ => {
-                let (parsee, text) = parsee.text();
-                elements.push(Element::Text(text.unwrap().into()));
-                parsee
-            },
-        };
-
-        (parsee, elements)
     }
 
     fn text(self) -> (Self, Option<&'s str>) {
@@ -97,7 +73,10 @@ impl<'s> Parsee<'s> {
 
         let count = count + 1; // count trailing '}'
 
-        Ok((Parsee(&parsee.0[count..]), block))
+        let parsee = Parsee(&parsee.0[count..]);
+        let parsee = parsee.spaces();
+
+        Ok((parsee, block))
     }
 
     fn attribute(self) -> Result<(Self, Attribute), ()> {
@@ -155,13 +134,32 @@ impl<'s> Parsee<'s> {
         let mut parsee = self;
         loop {
             let p = parsee.clone();
-            match p.element() {
-                Ok((p, elements)) => {
-                    children.extend(elements);
+
+            // Parse a block, element, or text node
+
+            match p.peek() {
+                Some('{') => {
+                    let (p, block) = p.block().unwrap();
+                    children.push(Element::Block(block.into()));
                     parsee = p
                 }
-                Err(()) => break,
-            }
+
+                Some('<') => match p.element() {
+                    Ok((p, elements)) => {
+                        children.extend(elements);
+                        parsee = p
+                    }
+                    Err(()) => break,
+                },
+
+                Some(_) => {
+                    let (p, text) = p.text();
+                    children.push(Element::Text(text.unwrap().into()));
+                    parsee = p;
+                }
+
+                None => break,
+            };
         }
 
         (parsee, children)
@@ -172,7 +170,6 @@ impl<'s> Parsee<'s> {
 
         let mut elements = vec![];
 
-
         let (parsee, leading_text) = parsee.text();
         if let Some(text) = leading_text {
             elements.push(Element::Text(text.into()));
@@ -180,10 +177,7 @@ impl<'s> Parsee<'s> {
 
         let (parsee, name, attrs) = parsee.open_tag()?;
 
-        let (parsee, mut content) = parsee.content();
-        let (parsee, children) = parsee.elements();
-        content.extend(children);
-        let children = content;
+        let (parsee, children) = parsee.spaces().elements();
 
         let (parsee, close) = parsee.close_tag()?;
 
@@ -220,7 +214,7 @@ pub fn parse(input: &str) -> Result<Element, ()> {
     }
 
     let element = elements.remove(0);
-    println!("{:#?}", element);
+    // println!("{:#?}", element);
 
     Ok(element)
 }

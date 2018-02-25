@@ -13,21 +13,10 @@ mod parser;
 
 #[proc_macro]
 pub fn hypertext(input: TokenStream) -> TokenStream {
-    //    let input: syn::Expr = syn::parse(input).unwrap();
-
     let input = input.to_string();
     let dom = parser::parse(&input).unwrap();
-    //    format!(r##"cedar::browser::log(r#"Hello, world: {:?}"#)"##, dom)
-    //        .parse()
-    //        .unwrap()
 
-    //    println!("DOM (parsed): {:#?}", dom);
-
-    let dom = dom.render();
-
-    //    println!("DOM (rendered): {:#?}", dom);
-
-    dom.into()
+    dom.render().into()
 }
 
 impl parser::Element {
@@ -51,8 +40,9 @@ impl parser::Element {
                 quote! { ::cedar::dom::text(#text) }
             }
 
-            parser::Element::Block(text) => {
-                quote! {}
+            parser::Element::Block(block) => {
+                let block: syn::Expr = syn::parse(block.parse().unwrap()).unwrap();
+                quote! { ::cedar::dom::text(#block) }
             }
         }
     }
