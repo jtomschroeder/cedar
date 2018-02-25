@@ -29,9 +29,16 @@ pub fn hypertext(input: TokenStream) -> TokenStream {
 }
 
 #[derive(Debug)]
+struct Attribute {
+    name: String,
+    block: String,
+}
+
+#[derive(Debug)]
 enum Element {
     Element {
         name: String,
+        attributes: Vec<Attribute>,
         children: Vec<Element>,
     },
 
@@ -70,10 +77,67 @@ impl<'s> Parsee<'s> {
         (Parsee(&self.0[count..]), text)
     }
 
-    fn open_tag(self) -> Result<(Self, &'s str), ()> {
+    fn block(self) -> Result<(Self, &'s str), ()> {
+        let parsee = self.spaces().tag("{")?;
+
+        let mut stack = 1;
+        let count = parsee
+            .0
+            .chars()
+            .take_while(|&c| {
+                match c {
+                    '{' => stack += 1,
+                    '}' => stack -= 1,
+                    _ => {}
+                }
+                stack > 0
+            })
+            .count();
+
+        let block = parsee.0[..count].trim();
+
+        let count = count + 1; // count trailing '}'
+
+        Ok((Parsee(&parsee.0[count..]), block))
+    }
+
+    fn attribute(self) -> Result<(Self, Attribute), ()> {
+        let (parsee, attr) = self.spaces().identifier()?;
+        let (parsee, block) = parsee.spaces().tag("=")?.block()?;
+
+        Ok((
+            parsee,
+            Attribute {
+                name: attr.into(),
+                block: block.into(),
+            },
+        ))
+    }
+
+    fn attributes(self) -> (Self, Vec<Attribute>) {
+        let mut attrs = vec![];
+        let mut parsee = self;
+        loop {
+            let p = parsee.clone();
+            match p.attribute() {
+                Ok((p, attr)) => {
+                    attrs.push(attr);
+                    parsee = p
+                }
+                Err(()) => break,
+            }
+        }
+
+        (parsee, attrs)
+    }
+
+    fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>), ()> {
         let (parsee, name) = self.spaces().tag("<")?.identifier()?;
-        let parsee = parsee.tag(">")?;
-        Ok((parsee, name))
+
+        let (parsee, attrs) = parsee.attributes();
+
+        let parsee = parsee.spaces().tag(">")?;
+        Ok((parsee, name, attrs))
     }
 
     fn close_tag(self) -> Result<(Self, &'s str), ()> {
@@ -109,7 +173,7 @@ impl<'s> Parsee<'s> {
             elements.push(Element::Text(text.into()));
         }
 
-        let (parsee, name) = parsee.open_tag()?;
+        let (parsee, name, attrs) = parsee.open_tag()?;
 
         let (parsee, text) = parsee.text();
         let (parsee, mut children) = parsee.elements();
@@ -123,6 +187,7 @@ impl<'s> Parsee<'s> {
 
         elements.push(Element::Element {
             name: name.into(),
+            attributes: attrs,
             children,
         });
 
@@ -195,14 +260,27 @@ mod tests {
         );
     }
 
-    //    #[test]
-    //    fn attributes() {
-    //        assert!(parse(r#"<div attr1="" attr2=""></div>"#).is_ok());
-    //        //        assert!(parse(r#"<div attr1={rust code}></div>"#).is_ok());
-    //    }
+    #[test]
+    fn attributes() {
+        assert!(parse(r#"<div attr1={"test"} attr2={|| 42}></div>"#).is_ok());
+        assert!(parse(r#"<div attr1={{ 42 }}></div>"#).is_ok());
+    }
 
     //    #[test]
     //    fn self_closing_tag() {
     //        assert!(parse("<div />").is_ok());
+    //    }
+
+    //    #[test]
+    //    fn buttons() {
+    //        assert!(
+    //            parse(
+    //                "<div>
+    //                   <button click={Message::Increment}>+</button>
+    //                   <div>{model}</div>
+    //                   <button click={Message::Decrement}>-</button>
+    //                 </div>"
+    //            ).is_ok()
+    //        );
     //    }
 }
