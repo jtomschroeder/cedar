@@ -31,16 +31,25 @@ fn update(model: Model, message: &Message) -> Model {
 static mut MODEL: Model = 0;
 
 fn view(model: &Model) -> cedar::dom::Object<Message> {
-    // div().children(vec![
-    //     button().add(text("+")).click(Message::Increment),
-    //     div().add(text(model)),
-    //     button().add(text("-")).click(Message::Decrement),
-    // ])
-
     unsafe {
         MODEL = *model;
-        hypertext!(MODEL)
+
+//        hypertext!(MODEL)
+
+        hypertext! {
+            <div>
+                <button click={Message::Increment}>+</button>
+                <div>{model}</div>
+                <button click={Message::Decrement}>-</button>
+            </div>
+        };
     }
+
+    div().children(vec![
+        button().add(text("+")).click(Message::Increment),
+        div().add(text(model)),
+        button().add(text("-")).click(Message::Decrement),
+    ])
 }
 
 fn main() {

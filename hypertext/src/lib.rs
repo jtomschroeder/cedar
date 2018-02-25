@@ -11,11 +11,18 @@ extern crate syn;
 
 #[proc_macro]
 pub fn hypertext(input: TokenStream) -> TokenStream {
-    let input: syn::Expr = syn::parse(input).unwrap();
+    //    let input: syn::Expr = syn::parse(input).unwrap();
+
+    let input = input.to_string();
+    let dom = parse(&input).unwrap();
+    //    format!(r##"cedar::browser::log(r#"Hello, world: {:?}"#)"##, dom)
+    //        .parse()
+    //        .unwrap()
+    println!("DOM: {:#?}", dom);
 
     let children = vec![
         quote! { Object::new("button").add(text("+")).click(Message::Increment) },
-        quote! { Object::new("div").add(text(#input)) },
+        quote! { Object::new("div").add(text(MODEL)) },
         quote! { Object::new("button").add(text("-")).click(Message::Decrement) },
     ];
 
@@ -132,7 +139,7 @@ impl<'s> Parsee<'s> {
     }
 
     fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>), ()> {
-        let (parsee, name) = self.spaces().tag("<")?.identifier()?;
+        let (parsee, name) = self.spaces().tag("<")?.spaces().identifier()?;
 
         let (parsee, attrs) = parsee.attributes();
 
@@ -141,8 +148,13 @@ impl<'s> Parsee<'s> {
     }
 
     fn close_tag(self) -> Result<(Self, &'s str), ()> {
-        let (parsee, name) = self.spaces().tag("</")?.identifier()?;
-        let parsee = parsee.tag(">")?.spaces();
+        let (parsee, name) = self.spaces()
+            .tag("<")?
+            .spaces()
+            .tag("/")?
+            .spaces()
+            .identifier()?;
+        let parsee = parsee.spaces().tag(">")?.spaces();
         Ok((parsee, name))
     }
 
@@ -216,7 +228,7 @@ fn parse(input: &str) -> Result<Element, ()> {
     }
 
     let element = elements.remove(0);
-    println!("{:#?}", element);
+//    println!("{:#?}", element);
 
     Ok(element)
 }
@@ -271,16 +283,19 @@ mod tests {
     //        assert!(parse("<div />").is_ok());
     //    }
 
-    //    #[test]
-    //    fn buttons() {
-    //        assert!(
-    //            parse(
-    //                "<div>
-    //                   <button click={Message::Increment}>+</button>
-    //                   <div>{model}</div>
-    //                   <button click={Message::Decrement}>-</button>
-    //                 </div>"
-    //            ).is_ok()
-    //        );
-    //    }
+    #[test]
+    fn buttons() {
+        assert!(
+            parse(
+                "<div>
+                   <button click={Message::Increment}>+</button>
+                   <div>{model}</div>
+                   <button click={Message::Decrement}>-</button>
+                 </div>"
+            ).is_ok()
+        );
+
+        assert!(parse("< div > < / div >").is_ok());
+        assert!(parse("< div > < button click = { Message :: Increment } > + < / button > < div > { model } < / div > < button click = { Message :: Decrement } > - < / button > < / div >").is_ok());
+    }
 }
