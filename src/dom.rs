@@ -239,6 +239,26 @@ pub fn text<S, T: ToString>(text: T) -> Object<S> {
     }
 }
 
+pub trait ToObject<S> {
+    fn to_object(self) -> Object<S>;
+}
+
+impl<S> ToObject<S> for Object<S> {
+    fn to_object(self) -> Object<S> {
+        self
+    }
+}
+
+impl<S, T: ToString> ToObject<S> for T {
+    fn to_object(self) -> Object<S> {
+        text(self)
+    }
+}
+
+pub fn object<S, O: ToObject<S>>(obj: O) -> Object<S> {
+    obj.to_object()
+}
+
 // Attributes
 
 pub fn placeholder<T: ToString>(text: T) -> Attribute {

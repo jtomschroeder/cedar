@@ -37,12 +37,12 @@ impl parser::Element {
             }
 
             parser::Element::Text(text) => {
-                quote! { ::cedar::dom::text(#text) }
+                quote! { ::cedar::dom::object(#text) }
             }
 
             parser::Element::Block(block) => {
                 let block: syn::Expr = syn::parse(block.parse().unwrap()).unwrap();
-                quote! { ::cedar::dom::text(#block) }
+                quote! { ::cedar::dom::object(#block) }
             }
         }
     }

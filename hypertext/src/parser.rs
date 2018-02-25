@@ -132,7 +132,7 @@ impl<'s> Parsee<'s> {
     fn elements(self) -> (Self, Vec<Element>) {
         let mut elements = vec![];
         let mut parsee = self;
-        
+
         loop {
             let p = parsee.clone();
 
