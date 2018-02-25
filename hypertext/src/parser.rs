@@ -32,6 +32,7 @@ impl<'s> Parsee<'s> {
         if self.0.starts_with(text) {
             Ok(Parsee(&self.0[text.len()..]))
         } else {
+
             Err(())
         }
     }
@@ -56,16 +57,18 @@ impl<'s> Parsee<'s> {
 
             '<' => parsee,
 
-            _ => parsee,
+            _ => {
+                let (parsee, text) = parsee.text();
+                elements.push(Element::Text(text.unwrap().into()));
+                parsee
+            },
         };
-
-        println!("content: {:#?}", elements);
 
         (parsee, elements)
     }
 
     fn text(self) -> (Self, Option<&'s str>) {
-        let count = self.0.chars().take_while(|&c| c != '<' || c != '{').count();
+        let count = self.0.chars().take_while(|&c| c != '<' && c != '{').count();
 
         let text = self.0[..count].trim();
         let text = if text.is_empty() { None } else { Some(text) };
@@ -128,9 +131,8 @@ impl<'s> Parsee<'s> {
     }
 
     fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>), ()> {
-        println!("HEY!");
         let (parsee, name) = self.spaces().tag("<")?.spaces().identifier()?;
-        
+
         let (parsee, attrs) = parsee.attributes();
 
         let parsee = parsee.spaces().tag(">")?;
@@ -170,21 +172,16 @@ impl<'s> Parsee<'s> {
 
         let mut elements = vec![];
 
+
         let (parsee, leading_text) = parsee.text();
         if let Some(text) = leading_text {
             elements.push(Element::Text(text.into()));
         }
 
-
         let (parsee, name, attrs) = parsee.open_tag()?;
-
 
         let (parsee, mut content) = parsee.content();
         let (parsee, children) = parsee.elements();
-        //        if let Some(text) = text {
-        //            children.insert(0, Element::Text(text.into()));
-        //        }
-
         content.extend(children);
         let children = content;
 
@@ -297,5 +294,6 @@ mod tests {
     #[test]
     fn embedded_block() {
         assert!(parse("<div>{model}</div>").is_ok());
+        assert!(parse("<div>{model} HEY {test}</div>").is_ok());
     }
 }
