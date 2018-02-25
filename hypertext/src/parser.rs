@@ -130,50 +130,42 @@ impl<'s> Parsee<'s> {
     }
 
     fn elements(self) -> (Self, Vec<Element>) {
-        let mut children = vec![];
+        let mut elements = vec![];
         let mut parsee = self;
+        
         loop {
             let p = parsee.clone();
 
             // Parse a block, element, or text node
 
-            match p.peek() {
+            let (p, element) = match p.peek() {
                 Some('{') => {
                     let (p, block) = p.block().unwrap();
-                    children.push(Element::Block(block.into()));
-                    parsee = p
+                    (p, Element::Block(block.into()))
                 }
 
                 Some('<') => match p.element() {
-                    Ok((p, elements)) => {
-                        children.extend(elements);
-                        parsee = p
-                    }
+                    Ok((p, element)) => (p, element),
                     Err(()) => break,
                 },
 
                 Some(_) => {
                     let (p, text) = p.text();
-                    children.push(Element::Text(text.unwrap().into()));
-                    parsee = p;
+                    (p, Element::Text(text.unwrap().into()))
                 }
 
                 None => break,
             };
+
+            elements.push(element);
+            parsee = p
         }
 
-        (parsee, children)
+        (parsee, elements)
     }
 
-    fn element(self) -> Result<(Self, Vec<Element>), ()> {
+    fn element(self) -> Result<(Self, Element), ()> {
         let parsee = self;
-
-        let mut elements = vec![];
-
-        let (parsee, leading_text) = parsee.text();
-        if let Some(text) = leading_text {
-            elements.push(Element::Text(text.into()));
-        }
 
         let (parsee, name, attrs) = parsee.open_tag()?;
 
@@ -183,37 +175,28 @@ impl<'s> Parsee<'s> {
 
         assert_eq!(name, close); // TODO: return Err()
 
-        elements.push(Element::Element {
-            name: name.into(),
-            attributes: attrs,
-            children,
-        });
-
-        let (parsee, trailing_text) = parsee.text();
-        if let Some(text) = trailing_text {
-            elements.push(Element::Text(text.into()));
-        }
-
-        Ok((parsee, elements))
+        Ok((
+            parsee,
+            Element::Element {
+                name: name.into(),
+                attributes: attrs,
+                children,
+            },
+        ))
     }
 
-    fn parse(self) -> Result<(Self, Vec<Element>), ()> {
+    fn parse(self) -> Result<(Self, Element), ()> {
         self.element()
     }
 }
 
 pub fn parse(input: &str) -> Result<Element, ()> {
-    let (parsee, mut elements) = Parsee(input).parse()?;
+    let (parsee, element) = Parsee(input).parse()?;
 
     if !parsee.0.is_empty() {
         return Err(()); // only one root element allowed! (must parse all input)
     }
 
-    if elements.len() != 1 {
-        return Err(()); // only one root element allowed!
-    }
-
-    let element = elements.remove(0);
     // println!("{:#?}", element);
 
     Ok(element)
