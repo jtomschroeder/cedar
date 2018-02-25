@@ -1,25 +1,29 @@
 #![allow(dead_code)]
 #![feature(proc_macro)]
 
-extern crate proc_macro as pm;
+extern crate proc_macro;
+
+use proc_macro::TokenStream;
 
 #[macro_use]
 extern crate quote;
 extern crate syn;
 
 #[proc_macro]
-pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
-    let ident: syn::Ident = syn::parse(input).unwrap();
+pub fn hypertext(input: TokenStream) -> TokenStream {
+    let input: syn::Expr = syn::parse(input).unwrap();
 
-    // Return closure as workaround for https://github.com/rust-lang/rust/issues/46489
+    let children = vec![
+        quote! { Object::new("button").add(text("+")).click(Message::Increment) },
+        quote! { Object::new("div").add(text(#input)) },
+        quote! { Object::new("button").add(text("-")).click(Message::Decrement) },
+    ];
 
-    let tokens = quote! {
-        |#ident| div().children(vec![
-            button().add(text("+")).click(Message::Increment),
-            div().add(text(#ident)),
-            button().add(text("-")).click(Message::Decrement),
-        ])
+    let children = quote! {
+        vec![ #(#children),* ]
     };
+
+    let tokens = quote! { Object::new("div").children(#children) };
 
     tokens.into()
 }

@@ -6,11 +6,7 @@ pub type Element = String;
 macro_rules! element {
     ($name:ident) => {
         pub fn $name<S>() -> Object<S> {
-            Object {
-                widget: Widget::new(String::from(stringify!($name))),
-                attributes: vec![],
-                children: vec![],
-            }
+            Object::new(stringify!($name))
         }
     }
 }
@@ -92,11 +88,11 @@ impl<S> Widget<S> {
         }
     }
 
-    pub fn is_text(&self)->bool {
+    pub fn is_text(&self) -> bool {
         self.element == "text"
     }
 
-    pub fn element(&self)-> String {
+    pub fn element(&self) -> String {
         self.element.clone()
     }
 }
@@ -111,6 +107,17 @@ pub struct Object<S> {
     pub widget: Widget<S>,
     pub attributes: Vec<Attribute>,
     pub children: Vec<Object<S>>,
+}
+
+/// Object: Actions
+impl<S> Object<S> {
+    pub fn new(widget: &str) -> Self {
+        Object {
+            widget: Widget::new(widget.into()),
+            attributes: vec![],
+            children: vec![],
+        }
+    }
 }
 
 impl<S> fmt::Debug for Object<S> {

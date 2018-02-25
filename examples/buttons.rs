@@ -27,6 +27,9 @@ fn update(model: Model, message: &Message) -> Model {
 //   <button click={Message::Decrement}>-</button>
 // </div>
 
+// Use global as workaround for https://github.com/rust-lang/rust/issues/46489
+static mut MODEL: Model = 0;
+
 fn view(model: &Model) -> cedar::dom::Object<Message> {
     // div().children(vec![
     //     button().add(text("+")).click(Message::Increment),
@@ -34,9 +37,10 @@ fn view(model: &Model) -> cedar::dom::Object<Message> {
     //     button().add(text("-")).click(Message::Decrement),
     // ])
 
-    // trace_macros!(true);
-
-    hypertext!(model)(model)
+    unsafe {
+        MODEL = *model;
+        hypertext!(MODEL)
+    }
 }
 
 fn main() {
