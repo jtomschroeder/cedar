@@ -1,3 +1,5 @@
+use std;
+
 #[derive(Debug)]
 pub struct Attribute {
     pub name: String,
@@ -16,6 +18,8 @@ pub enum Element {
     Block(String),
 }
 
+type Result<T> = std::result::Result<T, String>;
+
 #[derive(Clone, Debug)]
 struct Parsee<'s>(&'s str);
 
@@ -28,17 +32,17 @@ impl<'s> Parsee<'s> {
         Parsee(self.0.trim_left())
     }
 
-    fn tag(self, text: &str) -> Result<Self, ()> {
+    fn tag(self, text: &str) -> Result<Self> {
         if self.0.starts_with(text) {
             Ok(Parsee(&self.0[text.len()..]))
         } else {
-            Err(())
+            Err(format!("Text did not match tag '{}'", text))
         }
     }
 
-    fn identifier(self) -> Result<(Self, &'s str), ()> {
+    fn identifier(self) -> Result<(Self, &'s str)> {
         match self.0.chars().take_while(|c| c.is_alphanumeric()).count() {
-            0 => Err(()),
+            0 => Err(format!("Failed to find identifier @ {}", self.0)),
             count => Ok((Parsee(&self.0[count..]), &self.0[..count])),
         }
     }
@@ -52,7 +56,7 @@ impl<'s> Parsee<'s> {
         (Parsee(&self.0[count..]), text)
     }
 
-    fn block(self) -> Result<(Self, &'s str), ()> {
+    fn block(self) -> Result<(Self, &'s str)> {
         let parsee = self.spaces().tag("{")?;
 
         let mut stack = 1;
@@ -79,7 +83,7 @@ impl<'s> Parsee<'s> {
         Ok((parsee, block))
     }
 
-    fn attribute(self) -> Result<(Self, Attribute), ()> {
+    fn attribute(self) -> Result<(Self, Attribute)> {
         let (parsee, attr) = self.spaces().identifier()?;
         let (parsee, block) = parsee.spaces().tag("=")?.block()?;
 
@@ -102,14 +106,14 @@ impl<'s> Parsee<'s> {
                     attrs.push(attr);
                     parsee = p
                 }
-                Err(()) => break,
+                Err(_) => break,
             }
         }
 
         (parsee, attrs)
     }
 
-    fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>), ()> {
+    fn open_tag(self) -> Result<(Self, &'s str, Vec<Attribute>)> {
         let (parsee, name) = self.spaces().tag("<")?.spaces().identifier()?;
 
         let (parsee, attrs) = parsee.attributes();
@@ -118,18 +122,20 @@ impl<'s> Parsee<'s> {
         Ok((parsee, name, attrs))
     }
 
-    fn close_tag(self) -> Result<(Self, &'s str), ()> {
+    fn close_tag(self) -> Result<(Self, &'s str)> {
         let (parsee, name) = self.spaces()
             .tag("<")?
             .spaces()
             .tag("/")?
             .spaces()
             .identifier()?;
+
         let parsee = parsee.spaces().tag(">")?.spaces();
+
         Ok((parsee, name))
     }
 
-    fn elements(self) -> (Self, Vec<Element>) {
+    fn elements(self) -> Result<(Self, Vec<Element>)> {
         let mut elements = vec![];
         let mut parsee = self;
 
@@ -140,18 +146,21 @@ impl<'s> Parsee<'s> {
 
             let (p, element) = match p.peek() {
                 Some('{') => {
-                    let (p, block) = p.block().unwrap();
+                    let (p, block) = p.block()?;
                     (p, Element::Block(block.into()))
                 }
 
                 Some('<') => match p.element() {
                     Ok((p, element)) => (p, element),
-                    Err(()) => break,
+                    Err(_) => break,
                 },
 
                 Some(_) => {
                     let (p, text) = p.text();
-                    (p, Element::Text(text.unwrap().into()))
+                    match text {
+                        Some(text) => (p, Element::Text(text.into())),
+                        None => return Err("Failed to find text element!".into()),
+                    }
                 }
 
                 None => break,
@@ -161,15 +170,15 @@ impl<'s> Parsee<'s> {
             parsee = p
         }
 
-        (parsee, elements)
+        Ok((parsee, elements))
     }
 
-    fn element(self) -> Result<(Self, Element), ()> {
+    fn element(self) -> Result<(Self, Element)> {
         let parsee = self;
 
         let (parsee, name, attrs) = parsee.open_tag()?;
 
-        let (parsee, children) = parsee.spaces().elements();
+        let (parsee, children) = parsee.spaces().elements()?;
 
         let (parsee, close) = parsee.close_tag()?;
 
@@ -185,16 +194,17 @@ impl<'s> Parsee<'s> {
         ))
     }
 
-    fn parse(self) -> Result<(Self, Element), ()> {
+    fn parse(self) -> Result<(Self, Element)> {
         self.element()
     }
 }
 
-pub fn parse(input: &str) -> Result<Element, ()> {
+pub fn parse(input: &str) -> Result<Element> {
     let (parsee, element) = Parsee(input).parse()?;
 
     if !parsee.0.is_empty() {
-        return Err(()); // only one root element allowed! (must parse all input)
+        // only one root element allowed! (must parse all input)
+        return Err("Found more than a single element".into());
     }
 
     // println!("{:#?}", element);
