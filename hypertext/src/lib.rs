@@ -6,10 +6,19 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 #[macro_use]
+extern crate failure;
+
+#[macro_use]
 extern crate quote;
 extern crate syn;
 
 mod parser;
+
+#[derive(Fail, Debug)]
+enum Error {
+    #[fail(display = "Failed to lex.")] Lex(proc_macro::LexError),
+    #[fail(display = "Failed to parse.")] Parse(syn::synom::ParseError),
+}
 
 #[proc_macro]
 pub fn hypertext(input: TokenStream) -> TokenStream {
@@ -17,6 +26,13 @@ pub fn hypertext(input: TokenStream) -> TokenStream {
     let dom = parser::parse(&input).unwrap();
 
     dom.render().into()
+}
+
+fn parse<T: syn::synom::Synom>(input: &str) -> Result<T, Error> {
+    input
+        .parse()
+        .map_err(Error::Lex)
+        .and_then(|input| syn::parse(input).map_err(Error::Parse))
 }
 
 impl parser::Element {
@@ -41,7 +57,7 @@ impl parser::Element {
             }
 
             parser::Element::Block(block) => {
-                let block: syn::Expr = syn::parse(block.parse().unwrap()).unwrap();
+                let block: syn::Expr = parse(&block).unwrap();
                 quote! { ::cedar::dom::object(#block) }
             }
         }
@@ -52,8 +68,8 @@ impl parser::Attribute {
     fn render(self) -> quote::Tokens {
         // TODO: for attrs other than 'click', use 'attr()' method
 
-        let name: syn::Ident = syn::parse(self.name.parse().unwrap()).unwrap();
-        let block: syn::Expr = syn::parse(self.block.parse().unwrap()).unwrap();
+        let name: syn::Ident = parse(&self.name).unwrap();
+        let block: syn::Expr = parse(&self.block).unwrap();
 
         quote! { .#name(#block) }
     }
