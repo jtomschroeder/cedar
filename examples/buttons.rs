@@ -22,17 +22,13 @@ fn update(model: Model, message: &Message) -> Model {
 // Use global as workaround for https://github.com/rust-lang/rust/issues/46489
 static mut MODEL: Model = 0;
 
-fn plus() -> cedar::dom::Object<Message> {
-    hypertext! { <button click={Message::Increment}> + </button> }
-}
-
 fn view(model: &Model) -> cedar::dom::Object<Message> {
     unsafe {
         MODEL = *model;
 
         hypertext! {
             <div>
-                {plus()}
+                <button click={Message::Increment}> + </button>
                 <div>{MODEL}</div>
                 <button click={Message::Decrement}> - </button>
             </div>
