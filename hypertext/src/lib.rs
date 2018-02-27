@@ -2,6 +2,7 @@
 #![feature(proc_macro)]
 
 extern crate proc_macro;
+extern crate proc_macro2;
 
 use proc_macro::TokenStream;
 
@@ -29,6 +30,7 @@ pub fn hypertext(input: TokenStream) -> TokenStream {
 }
 
 fn parse<T: syn::synom::Synom>(input: &str) -> Result<T, Error> {
+//    println!("input: {}", input);
     input
         .parse()
         .map_err(Error::Lex)
@@ -57,7 +59,9 @@ impl parser::Element {
             }
 
             parser::Element::Block(block) => {
-                let block: syn::Expr = parse(&block).unwrap();
+//                let block: syn::Expr = parse(&block).unwrap();
+                let block: proc_macro2::TokenStream = block.parse().unwrap();
+
                 quote! { ::cedar::dom::object(#block) }
             }
         }
@@ -69,7 +73,8 @@ impl parser::Attribute {
         // TODO: for attrs other than 'click', use 'attr()' method
 
         let name: syn::Ident = parse(&self.name).unwrap();
-        let block: syn::Expr = parse(&self.block).unwrap();
+//        let block: syn::ExprCall = parse(&self.block).unwrap();
+        let block: proc_macro2::TokenStream = self.block.parse().unwrap();
 
         quote! { .#name(#block) }
     }
