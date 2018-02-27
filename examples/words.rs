@@ -20,27 +20,29 @@ fn update(_: Model, message: &Message) -> Model {
 
 type Widget = cedar::dom::Object<Message>;
 
-fn words(line: &str) -> Vec<Widget> {
+fn words(line: &str) -> cedar::dom::List<Widget> {
     line.split(' ')
         .filter(|s| !s.is_empty())
         .map(|w| {
-            hypertext! { <div>{"w"}</div> }
+            // TODO: hypertext! { <div>{w}</div> }
+            hypertext! { <div>{"word"}</div> }
         })
         .collect()
 }
 
 // Use global as workaround for https://github.com/rust-lang/rust/issues/46489
-static mut MODEL: Model = "".into();
+static mut MODEL: Option<Model> = None;
 
 fn view(model: &Model) -> Widget {
     unsafe {
-        MODEL = model.clone();
+        MODEL = Some(model.clone());
 
         trace_macros!(true);
         hypertext! {
             <div>
                 <input placeholder={"Words!"} input={Message::NewContent}></input>
-                <div>{words("hello world")}</div>
+                <div>{words(MODEL.as_ref().unwrap())}</div>
+                // TODO: <div>{words(model)}</div>
             </div>
         }
     }

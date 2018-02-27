@@ -1,41 +1,19 @@
-#![allow(dead_code)]
 #![feature(proc_macro)]
 
 extern crate proc_macro2 as pm2;
-extern crate proc_macro;
-
-use proc_macro::TokenStream;
-
-//#[macro_use]
-//extern crate failure;
+extern crate proc_macro as pm;
 
 #[macro_use]
 extern crate quote;
-//extern crate syn;
 
 mod parser;
 
-//#[derive(Fail, Debug)]
-//enum Error {
-//    #[fail(display = "Failed to lex.")] Lex(proc_macro::LexError),
-//    #[fail(display = "Failed to parse.")] Parse(syn::synom::ParseError),
-//}
-
 #[proc_macro]
-pub fn hypertext(input: TokenStream) -> TokenStream {
+pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
     let input = input.to_string();
     let dom = parser::parse(&input).unwrap();
-
     dom.render().into()
 }
-
-//fn parse<T: syn::synom::Synom>(input: &str) -> Result<T, Error> {
-//    //    println!("input: {}", input);
-//    input
-//        .parse()
-//        .map_err(Error::Lex)
-//        .and_then(|input| syn::parse(input).map_err(Error::Parse))
-//}
 
 impl parser::Element {
     fn render(self) -> quote::Tokens {
@@ -50,7 +28,7 @@ impl parser::Element {
                 quote! {
                     ::cedar::dom::Object::new(#name)
                         #( #attributes )*
-                        .children( vec![ #( #children ),* ] )
+                        #( .push( #children ) )*
                 }
             }
 
@@ -60,7 +38,7 @@ impl parser::Element {
 
             parser::Element::Block(block) => {
                 let block: pm2::TokenStream = block.parse().unwrap();
-                quote! { ::cedar::dom::object(#block) }
+                quote! { #block }
             }
         }
     }
@@ -69,7 +47,7 @@ impl parser::Element {
 impl parser::Attribute {
     fn render(self) -> quote::Tokens {
         // TODO: for attrs other than 'click', use 'attr()' method
-        
+
         let name: pm2::TokenStream = self.name.parse().unwrap();
         let block: pm2::TokenStream = self.block.parse().unwrap();
 

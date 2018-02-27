@@ -215,6 +215,37 @@ impl<S> Object<S> {
     }
 }
 
+pub struct List<T>(Vec<T>);
+
+use std::iter::FromIterator;
+impl<T> FromIterator<T> for List<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        List(Vec::from_iter(iter))
+    }
+}
+
+pub trait Pushed<S> {
+    fn pushed(self, object: &mut Object<S>);
+}
+
+impl<S> Pushed<S> for Object<S> {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.push(self);
+    }
+}
+
+impl<S> Pushed<S> for List<Object<S>> {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.extend(self.0);
+    }
+}
+
+impl<S, T: ToString> Pushed<S> for T {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.push(text(self));
+    }
+}
+
 /// Object: Children
 impl<S> Object<S> {
     pub fn add(mut self, child: Object<S>) -> Self {
@@ -224,6 +255,11 @@ impl<S> Object<S> {
 
     pub fn children(mut self, children: Vec<Object<S>>) -> Self {
         self.children.extend(children.into_iter());
+        self
+    }
+
+    pub fn push<P: Pushed<S>>(mut self, pushed: P) -> Self {
+        pushed.pushed(&mut self);
         self
     }
 }
