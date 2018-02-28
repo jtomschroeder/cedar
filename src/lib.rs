@@ -12,13 +12,15 @@ mod boo;
 #[macro_use]
 mod tree;
 mod phantom;
-mod program;
 mod renderer;
+mod program;
+mod processor;
 
 pub mod dom;
 
 pub use hypertext::hypertext;
-pub use program::{process, program};
+pub use program::program;
+pub use processor::process;
 
 pub mod browser;
 pub mod memory;

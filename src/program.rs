@@ -1,20 +1,13 @@
-use std::ffi::CString;
 use serde_json as json;
 
 use dom;
 use phantom::Phantom;
 use renderer;
 use browser;
+use processor;
 
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
-
-fn send(commands: Vec<renderer::Command>) {
-    for cmd in commands.into_iter() {
-        let cmd = json::to_string(&cmd).unwrap();
-        browser::command(&cmd);
-    }
-}
 
 struct Program<M, S> {
     model: Option<M>,
@@ -28,10 +21,10 @@ where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
-    pub fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
+    fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
         let (phantom, commands) = Phantom::initialize(&model, view);
 
-        send(commands);
+        Self::send(commands);
 
         Program {
             model: Some(model),
@@ -40,19 +33,16 @@ where
             phantom,
         }
     }
-}
 
-trait Processor {
-    fn process(&mut self, s: String);
-}
+    fn send(commands: Vec<renderer::Command>) {
+        for cmd in commands.into_iter() {
+            let cmd = json::to_string(&cmd).unwrap();
+            browser::command(&cmd);
+        }
+    }
 
-impl<M, S> Processor for Program<M, S>
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
-{
-    fn process(&mut self, s: String) {
-        let event: renderer::Event = json::from_str(&s).unwrap();
+    fn process(&mut self, event: String) {
+        let event: renderer::Event = json::from_str(&event).unwrap();
 
         let model = {
             // translate events from backend renderer to actions
@@ -73,21 +63,17 @@ where
             commands
         };
 
-        send(commands);
+        Self::send(commands);
     }
 }
 
-static mut PROCESSOR: Option<Box<Processor>> = None;
-
-#[no_mangle]
-pub extern "C" fn process(s: *mut i8) {
-    unsafe {
-        let s = CString::from_raw(s);
-        let s = s.into_string().unwrap();
-
-        if let Some(ref mut processor) = PROCESSOR {
-            processor.process(s);
-        }
+impl<M, S> processor::Processor for Program<M, S>
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
+{
+    fn process(&mut self, event: String) {
+        self.process(event)
     }
 }
 
@@ -97,5 +83,5 @@ where
     M: Send + 'static,
 {
     let program = Program::new(model, update, view);
-    unsafe { PROCESSOR = Some(Box::new(program)) };
+    processor::initialize(program);
 }
