@@ -83,13 +83,13 @@ fn commands<T>(
     commands
 }
 
-pub struct Phantom<S> {
+pub struct Shadow<S> {
     dom: dom::Object<S>,
 }
 
-impl<S> Phantom<S>
+impl<S> Shadow<S>
 where
-    S: 'static + Send + PartialEq,
+    S: Send + PartialEq + 'static,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
@@ -99,7 +99,7 @@ where
 
         let commands = commands(None, &dom, patch);
 
-        (Phantom { dom }, commands)
+        (Shadow { dom }, commands)
     }
 
     /// Find the message associated with an event (by looking up node in DOM)

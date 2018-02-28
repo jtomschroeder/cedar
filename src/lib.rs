@@ -11,7 +11,7 @@ mod boo;
 
 #[macro_use]
 mod tree;
-mod phantom;
+mod shadow;
 mod renderer;
 mod program;
 mod processor;

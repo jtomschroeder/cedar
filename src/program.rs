@@ -1,7 +1,7 @@
 use serde_json as json;
 
 use dom;
-use phantom::Phantom;
+use shadow::Shadow;
 use renderer;
 use browser;
 use processor;
@@ -13,7 +13,7 @@ struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
     view: View<M, S>,
-    phantom: Phantom<S>,
+    phantom: Shadow<S>,
 }
 
 impl<M, S> Program<M, S>
@@ -22,7 +22,7 @@ where
     M: Send + 'static,
 {
     fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
-        let (phantom, commands) = Phantom::initialize(&model, view);
+        let (phantom, commands) = Shadow::initialize(&model, view);
 
         Self::send(commands);
 
