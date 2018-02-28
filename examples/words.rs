@@ -23,29 +23,18 @@ type Widget = cedar::dom::Object<Message>;
 fn words(line: &str) -> cedar::dom::List<Widget> {
     line.split(' ')
         .filter(|s| !s.is_empty())
-        .map(|w| {
-            // TODO: hypertext! { <div>{w}</div> }
-            hypertext! { <div>{"word"}</div> }
-        })
+        .map(|w| (hypertext! { |w| <div>{w}</div> })(w))
         .collect()
 }
 
-// Use global as workaround for https://github.com/rust-lang/rust/issues/46489
-static mut MODEL: Option<Model> = None;
-
 fn view(model: &Model) -> Widget {
-    unsafe {
-        MODEL = Some(model.clone());
-
-        trace_macros!(true);
-        hypertext! {
-            <div>
-                <input placeholder={"Words!"} input={Message::NewContent}></input>
-                <div>{words(MODEL.as_ref().unwrap())}</div>
-                // TODO: <div>{words(model)}</div>
-            </div>
-        }
-    }
+    // trace_macros!(true);
+    (hypertext! { |model|
+        <div>
+            <input placeholder={"Words!"} input={Message::NewContent}></input>
+            <div>{words(model)}</div>
+        </div>
+    })(model)
 }
 
 fn main() {
