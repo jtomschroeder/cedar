@@ -7,6 +7,9 @@ extern crate serde_json;
 
 extern crate hypertext;
 
+// TODO: hyperlink generate rust at build-time via build.rs (a la LALRPOP)
+// - (until proc-macro bug is fixed)
+
 mod boo;
 
 #[macro_use]

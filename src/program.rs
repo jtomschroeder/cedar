@@ -9,6 +9,13 @@ use processor;
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
+// pub trait TProgram<M, S> {
+//     fn init() -> M {}
+//     fn update(M, &S) -> M {}
+//     fn view() {}
+//     fn subscriptions() {}
+// }
+
 struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
@@ -85,3 +92,6 @@ where
     let program = Program::new(model, update, view);
     processor::initialize(program);
 }
+
+// fn program<S, M>(p: (M, Update<M, S>, View<M, S>));
+// fn program<S, M>(p: (M, UpdateWithCmd<M, S>, View<M, S>, Subscriptions));
