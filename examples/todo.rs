@@ -110,7 +110,7 @@ type Widget = Object<Message>;
 fn view(model: &Model) -> Widget {
     div()
         .class("todomvc-wrapper")
-        .style(vec![("visibility", "hidden")])
+        .style("visibility: hidden")
         .add(
             section()
                 .class("todoapp")
@@ -147,7 +147,7 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
 
     section()
         .class("main")
-        .style(vec![("visibility", vis)])
+        .style(format!("visibility: {}", vis))
         .add(
             input()
                 .class("toggle-all")

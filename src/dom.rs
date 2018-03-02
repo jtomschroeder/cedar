@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::fmt;
 use tree;
 
 pub type Element = String;
@@ -183,7 +183,6 @@ impl<S> Object<S> {
     pub fn attr(self, name: &str, value: &str) -> Self {
         let name = match name {
             "class" => "className",
-            // "value" => "nodeValue",
             _ => name,
         };
 
@@ -198,16 +197,8 @@ impl<S> Object<S> {
     attribute!(placeholder => Placeholder);
     attribute!(class => Class);
 
-    pub fn style<T: Display, U: Display>(self, mut attrs: Vec<(T, U)>) -> Self {
-        let style = attrs
-            .drain(..)
-            .map(|(name, value)| format!("{}: {}; ", name, value))
-            .fold(String::new(), |mut style, s| {
-                style += &s;
-                style
-            });
-
-        self.attribute(Attribute::Style(style))
+    pub fn style<T: ToString>(self, s: T) -> Self {
+        self.attribute(Attribute::Style(s.to_string()))
     }
 
     pub fn hidden(self, value: bool) -> Self {

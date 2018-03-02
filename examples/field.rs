@@ -1,6 +1,8 @@
+#![feature(proc_macro)]
+
 extern crate cedar;
 
-use cedar::dom::*;
+use cedar::hypertext;
 
 type Model = String;
 
@@ -15,24 +17,18 @@ fn update(_: Model, message: &Message) -> Model {
     }
 }
 
-fn view(model: &Model) -> Object<Message> {
-    let style = vec![
-        ("width", "100%"),
-        ("height", "40px"),
-        ("padding", "10px 0"),
-        ("font-size", "2em"),
-        ("text-align", "center"),
-    ];
+const STYLE: &'static str =
+    "width: 100%; height: 40px; padding: 10px 0; font-size: 2em; text-align: center;";
 
-    div().children(vec![
-        input()
-            .placeholder("Text to reverse!")
-            .style(style.clone())
-            .input(Message::NewContent),
-        div()
-            .style(style)
-            .add(text(model.chars().rev().collect::<String>())),
-    ])
+fn view(model: &Model) -> cedar::dom::Object<Message> {
+    let field: String = model.chars().rev().collect();
+
+    (hypertext! { |field|
+        <div>
+            <input style={STYLE} input={Message::NewContent}></input>
+            <div style={STYLE}>{field}</div>
+        </div>
+    })(field)
 }
 
 fn main() {

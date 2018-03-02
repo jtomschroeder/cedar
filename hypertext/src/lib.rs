@@ -16,6 +16,10 @@ mod parser;
 pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
     let input = input.to_string();
 
+    // TODO: (HACK) someday just `dom.render().into()`
+    //   let dom = parser::parse(&input).unwrap();
+    //   dom.render().into()
+
     let args = {
         let mut count = 2;
         let args = input
@@ -32,8 +36,6 @@ pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
 
     let input = &input[args.len()..];
     let dom = parser::parse(input).unwrap();
-
-    // TODO: (HACK) someday just `dom.render().into()`
 
     let args: pm2::TokenStream = args.parse().unwrap();
     let dom = dom.render();
