@@ -1,7 +1,10 @@
+#![feature(proc_macro)]
 
 extern crate cedar;
 
 // TODO: move 'on enter' to JS front-end
+
+use cedar::hypertext;
 
 type Entries = Vec<Entry>;
 
@@ -107,18 +110,19 @@ fn update(mut model: Model, message: &Message) -> Model {
 use cedar::dom::*;
 type Widget = Object<Message>;
 
+//type Widget = cedar::dom::Object<Message>;
+
 fn view(model: &Model) -> Widget {
-    div()
-        .class("todomvc-wrapper")
-        .style("visibility: hidden")
-        .add(
-            section()
-                .class("todoapp")
-                .add(view_input(&model.field))
-                .add(view_entries(&model.visibility, &model.entries))
-                .add(view_controls(&model.visibility, &model.entries)),
-        )
-        .add(info_footer())
+    (hypertext! { |model: &Model|
+        <div class={"todomvc-wrapper"} style={"visibility: hidden"}>
+            <section class={"todoapp"}>
+                {view_input(&model.field)}
+                {view_entries(&model.visibility, &model.entries)}
+                {view_controls(&model.visibility, &model.entries)}
+            </section>
+            {info_footer()}
+        </div>
+    })(model)
 }
 
 fn view_input(task: &str) -> Widget {
