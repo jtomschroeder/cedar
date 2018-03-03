@@ -3,38 +3,18 @@ use tree;
 
 pub type Element = String;
 
-// TODO: {hidden, autofocus, checked} should be a Boolean in JS front-end!
-
 #[derive(PartialEq, Debug)]
-pub enum Attribute {
-    Placeholder(String),
-    Class(String),
-    Style(String),
-    Hidden(bool),
-    Other(String, String),
-}
+pub struct Attribute(String, String);
 
 impl Attribute {
     pub fn raw(&self) -> (String, String) {
         let (name, value) = match self {
-            &Attribute::Placeholder(ref p) => ("placeholder", p.as_str()),
-            &Attribute::Class(ref c) => ("className", c.as_str()),
-            &Attribute::Style(ref s) => ("style", s.as_str()),
-            &Attribute::Hidden(hidden) => ("hidden", if hidden { "true" } else { "false" }),
-            &Attribute::Other(ref name, ref value) => (name.as_str(), value.as_str()),
+            &Attribute(ref name, ref value) => (name.as_str(), value.as_str()),
         };
 
         (name.into(), value.into())
     }
 }
-
-//macro_rules! attribute {
-//    ($name:ident => $attr:ident) => {
-//        pub fn $name<T: ToString>(self, s: T) -> Self {
-//            self.attribute(Attribute::$attr(s.to_string()))
-//        }
-//    }
-//}
 
 pub struct Widget<S> {
     element: Element,
@@ -175,7 +155,7 @@ impl<S> Object<S> {
             _ => name,
         };
 
-        self.attribute(Attribute::Other(name.into(), value.to_string()))
+        self.attribute(Attribute(name.into(), value.to_string()))
     }
 
     fn attribute(mut self, attr: Attribute) -> Self {
