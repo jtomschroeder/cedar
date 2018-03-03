@@ -74,11 +74,14 @@ impl parser::Element {
 
 impl parser::Attribute {
     fn render(self) -> quote::Tokens {
-        // TODO: for attrs other than 'click', use 'attr()' method
-
         let name: pm2::TokenStream = self.name.parse().unwrap();
         let block: pm2::TokenStream = self.block.parse().unwrap();
 
-        quote! { .#name(#block) }
+        // TODO?: if value is 'true' or 'false' -> add or remove element without ="..."
+
+        match self.name.as_str() {
+            "click" | "input" | "keydown" => quote! { .#name(#block) },
+            _ => quote! { .attr(stringify!(#name), #block) },
+        }
     }
 }

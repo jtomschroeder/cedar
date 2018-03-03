@@ -93,11 +93,9 @@ fn update(mut model: Model, message: &Message) -> Model {
             }
         }
 
-        &Message::CheckAll(completed) => {
-            for entry in model.entries.iter_mut() {
-                entry.completed = completed;
-            }
-        }
+        &Message::CheckAll(completed) => for entry in model.entries.iter_mut() {
+            entry.completed = completed;
+        },
 
         &Message::ChangeVisibility(ref visibility) => {
             model.visibility = visibility.clone();
@@ -107,10 +105,7 @@ fn update(mut model: Model, message: &Message) -> Model {
     model
 }
 
-use cedar::dom::*;
-type Widget = Object<Message>;
-
-//type Widget = cedar::dom::Object<Message>;
+type Widget = cedar::dom::Object<Message>;
 
 fn view(model: &Model) -> Widget {
     (hypertext! { |model: &Model|
@@ -126,18 +121,19 @@ fn view(model: &Model) -> Widget {
 }
 
 fn view_input(task: &str) -> Widget {
-    header().class("header").add(h1().add(text("todos"))).add(
-        input()
-            .class("new-todo")
-            .placeholder("What needs to be done?")
-            .attr("autofocus", "true")
-            .attr("value", task)
-            .attr("name", "newTodo")
-            .input(Message::UpdateField)
-            .keydown(|code| {
-                if code == 13 /* ENTER */ { Some(Message::Add) } else { None }
-            }),
-    )
+    (hypertext! { |task: &str|
+        <header class={"header"}>
+            <h1>todos</h1>
+            <input class={"new-todo"}
+                   placeholder={"What needs to be done?"}
+                   autofocus={"true"}
+                   value={task}
+                   name={"newTodo"}
+                   input={Message::UpdateField}
+                   keydown={|code| { if code == 13 /* ENTER */ { Some(Message::Add) } else { None }}}>
+            </input>
+        </header>
+    })(task)
 }
 
 fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
@@ -149,74 +145,76 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
         "visible"
     };
 
-    section()
-        .class("main")
-        .style(format!("visibility: {}", vis))
-        .add(
-            input()
-                .class("toggle-all")
-                .attr("type", "checkbox")
-                .attr("name", "toggle")
-                .attr("checked", if all_completed { "true" } else { "false" })
-                .click(Message::CheckAll(!all_completed)),
-        )
-        .add(
-            ul().class("todo-list").children(
-                entries
-                    .iter()
-                    .filter(|todo| -> bool {
-                        match visibility {
-                            "Completed" => todo.completed,
-                            "Active" => !todo.completed,
-                            _ => true,
-                        }
-                    })
-                    .map(view_entry)
-                    .collect(),
-            ),
-        )
+    let todos: cedar::dom::List<_> = entries
+        .iter()
+        .filter(|todo| -> bool {
+            match visibility {
+                "Completed" => todo.completed,
+                "Active" => !todo.completed,
+                _ => true,
+            }
+        })
+        .map(view_entry)
+        .collect();
+
+    (hypertext! { |vis, all_completed, todos|
+        <section class={"main"} style={format!("visibility: {}", vis)}>
+            <input class={"toggle-all"}
+                   type={"checkbox"}
+                   name={"toggle"}
+                   checked={if all_completed { "true" } else { "false" }}
+                   click={Message::CheckAll(!all_completed)}>
+            </input>
+
+            <ul class={"todo-list"}>{todos}</ul>
+        </section>
+    })(vis, all_completed, todos)
 }
 
-fn view_entry(
-    &Entry {
+fn view_entry(entry: &Entry) -> Widget {
+    let &Entry {
         ref description,
         completed,
         id,
-    }: &Entry,
-) -> Widget {
-    li()
-        .add(
-            div()
-                .class("view")
-                .add(
-                    input()
-                        .class("toggle")
-                        .attr("type", "checkbox")
-                        .attr("checked", if completed { "true" } else { "false" })
-                        .click(Message::Check(id, !completed)),
-                )
-                .add(label().add(text(description))),
-        ).add(button().class("destroy").click(Message::Delete(id)))
-        .add(
-            input()
-                .class("edit")
-                .attr("value", description)
-                .attr("name", "title")
-                .attr("id", &format!("todo-{}", id))
-                .input(move |s| Message::UpdateEntry(id.clone(), s)),
-        )
+    } = entry;
+
+    (hypertext! { |id, completed, description|
+
+        <li>
+            <div class={"view"}>
+                <input class={"toggle"}
+                       type={"checkbox"}
+                       checked={if completed { "true" } else { "false" }}
+                       click={Message::Check(id, !completed)}>
+                </input>
+                <label>{description}</label>
+            </div>
+            <button class={"destroy"} click={Message::Delete(id)}></button>
+            <input class={"edit"}
+                   value={description}
+                   name={"title"}
+                   id={format!("todo-{}", id)}
+                   input={move |s| Message::UpdateEntry(id.clone(), s)}>
+            </input>
+        </li>
+
+    })(id, completed, description)
 }
 
 fn view_controls(visibility: &str, entries: &[Entry]) -> Widget {
     let num_completed = entries.iter().filter(|e| e.completed).count();
     let num_left = entries.len() - num_completed;
 
-    footer()
-        .class("footer")
-        .hidden(entries.is_empty())
-        .add(view_controls_count(num_left))
-        .add(view_controls_filters(visibility))
-        .add(view_controls_clear(num_completed))
+    (hypertext! { |entries: &[Entry], num_left, visibility, num_completed|
+
+        <footer class={"footer"}
+                hidden={entries.is_empty()}>
+            {view_controls_count(num_left)}
+            {view_controls_filters(visibility)}
+            {view_controls_clear(num_completed)}
+        </footer>
+
+    })(entries, num_left, visibility, num_completed)
 }
 
 fn view_controls_count(num_left: usize) -> Widget {
@@ -226,44 +224,50 @@ fn view_controls_count(num_left: usize) -> Widget {
     };
 
     let s = format!("{} {} left", num_left, item);
-    span().class("todo-count").add(text(&s))
+
+    (hypertext! { |s|
+        <span class={"todo-count"}>{s}</span>
+    })(s)
 }
 
 fn view_controls_filters(visibility: &str) -> Widget {
-    ul()
-        .class("filters")
-        .add(visibility_swap("All", visibility))
-        .add(text(" "))
-        .add(visibility_swap("Active", visibility))
-        .add(text(" "))
-        .add(visibility_swap("Completed", visibility))
+    (hypertext! { |visibility|
+        <ul class={"filters"}>
+            {visibility_swap("All", visibility)}
+            {" "}
+            {visibility_swap("Active", visibility)}
+            {" "}
+            {visibility_swap("Completed", visibility)}
+        </ul>
+    })(visibility)
 }
 
 fn visibility_swap(visibility: &str, actual_visibility: &str) -> Widget {
-    let a = a().add(text(visibility));
-    let a = if visibility == actual_visibility {
-        a.class("selected")
-    } else {
-        a
-    };
-
-    li()
-        .click(Message::ChangeVisibility(visibility.into()))
-        .add(a)
+    (hypertext! { |visibility: &str, actual_visibility: &str|
+        <li click={Message::ChangeVisibility(visibility.into())}>
+            <a class={if visibility == actual_visibility { "selected" } else { "" }}>
+                {visibility}
+            </a>
+        </li>
+    })(visibility, actual_visibility)
 }
 
 fn view_controls_clear(num_completed: usize) -> Widget {
-    button()
-        .class("clear-completed")
-        .hidden(num_completed == 0)
-        .add(text(&format!("Clear completed ({})", num_completed)))
-        .click(Message::DeleteComplete)
+    (hypertext! { |num_completed|
+        <button class={"clear-completed"}
+                hidden={num_completed == 0}
+                click={Message::DeleteComplete}>
+            {format!("Clear completed ({})", num_completed)}
+        </button>
+    })(num_completed)
 }
 
 fn info_footer() -> Widget {
-    footer().class("info").add(p().add(text(
-        "Written by Tom Schroeder using `cedar`!",
-    )))
+    (hypertext! { ||
+        <footer class={"info"}>
+            <p>{"Written by Tom Schroeder using cedar!"}</p>
+        </footer>
+    })()
 }
 
 fn main() {

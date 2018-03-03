@@ -3,29 +3,6 @@ use tree;
 
 pub type Element = String;
 
-macro_rules! element {
-    ($name:ident) => {
-        pub fn $name<S>() -> Object<S> {
-            Object::new(stringify!($name))
-        }
-    }
-}
-
-element!(div);
-element!(button);
-element!(input);
-element!(label);
-element!(section);
-element!(header);
-element!(footer);
-element!(span);
-element!(strong);
-element!(h1);
-element!(ul);
-element!(li);
-element!(a);
-element!(p);
-
 // TODO: {hidden, autofocus, checked} should be a Boolean in JS front-end!
 
 #[derive(PartialEq, Debug)]
@@ -51,13 +28,13 @@ impl Attribute {
     }
 }
 
-macro_rules! attribute {
-    ($name:ident => $attr:ident) => {
-        pub fn $name<T: ToString>(self, s: T) -> Self {
-            self.attribute(Attribute::$attr(s.to_string()))
-        }
-    }
-}
+//macro_rules! attribute {
+//    ($name:ident => $attr:ident) => {
+//        pub fn $name<T: ToString>(self, s: T) -> Self {
+//            self.attribute(Attribute::$attr(s.to_string()))
+//        }
+//    }
+//}
 
 pub struct Widget<S> {
     element: Element,
@@ -81,6 +58,18 @@ impl<S> Widget<S> {
             element,
 
             value: None,
+
+            click: None,
+            input: None,
+            keydown: None,
+        }
+    }
+
+    pub fn new_with_value(element: Element, value: String) -> Self {
+        Widget {
+            element,
+
+            value: Some(value),
 
             click: None,
             input: None,
@@ -180,29 +169,18 @@ impl<S> Object<S> {
 
 /// Object: Attributes
 impl<S> Object<S> {
-    pub fn attr(self, name: &str, value: &str) -> Self {
+    pub fn attr<V: ToString>(self, name: &str, value: V) -> Self {
         let name = match name {
             "class" => "className",
             _ => name,
         };
 
-        self.attribute(Attribute::Other(name.into(), value.into()))
+        self.attribute(Attribute::Other(name.into(), value.to_string()))
     }
 
-    pub fn attribute(mut self, attr: Attribute) -> Self {
+    fn attribute(mut self, attr: Attribute) -> Self {
         self.attributes.push(attr);
         self
-    }
-
-    attribute!(placeholder => Placeholder);
-    attribute!(class => Class);
-
-    pub fn style<T: ToString>(self, s: T) -> Self {
-        self.attribute(Attribute::Style(s.to_string()))
-    }
-
-    pub fn hidden(self, value: bool) -> Self {
-        self.attribute(Attribute::Hidden(value))
     }
 }
 
@@ -255,9 +233,8 @@ impl<S> Object<S> {
     }
 }
 
-pub fn text<S, T: ToString>(text: T) -> Object<S> {
-    let mut widget = Widget::new("text".into());
-    widget.value = Some(text.to_string());
+fn text<S, T: ToString>(text: T) -> Object<S> {
+    let widget = Widget::new_with_value("text".into(), text.to_string());
 
     Object {
         widget,
@@ -284,30 +261,4 @@ impl<S, T: ToString> ToObject<S> for T {
 
 pub fn object<S, O: ToObject<S>>(obj: O) -> Object<S> {
     obj.to_object()
-}
-
-// Attributes
-
-pub fn placeholder<T: ToString>(text: T) -> Attribute {
-    Attribute::Placeholder(text.to_string())
-}
-
-pub fn style(mut attrs: Vec<(String, String)>) -> Attribute {
-    let style = attrs
-        .drain(..)
-        .map(|(name, value)| format!("{}: {}; ", name, value))
-        .fold(String::new(), |mut style, s| {
-            style += &s;
-            style
-        });
-
-    Attribute::Style(style)
-}
-
-#[macro_export]
-macro_rules! style {
-    ($(($name:expr, $value:expr)),*) => {{
-        let attrs = vec![$(($name.into(), $value.into())),*];
-        $crate::dom::style(attrs)
-    }}
 }
