@@ -6,7 +6,6 @@ use cedar::hypertext;
 
 type Entries = Vec<Entry>;
 
-#[derive(Debug)]
 struct Model {
     entries: Entries,
     visibility: String,
@@ -25,7 +24,6 @@ impl Model {
     }
 }
 
-#[derive(Debug)]
 struct Entry {
     description: String,
     completed: bool,
@@ -42,7 +40,7 @@ impl Entry {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 enum Message {
     UpdateField(String),
     UpdateEntry(u32, String),
@@ -171,7 +169,6 @@ fn view_entry(entry: &Entry) -> Widget {
     } = entry;
 
     (hypertext! { |id, completed, description|
-
         <li>
             <div class={"view"}>
                 <input class={"toggle"}
@@ -189,7 +186,6 @@ fn view_entry(entry: &Entry) -> Widget {
                    input={move |s| Message::UpdateEntry(id.clone(), s)}>
             </input>
         </li>
-
     })(id, completed, description)
 }
 
@@ -198,14 +194,12 @@ fn view_controls(visibility: &str, entries: &[Entry]) -> Widget {
     let num_left = entries.len() - num_completed;
 
     (hypertext! { |entries: &[Entry], num_left, visibility, num_completed|
-
         <footer class={"footer"}
                 hidden={entries.is_empty()}>
             {view_controls_count(num_left)}
             {view_controls_filters(visibility)}
             {view_controls_clear(num_completed)}
         </footer>
-
     })(entries, num_left, visibility, num_completed)
 }
 
