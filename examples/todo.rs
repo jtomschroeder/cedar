@@ -2,8 +2,6 @@
 
 extern crate cedar;
 
-// TODO: move 'on enter' to JS front-end
-
 use cedar::hypertext;
 
 type Entries = Vec<Entry>;
@@ -69,37 +67,32 @@ fn update(mut model: Model, message: &Message) -> Model {
             model.uid += 1;
         }
 
-        &Message::UpdateField(ref s) => {
-            model.field = s.clone();
-        }
+        &Message::UpdateField(ref s) => model.field = s.clone(),
 
-        &Message::UpdateEntry(id, ref task) => {
-            if let Some(entry) = model.entries.iter_mut().find(|e| e.id == id) {
-                entry.description = task.clone();
-            }
-        }
+        &Message::UpdateEntry(id, ref task) => model
+            .entries
+            .iter_mut()
+            .find(|e| e.id == id)
+            .iter_mut()
+            .for_each(|e| e.description = task.clone()),
 
-        &Message::Delete(id) => {
-            model.entries.retain(|e| e.id != id);
-        }
+        &Message::Delete(id) => model.entries.retain(|e| e.id != id),
 
-        &Message::DeleteComplete => {
-            model.entries.retain(|e| !e.completed);
-        }
+        &Message::DeleteComplete => model.entries.retain(|e| !e.completed),
 
-        &Message::Check(id, completed) => {
-            if let Some(entry) = model.entries.iter_mut().find(|e| e.id == id) {
-                entry.completed = completed;
-            }
-        }
+        &Message::Check(id, completed) => model
+            .entries
+            .iter_mut()
+            .find(|e| e.id == id)
+            .iter_mut()
+            .for_each(|e| e.completed = completed),
 
-        &Message::CheckAll(completed) => for entry in model.entries.iter_mut() {
-            entry.completed = completed;
-        },
+        &Message::CheckAll(completed) => model
+            .entries
+            .iter_mut()
+            .for_each(|e| e.completed = completed),
 
-        &Message::ChangeVisibility(ref visibility) => {
-            model.visibility = visibility.clone();
-        }
+        &Message::ChangeVisibility(ref visibility) => model.visibility = visibility.clone(),
     }
 
     model
@@ -147,10 +140,10 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
 
     let todos: cedar::dom::List<_> = entries
         .iter()
-        .filter(|todo| -> bool {
+        .filter(|e| -> bool {
             match visibility {
-                "Completed" => todo.completed,
-                "Active" => !todo.completed,
+                "Completed" => e.completed,
+                "Active" => !e.completed,
                 _ => true,
             }
         })
@@ -165,7 +158,6 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
                    checked={if all_completed { "true" } else { "false" }}
                    click={Message::CheckAll(!all_completed)}>
             </input>
-
             <ul class={"todo-list"}>{todos}</ul>
         </section>
     })(vis, all_completed, todos)
