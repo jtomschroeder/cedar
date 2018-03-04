@@ -55,7 +55,7 @@ fn main() {
 
             std::fs::copy("lib/wasm/app.js", &format!("{}/app.js", directory)).unwrap();
             std::fs::copy("lib/wasm/index.html", &format!("{}/index.html", directory)).unwrap();
-            std::fs::copy("lib/wasm/style.css", &format!("{}/style.css", directory)).unwrap();
+            std::fs::copy(style, &format!("{}/style.css", directory)).unwrap();
 
             println!("Serving {} @ localhost:8000", example);
             hammer::serve(directory, "localhost:8000");
