@@ -22,7 +22,7 @@ mod processor;
 pub mod dom;
 
 pub use hypertext::hypertext;
-pub use program::program;
+pub use program::{program, programv, Subscription};
 pub use processor::process;
 
 pub mod browser;

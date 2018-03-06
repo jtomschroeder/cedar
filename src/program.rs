@@ -84,10 +84,29 @@ where
     }
 }
 
+pub trait Subscription {}
+pub type Subscriptions<M, S: Subscription> = fn(&M) -> S;
+
+// Time.every : Time -> (Time -> msg) -> Sub msg
+// e.g. Time.every second Tick
+
+impl Subscription for () {}
+
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
+{
+    let program = Program::new(model, update, view);
+    processor::initialize(program);
+}
+
+pub fn programv<S, M, B>(
+    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriptions<M, B>),
+) where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
+    B: Send + Subscription + 'static,
 {
     let program = Program::new(model, update, view);
     processor::initialize(program);
