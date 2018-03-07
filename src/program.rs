@@ -108,6 +108,8 @@ pub fn programv<S, M, B>(
     M: Send + 'static,
     B: Send + Subscription + 'static,
 {
+    browser::execute("console.log(42);");
+
     let program = Program::new(model, update, view);
     processor::initialize(program);
 }
