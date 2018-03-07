@@ -64,7 +64,7 @@ pub trait Comparable {
     fn compare(&self, other: &Self) -> Option<Difference>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Operation {
     Create,
     Delete,

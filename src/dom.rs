@@ -164,6 +164,7 @@ impl<S> Object<S> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct List<T>(Vec<T>);
 
 use std::iter::FromIterator;

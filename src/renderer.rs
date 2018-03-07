@@ -24,6 +24,7 @@ pub enum Command {
         id: Identifier,
         value: Update,
     },
+
     Remove {
         id: Identifier,
     },
