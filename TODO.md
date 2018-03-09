@@ -8,4 +8,4 @@
 - [ ] Implement native support via embedding in WebKit view (macOS, iOS) (https://github.com/Boscop/web-view)
 - [ ] Analyze performance (http://elm-lang.org/blog/blazing-fast-html-round-two)
 - [ ] time-travel debugger
-  - [ ] `redux-logger` inspired colored console logging
+  - [ ] `redux-logger` inspired colored console logging (https://github.com/evgenyrodionov/redux-logger)
