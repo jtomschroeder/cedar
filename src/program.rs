@@ -21,14 +21,15 @@ struct Program<M, S> {
     update: Update<M, S>,
     view: View<M, S>,
     shadow: Shadow<S>,
+    subscription: Option<Box<Subscription<S>>>,
 }
 
 impl<M, S> Program<M, S>
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
+    where
+        S: Send + PartialEq + 'static,
+        M: Send + 'static,
 {
-    fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
+    fn new(model: M, update: Update<M, S>, view: View<M, S>, subscription: Option<Box<Subscription<S>>>) -> Self {
         let (shadow, commands) = Shadow::initialize(&model, view);
 
         Self::send(commands);
@@ -38,6 +39,7 @@ where
             update,
             view,
             shadow,
+            subscription,
         }
     }
 
@@ -53,7 +55,7 @@ where
 
         let model = {
             // translate events from backend renderer to actions
-            let message = match self.shadow.translate(event) {
+            let message = match self.shadow.translate(event, &self.subscription) {
                 Some(m) => m,
                 _ => return,
             };
@@ -75,21 +77,23 @@ where
 }
 
 impl<M, S> processor::Processor for Program<M, S>
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
+    where
+        S: Send + PartialEq + 'static,
+        M: Send + 'static,
 {
     fn process(&mut self, event: String) {
         self.process(event)
     }
 }
 
-pub trait Subscription {
+pub trait Subscription<S> {
     fn enable(&self);
     fn disable(&self);
+
+    fn process(&self) -> S;
 }
 
-pub type Subscriber<M, S: Subscription> = fn(&M) -> S;
+pub type Subscriber<M, S> = fn(&M) -> S;
 
 // Time.every : Time -> (Time -> msg) -> Sub msg
 // e.g. Time.every second Tick
@@ -97,11 +101,11 @@ pub type Subscriber<M, S: Subscription> = fn(&M) -> S;
 //impl Subscription for () {}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
+    where
+        S: Send + PartialEq + 'static,
+        M: Send + 'static,
 {
-    let program = Program::new(model, update, view);
+    let program = Program::new(model, update, view, None);
     processor::initialize(program);
 }
 
@@ -110,12 +114,12 @@ pub fn programv<S, M, B>(
 ) where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
-    B: Send + Subscription + 'static,
+    B: Send + Subscription<S> + 'static,
 {
     let sub = subscriber(&model);
     sub.enable();
 
-    let program = Program::new(model, update, view);
+    let program = Program::new(model, update, view, Some(Box::new(sub)));
     processor::initialize(program);
 }
 

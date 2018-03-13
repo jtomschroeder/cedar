@@ -4,6 +4,7 @@
 extern crate cedar;
 
 use cedar::hypertext;
+use cedar::browser;
 
 mod mouse {
     use cedar::{browser, Subscription};
@@ -30,7 +31,7 @@ mod mouse {
         }
     }
 
-    impl<T> Subscription for Mouse<T> {
+    impl<T> Subscription<T> for Mouse<T> {
         fn enable(&self) {
             browser::execute(
                 r#"
@@ -43,6 +44,11 @@ mod mouse {
         }
 
         fn disable(&self) {}
+
+        fn process(&self) -> T {
+            // TODO: add a `value` parameter to parse as Position
+            (self.f)(Position::new(123, 123))
+        }
     }
 }
 
@@ -70,14 +76,33 @@ struct Drag {
     current: Position,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 enum Message {
     DragStart(Position),
     DragAt(Position),
     DragEnd(Position),
 }
 
-fn update(model: Model, _message: &Message) -> Model {
+fn update(mut model: Model, message: &Message) -> Model {
+    browser::log(&format!("Update: {:?}", message));
+
+//    case msg of
+//    DragStart xy ->
+//    Model position (Just (Drag xy xy))
+//
+//    DragAt xy ->
+//    Model position (Maybe.map (\{start} -> Drag start xy) drag)
+//
+//    DragEnd _ ->
+//    Model (getPosition model) Nothing
+
+
+    match message {
+        &Message::DragAt(position) => model.position = position.clone(),
+        _ => {}
+    }
+
+
     model
 }
 

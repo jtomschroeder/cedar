@@ -6,7 +6,7 @@ use boo::Boo;
 use dom;
 use tree::{self, Vertex};
 use renderer::{Command, Event, Update};
-use program::View;
+use program::{View, Subscription};
 use browser;
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
@@ -111,7 +111,7 @@ impl<S> Shadow<S>
     }
 
     /// Find the message associated with an event (by looking up node in DOM)
-    pub fn translate(&self, event: Event) -> Option<Boo<S>> {
+    pub fn translate(&self, event: Event, subscription: &Option<Box<Subscription<S>>>) -> Option<Boo<S>> {
 
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
@@ -138,8 +138,7 @@ impl<S> Shadow<S>
             }
 
             Event::Subscription { id } => {
-                browser::log(&format!("Subscription: {}", id));
-                None
+                subscription.as_ref().map(|s| s.process()).map(Boo::Owned)
             }
         }
     }
