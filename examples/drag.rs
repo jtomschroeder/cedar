@@ -6,6 +6,8 @@ extern crate cedar;
 use cedar::hypertext;
 
 mod mouse {
+    use cedar::{browser, Subscription};
+
     #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
     pub struct Position {
         pub x: i32,
@@ -17,9 +19,34 @@ mod mouse {
             Position { x, y }
         }
     }
+
+    pub struct Mouse<T> {
+        f: fn(Position) -> T,
+    }
+
+    impl<T> Mouse<T> {
+        pub fn moves(f: fn(Position) -> T) -> Self {
+            Mouse { f }
+        }
+    }
+
+    impl<T> Subscription for Mouse<T> {
+        fn enable(&self) {
+            browser::execute(
+                r#"
+                document.addEventListener('mousemove', (ev) => {
+                    //console.log(ev);
+                    window.post({ "Subscription": { "id": "123" } });
+                })
+                "#,
+            );
+        }
+
+        fn disable(&self) {}
+    }
 }
 
-use mouse::Position;
+use mouse::{Mouse, Position};
 
 struct Model {
     position: Position,
@@ -44,7 +71,11 @@ struct Drag {
 }
 
 #[derive(PartialEq)]
-enum Message {}
+enum Message {
+    DragStart(Position),
+    DragAt(Position),
+    DragEnd(Position),
+}
 
 fn update(model: Model, _message: &Message) -> Model {
     model
@@ -83,7 +114,13 @@ fn view(model: &Model) -> Widget {
     })(model)
 }
 
-fn subscriptions(_: &Model) {}
+fn subscriptions(_: &Model) -> Mouse<Message> {
+    Mouse::moves(Message::DragAt)
+
+    // case model.drag of
+    // Nothing -> Sub.none
+    // Just _ -> Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
+}
 
 fn main() {
     cedar::programv((

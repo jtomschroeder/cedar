@@ -84,13 +84,17 @@ where
     }
 }
 
-pub trait Subscription {}
-pub type Subscriptions<M, S: Subscription> = fn(&M) -> S;
+pub trait Subscription {
+    fn enable(&self);
+    fn disable(&self);
+}
+
+pub type Subscriber<M, S: Subscription> = fn(&M) -> S;
 
 // Time.every : Time -> (Time -> msg) -> Sub msg
 // e.g. Time.every second Tick
 
-impl Subscription for () {}
+//impl Subscription for () {}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -102,23 +106,14 @@ where
 }
 
 pub fn programv<S, M, B>(
-    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriptions<M, B>),
+    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, B>),
 ) where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
     B: Send + Subscription + 'static,
 {
-    // browser::execute("console.log(42);");
-    // browser::execute("document.onmousemove = () => console.log(123);");
-
-    browser::execute(
-        r#"
-        document.addEventListener('mousemove', (ev) => {
-            //console.log(ev);
-            window.post({ "Subscription": { "id": "123" } });
-        })
-        "#,
-    );
+    let sub = subscriber(&model);
+    sub.enable();
 
     let program = Program::new(model, update, view);
     processor::initialize(program);
