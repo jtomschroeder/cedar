@@ -89,8 +89,8 @@ pub struct Shadow<S> {
 }
 
 impl<S> Shadow<S>
-where
-    S: Send + PartialEq + 'static,
+    where
+        S: Send + PartialEq + 'static,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
@@ -103,33 +103,32 @@ where
         (Shadow { dom }, commands)
     }
 
+    fn find(&self, id: &str) -> Option<&dom::Object<S>> {
+        let path = id.split(".").filter_map(|s| s.parse().ok()).collect();
+        let path = tree::Path::from_vec(path);
+
+        self.dom.find(&path)
+    }
+
     /// Find the message associated with an event (by looking up node in DOM)
     pub fn translate(&self, event: Event) -> Option<Boo<S>> {
+
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
-        let path = |id: &str| {
-            let path = id.split(".").filter_map(|s| s.parse().ok()).collect();
-            tree::Path::from_vec(path)
-        };
-
-        let ref dom = self.dom;
         match event {
             Event::Click { id } => {
-                let path = path(&id);
-                dom.find(&path)
+                self.find(&id)
                     .and_then(|node| node.widget.click.as_ref().map(Boo::Borrowed))
             }
 
             Event::Input { id, value } => {
-                let path = path(&id);
-                dom.find(&path)
+                self.find(&id)
                     .and_then(|node| node.widget.input.as_ref().map(|i| i(value)).map(Boo::Owned))
             }
 
             Event::Keydown { id, code } => {
-                let path = path(&id);
-                dom.find(&path).and_then(|node| {
+                self.find(&id).and_then(|node| {
                     node.widget
                         .keydown
                         .as_ref()
