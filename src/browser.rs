@@ -27,5 +27,6 @@ pub fn command(msg: &str) {
 }
 
 pub fn execute(code: &str) {
+    let code = code.trim();
     unsafe { ffi::execute(code.as_ptr(), code.as_bytes().len() as u32) };
 }

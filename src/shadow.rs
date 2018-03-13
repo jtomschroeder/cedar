@@ -7,6 +7,7 @@ use dom;
 use tree::{self, Vertex};
 use renderer::{Command, Event, Update};
 use program::View;
+use browser;
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
 fn commands<T>(
@@ -135,6 +136,11 @@ where
                         .and_then(|k| k(code))
                         .map(Boo::Owned)
                 })
+            }
+
+            Event::Subscription { id } => {
+                browser::log(&format!("Subscription: {}", id));
+                None
             }
         }
     }

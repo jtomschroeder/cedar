@@ -20,7 +20,7 @@ struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
     view: View<M, S>,
-    phantom: Shadow<S>,
+    shadow: Shadow<S>,
 }
 
 impl<M, S> Program<M, S>
@@ -29,7 +29,7 @@ where
     M: Send + 'static,
 {
     fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
-        let (phantom, commands) = Shadow::initialize(&model, view);
+        let (shadow, commands) = Shadow::initialize(&model, view);
 
         Self::send(commands);
 
@@ -37,7 +37,7 @@ where
             model: Some(model),
             update,
             view,
-            phantom,
+            shadow,
         }
     }
 
@@ -53,7 +53,7 @@ where
 
         let model = {
             // translate events from backend renderer to actions
-            let message = match self.phantom.translate(event) {
+            let message = match self.shadow.translate(event) {
                 Some(m) => m,
                 _ => return,
             };
@@ -65,7 +65,7 @@ where
         let commands = {
             // TODO: inject middleware here: middleware.handlers(&model, &message)
 
-            let commands = self.phantom.update(&model, self.view);
+            let commands = self.shadow.update(&model, self.view);
             self.model = Some(model);
             commands
         };
@@ -108,7 +108,17 @@ pub fn programv<S, M, B>(
     M: Send + 'static,
     B: Send + Subscription + 'static,
 {
-    browser::execute("console.log(42);");
+    // browser::execute("console.log(42);");
+    // browser::execute("document.onmousemove = () => console.log(123);");
+
+    browser::execute(
+        r#"
+        document.addEventListener('mousemove', (ev) => {
+            //console.log(ev);
+            window.post({ "Subscription": { "id": "123" } });
+        })
+        "#,
+    );
 
     let program = Program::new(model, update, view);
     processor::initialize(program);
