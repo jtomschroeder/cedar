@@ -7,7 +7,7 @@ use cedar::hypertext;
 use cedar::browser;
 
 mod mouse {
-    use cedar::{browser, Subscription};
+    use cedar::{browser, json, Subscription};
 
     #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
     pub struct Position {
@@ -37,7 +37,7 @@ mod mouse {
                 r#"
                 document.addEventListener('mousemove', (ev) => {
                     //console.log(ev);
-                    window.post({ "Subscription": { "id": "123" } });
+                    window.post({ "Subscription": { "id": "123", "value": [ev.x, ev.y] } });
                 })
                 "#,
             );
@@ -45,9 +45,9 @@ mod mouse {
 
         fn disable(&self) {}
 
-        fn process(&self) -> T {
-            // TODO: add a `value` parameter to parse as Position
-            (self.f)(Position::new(123, 123))
+        fn process(&self, value: json::Value) -> T {
+            let (x, y) = json::from_value(value).unwrap();
+            (self.f)(Position::new(x, y))
         }
     }
 }
@@ -84,7 +84,7 @@ enum Message {
 }
 
 fn update(mut model: Model, message: &Message) -> Model {
-    browser::log(&format!("Update: {:?}", message));
+    // browser::log(&format!("Update: {:?}", message));
 
 //    case msg of
 //    DragStart xy ->

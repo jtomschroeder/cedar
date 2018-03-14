@@ -1,6 +1,7 @@
 use std::str;
 use std::collections::HashMap;
 
+use json;
 use boo::Boo;
 
 use dom;
@@ -137,8 +138,8 @@ impl<S> Shadow<S>
                 })
             }
 
-            Event::Subscription { id } => {
-                subscription.as_ref().map(|s| s.process()).map(Boo::Owned)
+            Event::Subscription { id, value } => {
+                subscription.as_ref().map(|s| s.process(value)).map(Boo::Owned)
             }
         }
     }

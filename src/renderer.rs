@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use json;
 
 type Identifier = String;
 
@@ -36,5 +37,5 @@ pub enum Event {
     Input { id: Identifier, value: String },
     Keydown { id: Identifier, code: u32 },
 
-    Subscription { id: Identifier },
+    Subscription { id: Identifier, value: json::Value },
 }

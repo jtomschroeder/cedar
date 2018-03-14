@@ -1,4 +1,4 @@
-use serde_json as json;
+use json;
 
 use dom;
 use shadow::Shadow;
@@ -90,7 +90,7 @@ pub trait Subscription<S> {
     fn enable(&self);
     fn disable(&self);
 
-    fn process(&self) -> S;
+    fn process(&self, value: json::Value) -> S;
 }
 
 pub type Subscriber<M, S> = fn(&M) -> S;
