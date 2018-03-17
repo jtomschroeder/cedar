@@ -1,5 +1,6 @@
 #![feature(proc_macro)]
 #![feature(trace_macros)]
+#![feature(conservative_impl_trait)]
 
 extern crate cedar;
 
@@ -7,9 +8,10 @@ use cedar::hypertext;
 use cedar::browser;
 
 mod mouse {
+    use std::hash::Hash;
     use cedar::{browser, json, Subscription};
 
-    #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+    #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
     pub struct Position {
         pub x: i32,
         pub y: i32,
@@ -21,38 +23,84 @@ mod mouse {
         }
     }
 
-    pub struct Mouse<T> {
+    #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
+    pub struct Moves<T> where T: Eq + Hash {
         f: fn(Position) -> T,
     }
 
-    impl<T> Mouse<T> {
-        pub fn moves(f: fn(Position) -> T) -> Self {
-            Mouse { f }
-        }
+    pub fn moves<T>(f: fn(Position) -> T) -> Moves<T> where T: Eq + Hash {
+        Moves { f }
     }
 
-    impl<T> Subscription<T> for Mouse<T> {
+    impl<T> Subscription<T> for Moves<T> where T: Eq + Hash {
         fn enable(&self) {
             browser::execute(
                 r#"
-                document.addEventListener('mousemove', (ev) => {
-                    //console.log(ev);
-                    window.post({ "Subscription": { "id": "123", "value": [ev.x, ev.y] } });
-                })
-                "#,
+                    window.cedar_mouse_mousemove = (ev) => {
+                        window.post({ "Subscription": { "id": "123", "value": [ev.x, ev.y] } });
+                    };"#,
+            );
+
+            browser::execute(
+                r#"document.addEventListener('mousemove', window.cedar_mouse_mousemove);"#,
             );
         }
 
-        fn disable(&self) {}
+        fn disable(&self) {
+            browser::execute(
+                r#"
+                document.removeEventListener('mousemove', window.cedar_mouse_mousemove);
+                "#,
+            );
+        }
 
         fn process(&self, value: json::Value) -> T {
             let (x, y) = json::from_value(value).unwrap();
             (self.f)(Position::new(x, y))
         }
     }
+
+    /*
+    #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
+    pub struct Ups<T> {
+        f: fn(Position) -> T,
+    }
+
+    pub fn ups<T>(f: fn(Position) -> T) -> Ups<T> {
+        Ups { f }
+    }
+
+    impl<T> Subscription<T> for Ups<T> {
+        fn enable(&self) {
+            browser::execute(
+                r#"
+                window.cedar.mouse.mouseup = (ev) => {
+                    console.log(ev);
+                    window.post({ "Subscription": { "id": "123", "value": [ev.x, ev.y] } });
+                };
+
+                document.addEventListener('mouseup', window.cedar.mouse.mouseup);
+                "#,
+            );
+        }
+
+        fn disable(&self) {
+            browser::execute(
+                r#"
+                document.removeEventListener('mouseup', window.cedar.mouse.mouseup);
+                "#,
+            );
+        }
+
+        fn process(&self, value: json::Value) -> T {
+            let (x, y) = json::from_value(value).unwrap();
+            (self.f)(Position::new(x, y))
+        }
+    }
+    */
 }
 
-use mouse::{Mouse, Position};
+use mouse::Position;
 
 struct Model {
     position: Position,
@@ -76,7 +124,7 @@ struct Drag {
     current: Position,
 }
 
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
 enum Message {
     DragStart(Position),
     DragAt(Position),
@@ -87,21 +135,14 @@ fn update(mut model: Model, message: &Message) -> Model {
     // browser::log(&format!("Update: {:?}", message));
 
 //    case msg of
-//    DragStart xy ->
-//    Model position (Just (Drag xy xy))
-//
-//    DragAt xy ->
-//    Model position (Maybe.map (\{start} -> Drag start xy) drag)
-//
-//    DragEnd _ ->
-//    Model (getPosition model) Nothing
-
+//       DragStart xy -> Model position (Just (Drag xy xy))
+//       DragAt xy    -> Model position (Maybe.map (\{start} -> Drag start xy) drag)
+//       DragEnd _    -> Model (getPosition model) Nothing
 
     match message {
         &Message::DragAt(position) => model.position = position.clone(),
         _ => {}
     }
-
 
     model
 }
@@ -139,8 +180,8 @@ fn view(model: &Model) -> Widget {
     })(model)
 }
 
-fn subscriptions(_: &Model) -> Mouse<Message> {
-    Mouse::moves(Message::DragAt)
+fn subscriptions(_: &Model) -> impl cedar::Subscription<Message> {
+    mouse::moves(Message::DragAt)
 
     // case model.drag of
     // Nothing -> Sub.none

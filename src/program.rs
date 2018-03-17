@@ -1,3 +1,6 @@
+use std;
+use std::hash::Hash;
+use std::collections::HashSet;
 use json;
 
 use dom;
@@ -9,37 +12,48 @@ use processor;
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
-// pub trait TProgram<M, S> {
-//     fn init() -> M {}
-//     fn update(M, &S) -> M {}
-//     fn view() {}
-//     fn subscriptions() {}
-// }
-
-struct Program<M, S> {
+struct Program<M, S, R> where R: Eq + Hash {
     model: Option<M>,
     update: Update<M, S>,
     view: View<M, S>,
     shadow: Shadow<S>,
-    subscription: Option<Box<Subscription<S>>>,
+
+    subscriber: Option<Subscriber<M, R>>,
+    subscriptions: HashSet<R>,
 }
 
-impl<M, S> Program<M, S>
+impl<M, S, R> Program<M, S, R>
     where
         S: Send + PartialEq + 'static,
         M: Send + 'static,
+        R: Send + Subscription<S> + 'static,
 {
-    fn new(model: M, update: Update<M, S>, view: View<M, S>, subscription: Option<Box<Subscription<S>>>) -> Self {
+    fn new(model: M, update: Update<M, S>, view: View<M, S>, subscriber: Option<Subscriber<M, R>>) -> Self {
         let (shadow, commands) = Shadow::initialize(&model, view);
 
         Self::send(commands);
+
+        let subscription = subscriber.map(|s| {
+            let sub = s(&model);
+            sub.enable();
+            sub
+        });
+
+        let mut subscriptions= HashSet::new();
+        if let Some(subscriber) = subscriber {
+            let sub = subscriber(&model);
+            sub.enable();
+            subscriptions.insert(sub);
+        }
 
         Program {
             model: Some(model),
             update,
             view,
             shadow,
-            subscription,
+
+            subscriber,
+            subscriptions,
         }
     }
 
@@ -53,9 +67,13 @@ impl<M, S> Program<M, S>
     fn process(&mut self, event: String) {
         let event: renderer::Event = json::from_str(&event).unwrap();
 
+        // TODO: get new subscriptions
+        // - Do a 'difference' on the old and new
+        // - Enable new ones and disable old ones
+
         let model = {
             // translate events from backend renderer to actions
-            let message = match self.shadow.translate(event, &self.subscription) {
+            let message = match self.shadow.translate(event, self.subscriptions.iter().next()) {
                 Some(m) => m,
                 _ => return,
             };
@@ -65,8 +83,6 @@ impl<M, S> Program<M, S>
         };
 
         let commands = {
-            // TODO: inject middleware here: middleware.handlers(&model, &message)
-
             let commands = self.shadow.update(&model, self.view);
             self.model = Some(model);
             commands
@@ -76,24 +92,25 @@ impl<M, S> Program<M, S>
     }
 }
 
-impl<M, S> processor::Processor for Program<M, S>
+impl<M, S, R> processor::Processor for Program<M, S, R>
     where
         S: Send + PartialEq + 'static,
         M: Send + 'static,
+        R: Send + Subscription<S> + 'static,
 {
     fn process(&mut self, event: String) {
-        self.process(event)
+        Program::process(self, event)
     }
 }
 
-pub trait Subscription<S> {
+pub trait Subscription<S>: Eq + Hash {
     fn enable(&self);
     fn disable(&self);
 
     fn process(&self, value: json::Value) -> S;
 }
 
-pub type Subscriber<M, S> = fn(&M) -> S;
+pub type Subscriber<M, R> = fn(&M) -> R;
 
 // Time.every : Time -> (Time -> msg) -> Sub msg
 // e.g. Time.every second Tick
@@ -105,21 +122,20 @@ pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
         S: Send + PartialEq + 'static,
         M: Send + 'static,
 {
-    let program = Program::new(model, update, view, None);
-    processor::initialize(program);
+//    let program = Program::new(model, update, view, None);
+//    processor::initialize(program);
 }
 
-pub fn programv<S, M, B>(
-    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, B>),
+pub fn programv<S, M, R>(
+    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, R>),
 ) where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
-    B: Send + Subscription<S> + 'static,
+    R: Send + Subscription<S> + 'static,
 {
-    let sub = subscriber(&model);
-    sub.enable();
+    browser::log("programv!");
 
-    let program = Program::new(model, update, view, Some(Box::new(sub)));
+    let program = Program::new(model, update, view, Some(subscriber));
     processor::initialize(program);
 }
 

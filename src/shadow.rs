@@ -112,7 +112,7 @@ impl<S> Shadow<S>
     }
 
     /// Find the message associated with an event (by looking up node in DOM)
-    pub fn translate(&self, event: Event, subscription: &Option<Box<Subscription<S>>>) -> Option<Boo<S>> {
+    pub fn translate<R: Subscription<S>>(&self, event: Event, subscription: Option<&R>) -> Option<Boo<S>> {
 
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
