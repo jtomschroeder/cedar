@@ -1,5 +1,6 @@
 
 use gtk;
+use gtk::LabelExt;
 
 use super::widget::Widgeted;
 
