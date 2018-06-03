@@ -3,8 +3,8 @@ use json;
 use std::fs::File;
 use std::io::prelude::*;
 
-use web_view;
 use sass;
+use web_view;
 
 use dom;
 use renderer;
@@ -67,6 +67,9 @@ where
     }
 }
 
+const HTML: &str = include_str!("../lib/web-view/index.html");
+const CSS: &str = include_str!("../lib/web-view/style.scss");
+
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Send + PartialEq + 'static,
@@ -74,18 +77,8 @@ where
 {
     let (mut program, mut commands) = Program::new(model, update, view);
 
-    println!("{:?}", commands);
-
-    let html = {
-        let mut file = File::open("lib/web-view/index.html").unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        contents
-    };
-
-    let css = sass::compile_file("lib/wasm/style-todo.scss", sass::Options::default()).unwrap();
-
-    let html = html.replace("/* styles */", &css);
+    let css = sass::compile_string(CSS, sass::Options::default()).unwrap();
+    let html = HTML.replace("/* styles */", &css);
 
     let title = "cedar app";
 

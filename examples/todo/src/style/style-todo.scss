@@ -1,7 +1,6 @@
 @import "mixins";
 
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
 }
@@ -82,13 +81,10 @@ input[type="checkbox"] {
   font-weight: 100;
   text-align: center;
   color: rgba(175, 47, 47, 0.15);
-  -webkit-text-rendering: optimizeLegibility;
-  -moz-text-rendering: optimizeLegibility;
   text-rendering: optimizeLegibility;
 }
 
-.new-todo,
-.edit {
+.new-todo, .edit {
   position: relative;
   margin: 0;
   width: 100%;
@@ -310,8 +306,7 @@ label[for='toggle-all'] {
   }
 }
 
-.clear-completed,
-html .clear-completed:active {
+.clear-completed, html .clear-completed:active {
   float: right;
   position: relative;
   line-height: 20px;
@@ -360,6 +355,7 @@ html .clear-completed:active {
   .toggle-all {
     -webkit-transform: rotate(90deg);
     transform: rotate(90deg);
+
     -webkit-appearance: none;
     appearance: none;
   }

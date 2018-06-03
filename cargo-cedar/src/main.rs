@@ -1,6 +1,6 @@
-extern crate hammer;
 #[macro_use]
 extern crate structopt;
+extern crate sass_rs as sass;
 
 use std::env;
 use std::path::PathBuf;
@@ -12,8 +12,11 @@ use structopt::StructOpt;
 enum CLI {
     #[structopt(name = "run")]
     Run {
-        #[structopt(long = "example")] example: String,
-        #[structopt(long = "style", parse(from_os_str))] style: PathBuf,
+        #[structopt(long = "example")]
+        example: Option<String>,
+
+        #[structopt(long = "style", parse(from_os_str))]
+        style: Option<PathBuf>,
     },
 }
 
@@ -23,42 +26,18 @@ fn main() {
 
     match cli {
         CLI::Run { example, style } => {
-            let status = Command::new("cargo")
-                .args(&[
-                    "build",
-                    "--target=wasm32-unknown-unknown",
-                    "--release",
-                    "--example",
-                    &example,
-                ])
-                .status()
-                .expect("Failed to execute `cargo build`");
+            let mut command = Command::new("cargo");
+            command.args(&["run", "--release"]);
 
-            // println!("process exited with: {}", status);
+            if let Some(style) = style {
+                let css = sass::compile_file(style, sass::Options::default()).unwrap();
+                command.env("CEDAR_STYLING", css);
+                println!("HERE");
+            }
+
+            let status = command.status().expect("Failed to execute `cargo run`");
 
             assert!(status.success());
-
-            // target/wasm32-unknown-unknown/release/examples
-            // target/cedar/release/examples/${example}/*
-
-            let directory = format!("target/cedar/release/examples/{}", example);
-
-            std::fs::create_dir_all(&directory).unwrap();
-
-            std::fs::copy(
-                &format!(
-                    "target/wasm32-unknown-unknown/release/examples/{}.wasm",
-                    example
-                ),
-                &format!("{}/code.wasm", directory),
-            ).unwrap();
-
-            std::fs::copy("lib/wasm/app.js", &format!("{}/app.js", directory)).unwrap();
-            std::fs::copy("lib/wasm/index.html", &format!("{}/index.html", directory)).unwrap();
-            std::fs::copy(style, &format!("{}/style.css", directory)).unwrap();
-
-            println!("Serving {} @ localhost:8000", example);
-            hammer::serve(directory, "localhost:8000");
         }
     }
 }

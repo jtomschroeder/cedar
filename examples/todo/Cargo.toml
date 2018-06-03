@@ -1,0 +1,8 @@
+[package]
+name = "todo"
+version = "0.1.0"
+authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
+
+[dependencies]
+cedar = { path = "../.." }
+#hypertext = { path = "../../hypertext" }
