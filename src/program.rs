@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use web_view;
+use sass;
 
 use dom;
 use renderer;
@@ -82,12 +83,7 @@ where
         contents
     };
 
-    let css = {
-        let mut file = File::open("lib/wasm/style-todo.css").unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        contents
-    };
+    let css = sass::compile_file("lib/wasm/style-todo.scss", sass::Options::default()).unwrap();
 
     let html = html.replace("/* styles */", &css);
 

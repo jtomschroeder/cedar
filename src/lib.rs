@@ -13,6 +13,8 @@ extern crate serde_derive;
 pub extern crate serde_json as json;
 
 extern crate web_view;
+extern crate sass_rs as sass;
+
 
 extern crate hypertext;
 
