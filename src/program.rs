@@ -8,9 +8,7 @@ use std::io::prelude::*;
 
 use web_view;
 
-use browser;
 use dom;
-use processor;
 use renderer;
 use shadow::Shadow;
 
@@ -32,8 +30,6 @@ where
     fn new(model: M, update: Update<M, S>, view: View<M, S>) -> (Self, Vec<renderer::Command>) {
         let (shadow, commands) = Shadow::initialize(&model, view);
 
-        // Self::send(commands);
-
         (
             Program {
                 model: Some(model),
@@ -44,13 +40,6 @@ where
             commands,
         )
     }
-
-    //    fn send(commands: Vec<renderer::Command>) {
-    //        for cmd in commands.into_iter() {
-    //            let cmd = json::to_string(&cmd).unwrap();
-    //            browser::command(&cmd);
-    //        }
-    //    }
 
     fn process(&mut self, event: &str) -> Vec<renderer::Command> {
         let event: renderer::Event = json::from_str(event).unwrap();
@@ -76,21 +65,9 @@ where
             commands
         };
 
-        // Self::send(commands);
-
         commands
     }
 }
-
-//impl<M, S> processor::Processor for Program<M, S>
-//where
-//    S: Send + PartialEq + 'static,
-//    M: Send + 'static,
-//{
-//    fn process(&mut self, event: String) {
-//        Program::process(self, event)
-//    }
-//}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
@@ -98,7 +75,6 @@ where
     M: Send + 'static,
 {
     let (mut program, mut commands) = Program::new(model, update, view);
-    // processor::initialize(program);
 
     println!("{:?}", commands);
 

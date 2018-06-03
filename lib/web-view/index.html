@@ -1,7 +1,6 @@
 <!doctype html>
 <html>
 <body>
-<!--<h1>Hello, world</h1>-->
 <script type="text/javascript">
     "use strict";
 
@@ -16,24 +15,23 @@
             external.invoke(JSON.stringify(msg));
         };
 
-        cedar.click = (id) => (event) => {
+        cedar.click = (id) => () => {
             post({"Click": {"id": id}});
         };
 
-        cedar.input = (id, element) => (event) => {
-            var value = element.value || '';
+        cedar.input = (id, element) => () => {
+            const value = element.value || '';
             post({Input: {id: id, value: value}});
         };
 
-        cedar.keydown = (id, element) => (e) => {
+        cedar.keydown = (id) => (e) => {
             post({Keydown: {id: id, code: (e.keyCode ? e.keyCode : e.which)}});
         };
 
         cedar.attributes = (node, attributes) => {
             for (const attr in attributes) {
-                var value = attributes[attr];
+                let value = attributes[attr];
 
-                // TODO: fix this!
                 // HACK: convert to Boolean
                 if (value === "true") {
                     value = true;
@@ -48,24 +46,20 @@
         };
 
         cedar.command = (cmd) => {
-            console.log("Command ", cmd);
+            const cedar = window.cedar;
 
-            var cedar = window.cedar;
+            const command = JSON.parse(cmd);
 
-            var cmd = JSON.parse(cmd);
-
-            if (cmd.hasOwnProperty('Create')) {
-                var create = cmd.Create;
+            if (command.hasOwnProperty('Create')) {
+                const create = command.Create;
 
                 var id = create.id;
-                var parent = create.parent;
+                const kind = create.kind;
+                const value = create.value;
 
-                var kind = create.kind;
-                var value = create.value;
+                const attributes = create.attributes;
 
-                var attributes = create.attributes;
-
-                var node = kind === 'text' ? document.createTextNode(value) : document.createElement(kind);
+                let node = kind === 'text' ? document.createTextNode(value) : document.createElement(kind);
 
                 // TODO: only register for nodes that need to?
                 // TODO: handle 'duplicate' events?
@@ -73,7 +67,7 @@
                 node.addEventListener("click", cedar.click(id));
 
                 node.addEventListener("input", cedar.input(id, node));
-                node.addEventListener("keydown", cedar.keydown(id, node));
+                node.addEventListener("keydown", cedar.keydown(id));
 
                 // var input = cedar.input(id, node);
                 // node.addEventListener("keypress", input);
@@ -82,17 +76,17 @@
 
                 cedar.attributes(node, attributes);
 
-                var parent = cedar.nodes[parent];
+                let parent = cedar.nodes[create.parent];
                 parent.appendChild(node);
 
                 cedar.nodes[id] = node;
-            } else if (cmd.hasOwnProperty('Update')) {
-                var update = cmd.Update;
+            } else if (command.hasOwnProperty('Update')) {
+                const update = command.Update;
 
                 var id = update.id;
                 var value = update.value;
 
-                var node = cedar.nodes[id];
+                let node = cedar.nodes[id];
 
                 if (value.hasOwnProperty('Text')) {
                     node.nodeValue = value.Text;
@@ -101,9 +95,9 @@
                 } else {
                     // console.log("Unsupported value!");
                 }
-            } else if (cmd.hasOwnProperty('Remove')) {
-                var remove = cmd.Remove;
-                var id = remove.id;
+            } else if (command.hasOwnProperty('Remove')) {
+                const remove = command.Remove;
+                const id = remove.id;
 
                 cedar.nodes[id].remove();
             }

@@ -23,7 +23,7 @@ mod boo;
 
 #[macro_use]
 mod tree;
-mod processor;
+
 mod program;
 mod renderer;
 mod shadow;
@@ -31,8 +31,4 @@ mod shadow;
 pub mod dom;
 
 pub use hypertext::hypertext;
-pub use processor::process;
 pub use program::program;
-
-pub mod browser;
-pub mod memory;

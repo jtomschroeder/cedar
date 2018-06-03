@@ -4,7 +4,6 @@ use std::str;
 use boo::Boo;
 use json;
 
-use browser;
 use dom;
 use program::View;
 use renderer::{Command, Event, Update};
