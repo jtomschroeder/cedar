@@ -39,5 +39,5 @@ fn view(model: &Model) -> Widget {
 }
 
 fn main() {
-    cedar::program("".into(), update, view)
+    cedar::app("".into(), update, view)
 }

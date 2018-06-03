@@ -13,6 +13,39 @@ use shadow::Shadow;
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
+pub struct Application<M, S> {
+    model: M,
+    update: Update<M, S>,
+    view: View<M, S>,
+
+    style: Option<String>,
+}
+
+impl<M, S> Application<M, S>
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
+{
+    pub fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
+        Application {
+            model,
+            update,
+            view,
+
+            style: None,
+        }
+    }
+
+    pub fn style(mut self, style: &str) -> Self {
+        self.style = Some(style.into());
+        self
+    }
+
+    pub fn run(self) {
+        Program::run(self.model, self.update, self.view, self.style)
+    }
+}
+
 struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
@@ -65,53 +98,62 @@ where
 
         commands
     }
-}
 
-const HTML: &str = include_str!("../lib/web-view/index.html");
-const CSS: &str = include_str!("../lib/web-view/style.scss");
+    fn run(model: M, update: Update<M, S>, view: View<M, S>, style: Option<String>) {
+        let (mut program, mut commands) = Program::new(model, update, view);
 
-pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
-{
-    let (mut program, mut commands) = Program::new(model, update, view);
+        let html = match style {
+            Some(style) => HTML.replace("/* styles */", &style),
+            _ => {
+                let css = sass::compile_string(CSS, sass::Options::default()).unwrap();
+                HTML.replace("/* styles */", &css)
+            }
+        };
 
-    let css = sass::compile_string(CSS, sass::Options::default()).unwrap();
-    let html = HTML.replace("/* styles */", &css);
+        let title = "cedar app";
 
-    let title = "cedar app";
+        let size = (800, 600);
+        let resizable = true;
+        let debug = true;
 
-    let size = (800, 600);
-    let resizable = true;
-    let debug = true;
+        web_view::run(
+            title,
+            web_view::Content::Html(html),
+            Some(size),
+            resizable,
+            debug,
+            move |webview| {
+                webview.dispatch(move |webview, _| {
+                    webview.eval("setup()");
 
-    web_view::run(
-        title,
-        web_view::Content::Html(html),
-        Some(size),
-        resizable,
-        debug,
-        move |webview| {
-            webview.dispatch(move |webview, _| {
-                webview.eval("setup()");
+                    for cmd in commands.drain(..) {
+                        let cmd = json::to_string(&cmd).unwrap();
+                        webview.eval(&format!("window.cedar.command('{}')", cmd));
+                    }
+                });
+            },
+            move |webview, message, _| {
+                println!("message: {}", message);
+
+                let mut commands = program.process(message);
 
                 for cmd in commands.drain(..) {
                     let cmd = json::to_string(&cmd).unwrap();
                     webview.eval(&format!("window.cedar.command('{}')", cmd));
                 }
-            });
-        },
-        move |webview, message, _| {
-            println!("message: {}", message);
+            },
+            (),
+        );
+    }
+}
 
-            let mut commands = program.process(message);
+const HTML: &str = include_str!("../lib/web-view/index.html");
+const CSS: &str = include_str!("../lib/web-view/style.scss");
 
-            for cmd in commands.drain(..) {
-                let cmd = json::to_string(&cmd).unwrap();
-                webview.eval(&format!("window.cedar.command('{}')", cmd));
-            }
-        },
-        (),
-    );
+pub fn app<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
+{
+    Application::new(model, update, view).run()
 }

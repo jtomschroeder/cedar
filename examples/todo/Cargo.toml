@@ -6,3 +6,6 @@ authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 [dependencies]
 cedar = { path = "../.." }
 #hypertext = { path = "../../hypertext" }
+
+[build-dependencies]
+cedar = { path = "../.." }

@@ -260,5 +260,7 @@ fn info_footer() -> Widget {
 }
 
 fn main() {
-    cedar::program(Model::empty(), update, view)
+    cedar::Application::new(Model::empty(), update, view)
+        .style(include_str!(concat!(env!("OUT_DIR"), "/", "style.css")))
+        .run()
 }

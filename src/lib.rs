@@ -2,10 +2,10 @@
 // #![deny(missing_docs)]
 // #![deny(unsafe_code, unstable_features)]
 #![deny(trivial_casts, trivial_numeric_casts)]
-#![deny(
-    missing_debug_implementations, missing_copy_implementations, unused_import_braces,
-    unused_qualifications
-)]
+//#![deny(
+//    missing_debug_implementations, missing_copy_implementations, unused_import_braces,
+//    unused_qualifications
+//)]
 
 extern crate serde;
 #[macro_use]
@@ -32,4 +32,16 @@ mod shadow;
 pub mod dom;
 
 pub use hypertext::hypertext;
-pub use program::program;
+pub use program::{app, Application};
+
+/// build.rs helper
+pub fn custom_style(path: &str) {
+    let css = sass::compile_file(path, sass::Options::default()).unwrap();
+
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let out_file = format!("{}/style.css", std::env::var("OUT_DIR").unwrap());
+    let mut file = File::create(&out_file).unwrap();
+    file.write_all(css.as_bytes()).unwrap();
+}

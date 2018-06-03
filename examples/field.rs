@@ -33,5 +33,5 @@ fn view(model: &Model) -> cedar::dom::Object<Message> {
 }
 
 fn main() {
-    cedar::program("".into(), update, view)
+    cedar::app("".into(), update, view)
 }

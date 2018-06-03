@@ -258,5 +258,5 @@ fn info_footer() -> Widget {
 }
 
 fn main() {
-    cedar::program(Model::empty(), update, view)
+    cedar::app(Model::empty(), update, view)
 }
