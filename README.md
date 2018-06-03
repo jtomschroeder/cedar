@@ -9,6 +9,14 @@
 
 **Note:** `cedar` is in the *experimental* stage and rapidly evolving.
 
+### Getting started!
+
+Add the following dependency to your `Cargo.toml`:
+
+```toml
+cedar = { git = "https://github.com/jtomschroeder/cedar" }
+```
+
 ### Example: creating buttons & *reactive* text :rocket:
 
 ```rust
