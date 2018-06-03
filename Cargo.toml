@@ -2,7 +2,7 @@
 name = "cedar"
 version = "0.1.1"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
-description = "Reactive, functional library for creating GUI applications"
+description = "Reactive, functional library for creating UI applications"
 
 documentation = "https://docs.rs/crate/cedar"
 homepage = "https://github.com/jtomschroeder/cedar"
@@ -10,16 +10,14 @@ repository = "https://github.com/jtomschroeder/cedar"
 
 readme = "README.md"
 license = "MIT"
-keywords = ["frp", "gui"]
+keywords = ["frp", "ui"]
 
 [dependencies]
-crossbeam = "0.2.10"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-gtk = "0.4.1"
+web-view = "0.2"
+sass-rs = "0.2"
 
-[target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.9"
-objc = "0.2"
-core-graphics = "0.9"
-gtk = { version = "0.4.1", optional = true }
+cedar-hypertext = { path = "hypertext" }

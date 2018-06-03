@@ -1,31 +1,37 @@
+#![feature(proc_macro)]
+#![feature(proc_macro_non_items)]
 
 extern crate cedar;
 
-use cedar::dom;
-use cedar::dom::Builder;
+use cedar::hypertext;
 
 type Model = String;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq)]
 enum Message {
     NewContent(String),
 }
 
-fn update(_: Model, message: Message) -> Model {
+fn update(_: Model, message: &Message) -> Model {
     match message {
-        Message::NewContent(content) => content,
+        &Message::NewContent(ref content) => content.clone(),
     }
 }
 
-fn view(model: &Model) -> dom::Object<Message> {
-    use cedar::dom;
-    dom::stack()
-        .add(dom::field()
-                 .placeholder("Text to reverse!".into())
-                 .change(Message::NewContent))
-        .add(dom::label().text(model.chars().rev().collect()))
+const STYLE: &'static str =
+    "width: 100%; height: 40px; padding: 10px 0; font-size: 2em; text-align: center;";
+
+fn view(model: &Model) -> cedar::dom::Object<Message> {
+    let field: String = model.chars().rev().collect();
+
+    (hypertext! { |field|
+        <div>
+            <input style={STYLE} input={Message::NewContent}></input>
+            <div style={STYLE}>{field}</div>
+        </div>
+    })(field)
 }
 
 fn main() {
-    cedar::program("--".into(), update, view)
+    cedar::app("".into(), update, view)
 }

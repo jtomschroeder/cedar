@@ -1,89 +1,245 @@
-
+use std::fmt;
 use tree;
 
-#[derive(PartialEq, Clone, Debug)]
-pub enum Kind {
-    Stack,
-    Button,
-    Label,
-    Field,
+pub type Element = String;
+
+#[derive(PartialEq, Debug)]
+pub struct Attribute(String, String);
+
+impl Attribute {
+    pub fn raw(&self) -> (String, String) {
+        let (name, value) = match self {
+            &Attribute(ref name, ref value) => (name.as_str(), value.as_str()),
+        };
+
+        (name.into(), value.into())
+    }
 }
 
-#[derive(PartialEq, Clone, Debug)]
-pub enum Attribute<S> {
-    Text(String),
-    Click(S),
-    Placeholder(String),
-    Change(fn(String) -> S),
+pub struct Widget<S> {
+    element: Element,
+    pub value: Option<String>,
+
+    // Events
+    pub click: Option<S>,
+    pub input: Option<Box<Fn(String) -> S>>,
+    pub keydown: Option<Box<Fn(u32) -> Option<S>>>,
 }
 
-pub type Attributes<S> = Vec<Attribute<S>>;
+impl<S> PartialEq for Widget<S> {
+    fn eq(&self, other: &Self) -> bool {
+        self.element == other.element && self.value == other.value
+    }
+}
 
-pub type Value<S> = (Kind, Attributes<S>);
-pub type Object<S> = tree::Node<Value<S>>;
+impl<S> Widget<S> {
+    pub fn new(element: Element) -> Self {
+        Widget {
+            element,
 
-pub type Change<S> = tree::Change<Value<S>>;
-pub type Changeset<S> = tree::Changeset<Value<S>>;
+            value: None,
 
-pub fn diff<S: PartialEq>(old: Object<S>, new: Object<S>) -> Changeset<S> {
-    fn comparator<S: PartialEq>(t: &Object<S>, u: &Object<S>) -> Option<tree::Difference> {
-        if t.value.0 != u.value.0 {
+            click: None,
+            input: None,
+            keydown: None,
+        }
+    }
+
+    pub fn new_with_value(element: Element, value: String) -> Self {
+        Widget {
+            element,
+
+            value: Some(value),
+
+            click: None,
+            input: None,
+            keydown: None,
+        }
+    }
+
+    pub fn is_text(&self) -> bool {
+        self.element == "text"
+    }
+
+    pub fn element(&self) -> String {
+        self.element.clone()
+    }
+}
+
+impl<S> fmt::Debug for Widget<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.element)
+    }
+}
+
+pub struct Object<S> {
+    pub widget: Widget<S>,
+    pub attributes: Vec<Attribute>,
+    pub children: Vec<Object<S>>,
+}
+
+/// Object: Actions
+impl<S> Object<S> {
+    pub fn new(widget: &str) -> Self {
+        Object {
+            widget: Widget::new(widget.into()),
+            attributes: vec![],
+            children: vec![],
+        }
+    }
+}
+
+impl<S> fmt::Debug for Object<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Object")
+            .field("widget", &self.widget)
+            .field("children", &self.children)
+            .finish()
+    }
+}
+
+impl<T> tree::Vertex for Object<T> {
+    fn children(&self) -> &[Self] {
+        &self.children
+    }
+}
+
+impl<T: PartialEq> tree::Comparable for Object<T> {
+    fn compare(&self, other: &Self) -> Option<tree::Difference> {
+        if self.widget.element != other.widget.element {
             Some(tree::Difference::Kind)
-        } else if t.value.1 != u.value.1 {
+        } else if self.widget != other.widget || self.attributes != other.attributes {
             Some(tree::Difference::Value)
         } else {
             None
         }
     }
-
-    tree::diff(vec![old], vec![new], comparator)
 }
 
-pub trait Builder<S> {
-    fn add(self, object: Self) -> Self;
+pub type Change = tree::Change;
+pub type Changeset = tree::Changeset;
 
-    fn text(self, text: String) -> Self;
-    fn click(self, action: S) -> Self;
-    fn placeholder(self, text: String) -> Self;
-    fn change(self, messenger: fn(String) -> S) -> Self;
+pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
+    tree::diff(old, new)
 }
 
-impl<S> Builder<S> for Object<S> {
-    fn add(mut self, object: Self) -> Self {
-        self.children.push(object);
+/// Object: Actions
+impl<S> Object<S> {
+    pub fn click(mut self, action: S) -> Self {
+        self.widget.click = Some(action);
         self
     }
 
-    fn text(mut self, text: String) -> Self {
-        self.value.1.push(Attribute::Text(text));
+    pub fn input<F>(mut self, input: F) -> Self
+    where
+        F: Fn(String) -> S + 'static,
+    {
+        self.widget.input = Some(Box::new(input));
         self
     }
-    fn click(mut self, action: S) -> Self {
-        self.value.1.push(Attribute::Click(action));
-        self
-    }
-    fn placeholder(mut self, text: String) -> Self {
-        self.value.1.push(Attribute::Placeholder(text));
-        self
-    }
-    fn change(mut self, messenger: fn(String) -> S) -> Self {
-        self.value.1.push(Attribute::Change(messenger));
+
+    pub fn keydown<F>(mut self, keydown: F) -> Self
+    where
+        F: Fn(u32) -> Option<S> + 'static,
+    {
+        self.widget.keydown = Some(Box::new(keydown));
         self
     }
 }
 
-pub fn stack<S>() -> Object<S> {
-    node![(Kind::Stack, vec![])]
+/// Object: Attributes
+impl<S> Object<S> {
+    pub fn attr<V: ToString>(self, name: &str, value: V) -> Self {
+        let name = match name {
+            "class" => "className",
+            _ => name,
+        };
+
+        self.attribute(Attribute(name.into(), value.to_string()))
+    }
+
+    fn attribute(mut self, attr: Attribute) -> Self {
+        self.attributes.push(attr);
+        self
+    }
 }
 
-pub fn label<S>() -> Object<S> {
-    node![(Kind::Label, vec![])]
+#[derive(Debug, Clone, PartialEq)]
+pub struct List<T>(Vec<T>);
+
+use std::iter::FromIterator;
+impl<T> FromIterator<T> for List<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        List(Vec::from_iter(iter))
+    }
 }
 
-pub fn button<S>() -> Object<S> {
-    node![(Kind::Button, vec![])]
+pub trait Pushed<S> {
+    fn pushed(self, object: &mut Object<S>);
 }
 
-pub fn field<S>() -> Object<S> {
-    node![(Kind::Field, vec![])]
+impl<S> Pushed<S> for Object<S> {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.push(self);
+    }
+}
+
+impl<S> Pushed<S> for List<Object<S>> {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.extend(self.0);
+    }
+}
+
+impl<S, T: ToString> Pushed<S> for T {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.push(text(self));
+    }
+}
+
+/// Object: Children
+impl<S> Object<S> {
+    pub fn add(mut self, child: Object<S>) -> Self {
+        self.children.push(child);
+        self
+    }
+
+    pub fn children(mut self, children: Vec<Object<S>>) -> Self {
+        self.children.extend(children.into_iter());
+        self
+    }
+
+    pub fn push<P: Pushed<S>>(mut self, pushed: P) -> Self {
+        pushed.pushed(&mut self);
+        self
+    }
+}
+
+fn text<S, T: ToString>(text: T) -> Object<S> {
+    let widget = Widget::new_with_value("text".into(), text.to_string());
+
+    Object {
+        widget,
+        attributes: vec![],
+        children: vec![],
+    }
+}
+
+pub trait ToObject<S> {
+    fn to_object(self) -> Object<S>;
+}
+
+impl<S> ToObject<S> for Object<S> {
+    fn to_object(self) -> Object<S> {
+        self
+    }
+}
+
+impl<S, T: ToString> ToObject<S> for T {
+    fn to_object(self) -> Object<S> {
+        text(self)
+    }
+}
+
+pub fn object<S, O: ToObject<S>>(obj: O) -> Object<S> {
+    obj.to_object()
 }

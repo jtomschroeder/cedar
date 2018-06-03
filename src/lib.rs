@@ -1,40 +1,47 @@
+#![feature(proc_macro)]
 
-extern crate crossbeam;
+#![deny(trivial_casts, trivial_numeric_casts)]
+#![deny(unused_import_braces, unused_qualifications)]
+// #![deny(missing_docs)]
+// #![deny(unsafe_code, unstable_features)]
+// #![deny(missing_debug_implementations, missing_copy_implementations)]
 
-// --- macOS ---
-
-#[cfg(all(target_os = "macos", not(feature = "gtk")))]
+extern crate serde;
 #[macro_use]
-extern crate objc;
-#[cfg(all(target_os = "macos", not(feature = "gtk")))]
-extern crate cocoa;
-#[cfg(all(target_os = "macos", not(feature = "gtk")))]
-extern crate core_graphics;
+extern crate serde_derive;
+pub extern crate serde_json as json;
 
-#[cfg(all(target_os = "macos", not(feature = "gtk")))]
-#[path = "cocoa/mod.rs"]
-mod cacao;
+extern crate sass_rs as sass;
+extern crate web_view;
 
-#[cfg(all(target_os = "macos", not(feature = "gtk")))]
-pub use cacao::program;
+extern crate cedar_hypertext as hypertext;
 
-// --- gtk ---
+// TODO: hyperlink generate rust at build-time via build.rs (a la LALRPOP)
+// - (until proc-macro bug is fixed)
 
-#[cfg(any(feature = "gtk", not(target_os = "macos")))]
-extern crate gtk;
-
-#[cfg(any(feature = "gtk", not(target_os = "macos")))]
-#[path = "gtk/mod.rs"]
-mod gtk3;
-
-#[cfg(any(feature = "gtk", not(target_os = "macos")))]
-pub use gtk3::program;
-
-// --- common ---
+mod boo;
 
 #[macro_use]
 mod tree;
-mod atomic_box;
-mod stream;
+
+mod application;
+mod renderer;
+mod shadow;
 
 pub mod dom;
+
+pub use application::{app, Application};
+pub use hypertext::hypertext;
+
+// TODO: move into own module or crate
+/// build.rs helper
+pub fn custom_style(path: &str) {
+    let css = sass::compile_file(path, sass::Options::default()).unwrap();
+
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let out_file = format!("{}/style.css", std::env::var("OUT_DIR").unwrap());
+    let mut file = File::create(&out_file).unwrap();
+    file.write_all(css.as_bytes()).unwrap();
+}

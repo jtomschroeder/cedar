@@ -1,110 +1,88 @@
-
-#[derive(Clone, Debug)]
-pub struct Node<T> {
-    pub value: T,
-    pub children: Vec<Node<T>>,
-}
-
-#[macro_export]
-macro_rules! node {
-    ($v:expr) => {
-        $crate::tree::Node {
-            value: $v,
-            children: vec![]
-        }
-    };
-
-    ( $v:expr => $( $c:expr ),* ) => {{
-        $crate::tree::Node {
-            value: $v,
-            children: vec![ $( $c ),* ]
-        }
-    }};
-}
-
-pub type Path = Vec<Location>;
-
-#[derive(PartialEq, Clone)]
-pub struct Location {
-    pub depth: usize,
-    pub index: usize,
-}
-
-use std::fmt;
-
-impl fmt::Debug for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Location({}:{})", self.depth, self.index)
-    }
-}
-
-impl Location {
-    pub fn new(depth: usize, index: usize) -> Self {
-        Location { depth, index }
-    }
-}
-
-#[derive(Debug)]
-pub enum Operation<T> {
-    Create(Node<T>),
-    Delete,
-    Update(T),
-    Replace(Node<T>),
-}
-
-pub type Change<T> = (Path, Operation<T>);
-pub type Changeset<T> = Vec<Change<T>>;
-
-enum Pair<T, U> {
-    Left(T),
-    Both(T, U),
-    Right(U),
-}
-
-struct Zip<I, J> {
-    i: I,
-    j: J,
-}
-
-impl<I, J> Iterator for Zip<I, J>
-where
-    I: Iterator,
-    J: Iterator,
-{
-    type Item = Pair<I::Item, J::Item>;
-    fn next(&mut self) -> Option<Self::Item> {
-        match (self.i.next(), self.j.next()) {
-            (Some(i), Some(j)) => Some(Pair::Both(i, j)),
-            (Some(i), _) => Some(Pair::Left(i)),
-            (_, Some(j)) => Some(Pair::Right(j)),
-            _ => None,
-        }
-    }
-}
-
-fn zip<I, J>(i: I, j: J) -> Zip<I::IntoIter, J::IntoIter>
-where
-    I: IntoIterator,
-    J: IntoIterator,
-{
-    Zip {
-        i: i.into_iter(),
-        j: j.into_iter(),
-    }
-}
+mod path;
+mod zipper;
 
 use std::collections::VecDeque;
 
-type Nodes<T> = Vec<Node<T>>;
+use self::zipper::{zip, Pair};
+pub use self::path::Path;
+
+pub trait Vertex {
+    fn children(&self) -> &[Self]
+    where
+        Self: Sized;
+
+    fn find(&self, path: &Path) -> Option<&Self>
+    where
+        Self: Sized,
+    {
+        let path = path.raw();
+
+        let mut queue = VecDeque::new();
+        queue.push_back((path, 0, self));
+
+        while let Some((path, i, node)) = queue.pop_front() {
+            match path.len() {
+                0 => {}
+
+                1 if i == path[0] => return Some(node),
+
+                _ if i == path[0] => for (n, child) in node.children().iter().enumerate() {
+                    queue.push_back((&path[1..], n, child));
+                },
+
+                _ => {}
+            }
+        }
+
+        None
+    }
+
+    fn traverse<D>(&self, root: &Path, mut delegate: D)
+    where
+        Self: Sized,
+        D: FnMut(&Path, &Self),
+    {
+        let path = root.clone();
+
+        let mut queue = VecDeque::new();
+        queue.push_back((path, self));
+
+        while let Some((path, node)) = queue.pop_front() {
+            delegate(&path, node);
+
+            for (n, child) in node.children().iter().enumerate() {
+                let mut path = path.clone();
+                path.push(n);
+
+                queue.push_back((path, child));
+            }
+        }
+    }
+}
+
+pub trait Comparable {
+    fn compare(&self, other: &Self) -> Option<Difference>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Operation {
+    Create,
+    Delete,
+    Update,
+    Replace,
+}
+
+pub type Change = (Path, Operation);
+pub type Changeset = Vec<Change>;
 
 pub enum Difference {
     Kind,
     Value,
 }
 
-pub fn diff<T, F>(old: Nodes<T>, new: Nodes<T>, comparator: F) -> Changeset<T>
+pub fn diff<V>(old: &V, new: &V) -> Changeset
 where
-    F: Fn(&Node<T>, &Node<T>) -> Option<Difference>,
+    V: Vertex + Comparable,
 {
     use self::Operation::*;
 
@@ -117,46 +95,46 @@ where
 
     let mut changeset = vec![];
 
+    let path = Path::new();
     let mut queue = VecDeque::new();
 
-    // TODO: is `level`/`depth` necessary? - implied by index of path?
+    // TODO: this code is same as below... (DRY)
+    match old.compare(&new) {
+        Some(Difference::Kind) => changeset.push((path, Replace)),
+        cmp => {
+            if let Some(Difference::Value) = cmp {
+                changeset.push((path.clone(), Update));
+            }
 
-    queue.push_back((old, new, 0, vec![]));
+            queue.push_back((old.children(), new.children(), path));
+        }
+    }
 
-    while let Some((old, new, level, path)) = queue.pop_front() {
+    while let Some((old, new, path)) = queue.pop_front() {
         for (n, pair) in zip(old, new).enumerate() {
-
             // Add current location to path
-            let location = Location::new(level, n);
             let mut path = path.clone();
-            path.push(location.clone());
+            path.push(n);
 
             match pair {
-                Pair::Left(_) => {
-                    changeset.push((path.clone(), Delete));
-                }
+                Pair::Left(_) => changeset.push((path, Delete)),
+                Pair::Right(_) => changeset.push((path, Create)),
 
                 Pair::Both(t, u) => {
-                    // if t.type != u.type => replace u with t
-                    // else if t != u (properties changes) => update and diff children
-                    // else (if t == u) diff children
+                    //       if t.type != u.type            => replace u with t
+                    // else  if t != u (properties changes) => update and diff children
+                    // else (if t == u)                     => diff children
 
-                    match comparator(&t, &u) {
-                        Some(Difference::Kind) => {
-                            changeset.push((path.clone(), Replace(u)));
-                        }
+                    match t.compare(&u) {
+                        Some(Difference::Kind) => changeset.push((path, Replace)),
                         cmp => {
                             if let Some(Difference::Value) = cmp {
-                                changeset.push((path.clone(), Update(u.value)));
+                                changeset.push((path.clone(), Update));
                             }
 
-                            queue.push_back((t.children, u.children, level + 1, path));
+                            queue.push_back((t.children(), u.children(), path));
                         }
                     }
-                }
-
-                Pair::Right(u) => {
-                    changeset.push((path.clone(), Create(u)));
                 }
             }
         }
@@ -165,109 +143,74 @@ where
     changeset
 }
 
+// TODO: REALLY need to build out these tests!
+
 #[cfg(test)]
-mod test {
+mod tests {
     use tree;
 
     #[derive(PartialEq, Debug)]
     enum Kind {
-        Stack,
-        Button,
-        Label,
+        This,
+        That,
     }
 
-    #[derive(PartialEq, Debug)]
-    enum Attribute {
-        Text(String),
+    #[derive(Debug)]
+    struct Object {
+        kind: Kind,
+        value: u32,
+
+        children: Vec<Object>,
     }
 
-    type Attributes = Vec<Attribute>;
+    fn this(value: u32, children: Vec<Object>) -> Object {
+        Object {
+            kind: Kind::This,
+            value,
+            children,
+        }
+    }
 
-    type Value = (Kind, Attributes);
-    type Node = tree::Node<Value>;
+    fn that(value: u32, children: Vec<Object>) -> Object {
+        Object {
+            kind: Kind::That,
+            value,
+            children,
+        }
+    }
 
-    fn comparator(t: &Node, u: &Node) -> Option<tree::Difference> {
-        if t.value.0 != u.value.0 {
-            Some(tree::Difference::Kind)
-        } else if t.value.1 != u.value.1 {
-            Some(tree::Difference::Value)
-        } else {
-            None
+    impl tree::Vertex for Object {
+        fn children(&self) -> &[Self] {
+            &self.children
+        }
+    }
+
+    impl tree::Comparable for Object {
+        fn compare(&self, other: &Self) -> Option<tree::Difference> {
+            if self.kind != other.kind {
+                Some(tree::Difference::Kind)
+            } else if self.value != other.value {
+                Some(tree::Difference::Value)
+            } else {
+                None
+            }
         }
     }
 
     #[test]
-    fn objects() {
-        use self::Kind::*;
-        use self::Attribute::*;
+    fn same_tree() {
+        let tree = that(0, vec![this(1, vec![]), this(2, vec![])]);
 
-        use tree::Location;
-        use tree::Operation::*;
+        let changeset = tree::diff(&tree, &tree);
+        assert!(changeset.is_empty());
+    }
 
-        {
-            let t = node![(Stack, vec![])];
-            let u = node![(Stack, vec![])];
+    #[test]
+    fn tree() {
+        let left = that(0, vec![this(1, vec![]), this(2, vec![])]);
+        let right = that(0, vec![this(2, vec![])]);
 
-            let changeset = tree::diff(vec![t], vec![u], comparator);
-            assert!(changeset.is_empty());
-        }
-
-        {
-            let t = node![(Stack, vec![])];
-            let u = node![(Button, vec![])];
-
-            let mut changeset = tree::diff(vec![t], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Replace(node) => {
-                    let (kind, _) = node.value;
-                    assert_eq!(kind, Button);
-                }
-                _ => panic!("Wrong operation!"),
-            }
-        }
-
-        {
-            let t = node![(Label, vec![Text("".into())])];
-            let u = node![(Label, vec![Text("!".into())])];
-
-            let mut changeset = tree::diff(vec![t], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Update((kind, attrs)) => {
-                    assert_eq!(kind, Label);
-                    assert_eq!(&attrs, &[Text("!".into())]);
-                }
-                _ => panic!("Wrong operation!"),
-            }
-        }
-
-        {
-            let u =
-                node![(Stack, vec![]) 
-                        => node![(Button, vec![])]
-                         , node![(Label, vec![Text("!".into())])]
-                         , node![(Button, vec![])]
-                     ];
-
-            let mut changeset = tree::diff(vec![], vec![u], comparator);
-            assert_eq!(changeset.len(), 1);
-
-            let (location, operation) = changeset.remove(0);
-            assert_eq!(&location, &[Location::new(0, 0)]);
-
-            match operation {
-                Create(..) => {}
-                _ => panic!("Wrong operation!"),
-            }
-        }
+        let changeset = tree::diff(&left, &right);
+        println!("changeset: {:?}", changeset);
     }
 }

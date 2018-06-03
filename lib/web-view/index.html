@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<body>
+<style>
+    /* styles */
+</style>
+
+<script type="text/javascript">
+    "use strict";
+
+    function setup() {
+        console.log("Setting up cedar!");
+
+        let cedar = window.cedar = {};
+
+        cedar.nodes = {"": document.body};
+
+        let post = window.post = (msg) => {
+            external.invoke(JSON.stringify(msg));
+        };
+
+        cedar.click = (id) => () => {
+            post({"Click": {"id": id}});
+        };
+
+        cedar.input = (id, element) => () => {
+            const value = element.value || '';
+            post({Input: {id: id, value: value}});
+        };
+
+        cedar.keydown = (id) => (e) => {
+            post({Keydown: {id: id, code: (e.keyCode ? e.keyCode : e.which)}});
+        };
+
+        cedar.attributes = (node, attributes) => {
+            for (const attr in attributes) {
+                let value = attributes[attr];
+
+                // HACK: convert to Boolean
+                if (value === "true") {
+                    value = true;
+                } else if (value === "false") {
+                    value = false;
+                } else {
+                    // value is untouched
+                }
+
+                node[attr] = value;
+            }
+        };
+
+        cedar.command = (cmd) => {
+            const cedar = window.cedar;
+
+            const command = JSON.parse(cmd);
+
+            if (command.hasOwnProperty('Create')) {
+                const create = command.Create;
+
+                var id = create.id;
+                const kind = create.kind;
+                const value = create.value;
+
+                const attributes = create.attributes;
+
+                let node = kind === 'text' ? document.createTextNode(value) : document.createElement(kind);
+
+                // TODO: only register for nodes that need to?
+                // TODO: handle 'duplicate' events?
+
+                node.addEventListener("click", cedar.click(id));
+
+                node.addEventListener("input", cedar.input(id, node));
+                node.addEventListener("keydown", cedar.keydown(id));
+
+                // var input = cedar.input(id, node);
+                // node.addEventListener("keypress", input);
+                // node.addEventListener("input", input);
+                // node.addEventListener("paste", input);
+
+                cedar.attributes(node, attributes);
+
+                let parent = cedar.nodes[create.parent];
+                parent.appendChild(node);
+
+                cedar.nodes[id] = node;
+            } else if (command.hasOwnProperty('Update')) {
+                const update = command.Update;
+
+                var id = update.id;
+                var value = update.value;
+
+                let node = cedar.nodes[id];
+
+                if (value.hasOwnProperty('Text')) {
+                    node.nodeValue = value.Text;
+                } else if (value.hasOwnProperty('Attributes')) {
+                    cedar.attributes(node, value.Attributes);
+                } else {
+                    // console.log("Unsupported value!");
+                }
+            } else if (command.hasOwnProperty('Remove')) {
+                const remove = command.Remove;
+                const id = remove.id;
+
+                cedar.nodes[id].remove();
+            }
+        };
+    }
+</script>
+</body>
+</html>
