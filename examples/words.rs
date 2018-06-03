@@ -1,4 +1,3 @@
-#![feature(trace_macros)]
 #![feature(proc_macro)]
 #![feature(proc_macro_non_items)]
 
@@ -29,7 +28,6 @@ fn words(line: &str) -> cedar::dom::List<Widget> {
 }
 
 fn view(model: &Model) -> Widget {
-    // trace_macros!(true);
     (hypertext! { |model|
         <div>
             <input placeholder={"Words!"} input={Message::NewContent}></input>

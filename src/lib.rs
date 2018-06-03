@@ -13,7 +13,7 @@ pub extern crate serde_json as json;
 extern crate sass_rs as sass;
 extern crate web_view;
 
-extern crate hypertext;
+extern crate cedar_hypertext as hypertext;
 
 // TODO: hyperlink generate rust at build-time via build.rs (a la LALRPOP)
 // - (until proc-macro bug is fixed)
@@ -32,6 +32,7 @@ pub mod dom;
 pub use application::{app, Application};
 pub use hypertext::hypertext;
 
+// TODO: move into own module or crate
 /// build.rs helper
 pub fn custom_style(path: &str) {
     let css = sass::compile_file(path, sass::Options::default()).unwrap();

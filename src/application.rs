@@ -1,8 +1,5 @@
 use json;
 
-use std::fs::File;
-use std::io::prelude::*;
-
 use sass;
 use web_view;
 
@@ -144,8 +141,6 @@ where
                 });
             },
             move |webview, message, _| {
-                println!("message: {}", message);
-
                 let mut commands = program.process(message);
 
                 for cmd in commands.drain(..) {

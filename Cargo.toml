@@ -20,4 +20,4 @@ serde_json = "1.0"
 web-view = "0.2"
 sass-rs = "0.2"
 
-hypertext = { path = "hypertext" }
+cedar-hypertext = { path = "hypertext" }
