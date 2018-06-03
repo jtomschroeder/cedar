@@ -1,9 +1,10 @@
 #![feature(proc_macro)]
+
+#![deny(trivial_casts, trivial_numeric_casts)]
+#![deny(unused_import_braces, unused_qualifications)]
 // #![deny(missing_docs)]
 // #![deny(unsafe_code, unstable_features)]
-#![deny(trivial_casts, trivial_numeric_casts)]
-//#![deny(missing_debug_implementations, missing_copy_implementations)]
-#![deny(unused_import_braces, unused_qualifications)]
+// #![deny(missing_debug_implementations, missing_copy_implementations)]
 
 extern crate serde;
 #[macro_use]

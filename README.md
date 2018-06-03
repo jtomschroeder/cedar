@@ -1,7 +1,7 @@
 
 # cedar :evergreen_tree:
 
-`cedar` is a Rust framework for building functional-reactive applications.
+`cedar` is a Rust framework for building visual/interactive applications.
 
 [![crates.io](https://img.shields.io/crates/v/cedar.svg)](https://crates.io/crates/cedar)
 ![License](https://img.shields.io/crates/l/cedar.svg)
@@ -12,36 +12,36 @@
 ### Example: creating buttons & *reactive* text :rocket:
 
 ```rust
+#![feature(proc_macro)]
+#![feature(proc_macro_non_items)]
+
 extern crate cedar;
+
+use cedar::hypertext;
 
 type Model = i32;
 
-#[derive(PartialEq, Clone)]
-enum Message {
-    Increment,
-    Decrement,
-}
+#[derive(PartialEq)]
+enum Message { Increment, Decrement }
 
-fn update(model: Model, message: Message) -> Model {
+fn update(model: Model, message: &Message) -> Model {
     match message {
-        Message::Increment => model + 1,
-        Message::Decrement => model - 1,
+        &Message::Increment => model + 1,
+        &Message::Decrement => model - 1,
     }
 }
 
-use cedar::dom;
-
-fn view(model: &Model) -> dom::Object<Message> {
-    dom::div(vec![
-        dom::button("+".into()).click(Message::Increment),
-        dom::text(model.to_string()),
-        dom::button("-".into()).click(Message::Decrement),
-    ])
+fn view(model: &Model) -> cedar::dom::Object<Message> {
+    (hypertext! { |model|
+        <div>
+            <button click={Message::Increment}> + </button>
+            <div>{model}</div>
+            <button click={Message::Decrement}> - </button>
+        </div>
+    })(model)
 }
 
-fn main() {
-    cedar::program(0, update, view)
-}
+fn main() { cedar::app(0, update, view) }
 ```
 
 ### Design

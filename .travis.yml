@@ -2,7 +2,7 @@
 sudo: true
 
 language: rust
-rust: stable
+rust: nightly
 
 matrix:
   include:
