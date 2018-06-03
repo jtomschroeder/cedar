@@ -1,7 +1,12 @@
 use json;
+
 use std;
 use std::collections::HashSet;
+use std::fs::File;
 use std::hash::Hash;
+use std::io::prelude::*;
+
+use web_view;
 
 use browser;
 use dom;
@@ -24,28 +29,31 @@ where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
-    fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
+    fn new(model: M, update: Update<M, S>, view: View<M, S>) -> (Self, Vec<renderer::Command>) {
         let (shadow, commands) = Shadow::initialize(&model, view);
 
-        Self::send(commands);
+        // Self::send(commands);
 
-        Program {
-            model: Some(model),
-            update,
-            view,
-            shadow,
-        }
+        (
+            Program {
+                model: Some(model),
+                update,
+                view,
+                shadow,
+            },
+            commands,
+        )
     }
 
-    fn send(commands: Vec<renderer::Command>) {
-        for cmd in commands.into_iter() {
-            let cmd = json::to_string(&cmd).unwrap();
-            browser::command(&cmd);
-        }
-    }
+    //    fn send(commands: Vec<renderer::Command>) {
+    //        for cmd in commands.into_iter() {
+    //            let cmd = json::to_string(&cmd).unwrap();
+    //            browser::command(&cmd);
+    //        }
+    //    }
 
-    fn process(&mut self, event: String) {
-        let event: renderer::Event = json::from_str(&event).unwrap();
+    fn process(&mut self, event: &str) -> Vec<renderer::Command> {
+        let event: renderer::Event = json::from_str(event).unwrap();
 
         // TODO: get new subscriptions
         // - Do a 'difference' on the old and new
@@ -55,7 +63,7 @@ where
             // translate events from backend renderer to actions
             let message = match self.shadow.translate(event) {
                 Some(m) => m,
-                _ => return,
+                _ => return vec![], // TODO: Option<>?
             };
 
             let model = self.model.take().unwrap();
@@ -68,55 +76,75 @@ where
             commands
         };
 
-        Self::send(commands);
+        // Self::send(commands);
+
+        commands
     }
 }
 
-impl<M, S> processor::Processor for Program<M, S>
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
-{
-    fn process(&mut self, event: String) {
-        Program::process(self, event)
-    }
-}
-
-pub trait Subscription<S>: Eq + Hash {
-    fn enable(&self);
-    fn disable(&self);
-
-    fn process(&self, value: json::Value) -> S;
-}
-
-pub type Subscriber<M, R> = fn(&M) -> R;
-
-// Time.every : Time -> (Time -> msg) -> Sub msg
-// e.g. Time.every second Tick
-
-//impl Subscription for () {}
+//impl<M, S> processor::Processor for Program<M, S>
+//where
+//    S: Send + PartialEq + 'static,
+//    M: Send + 'static,
+//{
+//    fn process(&mut self, event: String) {
+//        Program::process(self, event)
+//    }
+//}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
 where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
 {
-    let program = Program::new(model, update, view);
-    processor::initialize(program);
+    let (mut program, mut commands) = Program::new(model, update, view);
+    // processor::initialize(program);
+
+    println!("{:?}", commands);
+
+    let html = {
+        let mut file = File::open("lib/web-view/index.html").unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        contents
+    };
+
+    let title = "cedar app";
+
+    let size = (800, 600);
+    let resizable = true;
+    let debug = true;
+
+    web_view::run(
+        title,
+        web_view::Content::Html(html),
+
+        Some(size),
+        resizable,
+        debug,
+
+        move |webview| {
+            webview.dispatch(move |webview, _| {
+                webview.eval("setup()");
+
+                for cmd in commands.drain(..) {
+                    let cmd = json::to_string(&cmd).unwrap();
+                    webview.eval(&format!("window.cedar.command('{}')", cmd));
+                }
+            });
+        },
+
+        move |webview, message, _| {
+            println!("message: {}", message);
+
+            let mut commands = program.process(message);
+
+            for cmd in commands.drain(..) {
+                let cmd = json::to_string(&cmd).unwrap();
+                webview.eval(&format!("window.cedar.command('{}')", cmd));
+            }
+        },
+
+        (),
+    );
 }
-
-//pub fn programv<S, M, R>(
-//    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, R>),
-//) where
-//    S: Send + PartialEq + 'static,
-//    M: Send + 'static,
-//    R: Send + Subscription<S> + 'static,
-//{
-//    browser::log("programv!");
-//
-//    let program = Program::new(model, update, view, Some(subscriber));
-//    processor::initialize(program);
-//}
-
-// fn program<S, M>(p: (M, Update<M, S>, View<M, S>));
-// fn program<S, M>(p: (M, UpdateWithCmd<M, S>, View<M, S>, Subscriptions));

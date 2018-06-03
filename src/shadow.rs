@@ -1,14 +1,14 @@
-use std::str;
 use std::collections::HashMap;
+use std::str;
 
-use json;
 use boo::Boo;
+use json;
 
-use dom;
-use tree::{self, Vertex};
-use renderer::{Command, Event, Update};
-use program::{View, Subscription};
 use browser;
+use dom;
+use program::View;
+use renderer::{Command, Event, Update};
+use tree::{self, Vertex};
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
 fn commands<T>(
@@ -90,8 +90,8 @@ pub struct Shadow<S> {
 }
 
 impl<S> Shadow<S>
-    where
-        S: Send + PartialEq + 'static,
+where
+    S: Send + PartialEq + 'static,
 {
     pub fn initialize<M>(model: &M, view: View<M, S>) -> (Self, Vec<Command>) {
         let dom = view(&model);
@@ -113,30 +113,23 @@ impl<S> Shadow<S>
 
     /// Find the message associated with an event (by looking up node in DOM)
     pub fn translate(&self, event: Event) -> Option<Boo<S>> {
-
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
 
         match event {
-            Event::Click { id } => {
-                self.find(&id)
-                    .and_then(|node| node.widget.click.as_ref().map(Boo::Borrowed))
-            }
+            Event::Click { id } => self.find(&id)
+                .and_then(|node| node.widget.click.as_ref().map(Boo::Borrowed)),
 
-            Event::Input { id, value } => {
-                self.find(&id)
-                    .and_then(|node| node.widget.input.as_ref().map(|i| i(value)).map(Boo::Owned))
-            }
+            Event::Input { id, value } => self.find(&id)
+                .and_then(|node| node.widget.input.as_ref().map(|i| i(value)).map(Boo::Owned)),
 
-            Event::Keydown { id, code } => {
-                self.find(&id).and_then(|node| {
-                    node.widget
-                        .keydown
-                        .as_ref()
-                        .and_then(|k| k(code))
-                        .map(Boo::Owned)
-                })
-            }
+            Event::Keydown { id, code } => self.find(&id).and_then(|node| {
+                node.widget
+                    .keydown
+                    .as_ref()
+                    .and_then(|k| k(code))
+                    .map(Boo::Owned)
+            }),
         }
     }
 

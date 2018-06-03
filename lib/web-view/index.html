@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<body>
+<!--<h1>Hello, world</h1>-->
+<script type="text/javascript">
+    "use strict";
+
+    function setup() {
+        console.log("Setting up cedar!");
+
+        let cedar = window.cedar = {};
+
+        cedar.nodes = {"": document.body};
+
+        let post = window.post = (msg) => {
+            external.invoke(JSON.stringify(msg));
+        };
+
+        cedar.click = (id) => (event) => {
+            post({"Click": {"id": id}});
+        };
+
+        cedar.input = (id, element) => (event) => {
+            var value = element.value || '';
+            post({Input: {id: id, value: value}});
+        };
+
+        cedar.keydown = (id, element) => (e) => {
+            post({Keydown: {id: id, code: (e.keyCode ? e.keyCode : e.which)}});
+        };
+
+        cedar.attributes = (node, attributes) => {
+            for (const attr in attributes) {
+                var value = attributes[attr];
+
+                // TODO: fix this!
+                // HACK: convert to Boolean
+                if (value === "true") {
+                    value = true;
+                } else if (value === "false") {
+                    value = false;
+                } else {
+                    // value is untouched
+                }
+
+                node[attr] = value;
+            }
+        };
+
+        cedar.command = (cmd) => {
+            console.log("Command ", cmd);
+
+            var cedar = window.cedar;
+
+            var cmd = JSON.parse(cmd);
+
+            if (cmd.hasOwnProperty('Create')) {
+                var create = cmd.Create;
+
+                var id = create.id;
+                var parent = create.parent;
+
+                var kind = create.kind;
+                var value = create.value;
+
+                var attributes = create.attributes;
+
+                var node = kind === 'text' ? document.createTextNode(value) : document.createElement(kind);
+
+                // TODO: only register for nodes that need to?
+                // TODO: handle 'duplicate' events?
+
+                node.addEventListener("click", cedar.click(id));
+
+                node.addEventListener("input", cedar.input(id, node));
+                node.addEventListener("keydown", cedar.keydown(id, node));
+
+                // var input = cedar.input(id, node);
+                // node.addEventListener("keypress", input);
+                // node.addEventListener("input", input);
+                // node.addEventListener("paste", input);
+
+                cedar.attributes(node, attributes);
+
+                var parent = cedar.nodes[parent];
+                parent.appendChild(node);
+
+                cedar.nodes[id] = node;
+            } else if (cmd.hasOwnProperty('Update')) {
+                var update = cmd.Update;
+
+                var id = update.id;
+                var value = update.value;
+
+                var node = cedar.nodes[id];
+
+                if (value.hasOwnProperty('Text')) {
+                    node.nodeValue = value.Text;
+                } else if (value.hasOwnProperty('Attributes')) {
+                    cedar.attributes(node, value.Attributes);
+                } else {
+                    // console.log("Unsupported value!");
+                }
+            } else if (cmd.hasOwnProperty('Remove')) {
+                var remove = cmd.Remove;
+                var id = remove.id;
+
+                cedar.nodes[id].remove();
+            }
+        };
+    }
+</script>
+</body>
+</html>

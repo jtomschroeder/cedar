@@ -12,6 +12,8 @@ extern crate serde;
 extern crate serde_derive;
 pub extern crate serde_json as json;
 
+extern crate web_view;
+
 extern crate hypertext;
 
 // TODO: hyperlink generate rust at build-time via build.rs (a la LALRPOP)
@@ -30,7 +32,7 @@ pub mod dom;
 
 pub use hypertext::hypertext;
 pub use processor::process;
-pub use program::{program, Subscription};
+pub use program::program;
 
 pub mod browser;
 pub mod memory;
