@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::str;
 
 use boo::Boo;
-use json;
 
 use dom;
 use program::View;

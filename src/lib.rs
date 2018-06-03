@@ -1,7 +1,7 @@
 #![feature(proc_macro)]
 // #![deny(missing_docs)]
 // #![deny(unsafe_code, unstable_features)]
-// #![deny(trivial_casts, trivial_numeric_casts)]
+#![deny(trivial_casts, trivial_numeric_casts)]
 #![deny(
     missing_debug_implementations, missing_copy_implementations, unused_import_braces,
     unused_qualifications

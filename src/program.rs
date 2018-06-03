@@ -1,9 +1,6 @@
 use json;
 
-use std;
-use std::collections::HashSet;
 use std::fs::File;
-use std::hash::Hash;
 use std::io::prelude::*;
 
 use web_view;
@@ -85,6 +82,15 @@ where
         contents
     };
 
+    let css = {
+        let mut file = File::open("lib/wasm/style-todo.css").unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        contents
+    };
+
+    let html = html.replace("/* styles */", &css);
+
     let title = "cedar app";
 
     let size = (800, 600);
@@ -94,11 +100,9 @@ where
     web_view::run(
         title,
         web_view::Content::Html(html),
-
         Some(size),
         resizable,
         debug,
-
         move |webview| {
             webview.dispatch(move |webview, _| {
                 webview.eval("setup()");
@@ -109,7 +113,6 @@ where
                 }
             });
         },
-
         move |webview, message, _| {
             println!("message: {}", message);
 
@@ -120,7 +123,6 @@ where
                 webview.eval(&format!("window.cedar.command('{}')", cmd));
             }
         },
-
         (),
     );
 }
