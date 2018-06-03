@@ -1,15 +1,15 @@
 #![feature(proc_macro)]
+#![feature(proc_macro_non_items)]
 #![feature(trace_macros)]
-#![feature(conservative_impl_trait)]
 
 extern crate cedar;
 
-use cedar::hypertext;
 use cedar::browser;
+use cedar::hypertext;
 
 mod mouse {
-    use std::hash::Hash;
     use cedar::{browser, json, Subscription};
+    use std::hash::Hash;
 
     #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
     pub struct Position {
@@ -24,15 +24,24 @@ mod mouse {
     }
 
     #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
-    pub struct Moves<T> where T: Eq + Hash {
+    pub struct Moves<T>
+    where
+        T: Eq + Hash,
+    {
         f: fn(Position) -> T,
     }
 
-    pub fn moves<T>(f: fn(Position) -> T) -> Moves<T> where T: Eq + Hash {
+    pub fn moves<T>(f: fn(Position) -> T) -> Moves<T>
+    where
+        T: Eq + Hash,
+    {
         Moves { f }
     }
 
-    impl<T> Subscription<T> for Moves<T> where T: Eq + Hash {
+    impl<T> Subscription<T> for Moves<T>
+    where
+        T: Eq + Hash,
+    {
         fn enable(&self) {
             browser::execute(
                 r#"
@@ -134,10 +143,10 @@ enum Message {
 fn update(mut model: Model, message: &Message) -> Model {
     // browser::log(&format!("Update: {:?}", message));
 
-//    case msg of
-//       DragStart xy -> Model position (Just (Drag xy xy))
-//       DragAt xy    -> Model position (Maybe.map (\{start} -> Drag start xy) drag)
-//       DragEnd _    -> Model (getPosition model) Nothing
+    //    case msg of
+    //       DragStart xy -> Model position (Just (Drag xy xy))
+    //       DragAt xy    -> Model position (Maybe.map (\{start} -> Drag start xy) drag)
+    //       DragEnd _    -> Model (getPosition model) Nothing
 
     match message {
         &Message::DragAt(position) => model.position = position.clone(),
@@ -189,13 +198,12 @@ fn subscriptions(_: &Model) -> impl cedar::Subscription<Message> {
 }
 
 fn main() {
-    cedar::programv((
+    cedar::program(
         Model {
             position: Position::new(200, 200),
             drag: None,
         },
         update,
         view,
-        subscriptions,
-    ))
+    )
 }

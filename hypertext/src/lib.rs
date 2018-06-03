@@ -17,8 +17,9 @@ pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
     let input = input.to_string();
 
     // TODO: (HACK) someday just `dom.render().into()`
-    //   let dom = parser::parse(&input).unwrap();
-    //   dom.render().into()
+
+    // let dom = parser::parse(&input).unwrap();
+    // dom.render().into()
 
     let args = {
         let mut count = 2;

@@ -1,59 +1,39 @@
-use std;
-use std::hash::Hash;
-use std::collections::HashSet;
 use json;
+use std;
+use std::collections::HashSet;
+use std::hash::Hash;
 
-use dom;
-use shadow::Shadow;
-use renderer;
 use browser;
+use dom;
 use processor;
+use renderer;
+use shadow::Shadow;
 
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
 
-struct Program<M, S, R> where R: Eq + Hash {
+struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
     view: View<M, S>,
     shadow: Shadow<S>,
-
-    subscriber: Option<Subscriber<M, R>>,
-    subscriptions: HashSet<R>,
 }
 
-impl<M, S, R> Program<M, S, R>
-    where
-        S: Send + PartialEq + 'static,
-        M: Send + 'static,
-        R: Send + Subscription<S> + 'static,
+impl<M, S> Program<M, S>
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
 {
-    fn new(model: M, update: Update<M, S>, view: View<M, S>, subscriber: Option<Subscriber<M, R>>) -> Self {
+    fn new(model: M, update: Update<M, S>, view: View<M, S>) -> Self {
         let (shadow, commands) = Shadow::initialize(&model, view);
 
         Self::send(commands);
-
-        let subscription = subscriber.map(|s| {
-            let sub = s(&model);
-            sub.enable();
-            sub
-        });
-
-        let mut subscriptions= HashSet::new();
-        if let Some(subscriber) = subscriber {
-            let sub = subscriber(&model);
-            sub.enable();
-            subscriptions.insert(sub);
-        }
 
         Program {
             model: Some(model),
             update,
             view,
             shadow,
-
-            subscriber,
-            subscriptions,
         }
     }
 
@@ -73,7 +53,7 @@ impl<M, S, R> Program<M, S, R>
 
         let model = {
             // translate events from backend renderer to actions
-            let message = match self.shadow.translate(event, self.subscriptions.iter().next()) {
+            let message = match self.shadow.translate(event) {
                 Some(m) => m,
                 _ => return,
             };
@@ -92,11 +72,10 @@ impl<M, S, R> Program<M, S, R>
     }
 }
 
-impl<M, S, R> processor::Processor for Program<M, S, R>
-    where
-        S: Send + PartialEq + 'static,
-        M: Send + 'static,
-        R: Send + Subscription<S> + 'static,
+impl<M, S> processor::Processor for Program<M, S>
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
 {
     fn process(&mut self, event: String) {
         Program::process(self, event)
@@ -118,26 +97,26 @@ pub type Subscriber<M, R> = fn(&M) -> R;
 //impl Subscription for () {}
 
 pub fn program<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-    where
-        S: Send + PartialEq + 'static,
-        M: Send + 'static,
-{
-//    let program = Program::new(model, update, view, None);
-//    processor::initialize(program);
-}
-
-pub fn programv<S, M, R>(
-    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, R>),
-) where
+where
     S: Send + PartialEq + 'static,
     M: Send + 'static,
-    R: Send + Subscription<S> + 'static,
 {
-    browser::log("programv!");
-
-    let program = Program::new(model, update, view, Some(subscriber));
+    let program = Program::new(model, update, view);
     processor::initialize(program);
 }
+
+//pub fn programv<S, M, R>(
+//    (model, update, view, subscriber): (M, Update<M, S>, View<M, S>, Subscriber<M, R>),
+//) where
+//    S: Send + PartialEq + 'static,
+//    M: Send + 'static,
+//    R: Send + Subscription<S> + 'static,
+//{
+//    browser::log("programv!");
+//
+//    let program = Program::new(model, update, view, Some(subscriber));
+//    processor::initialize(program);
+//}
 
 // fn program<S, M>(p: (M, Update<M, S>, View<M, S>));
 // fn program<S, M>(p: (M, UpdateWithCmd<M, S>, View<M, S>, Subscriptions));

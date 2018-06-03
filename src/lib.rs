@@ -2,8 +2,10 @@
 // #![deny(missing_docs)]
 // #![deny(unsafe_code, unstable_features)]
 // #![deny(trivial_casts, trivial_numeric_casts)]
-#![deny(missing_debug_implementations, missing_copy_implementations, unused_import_braces,
-        unused_qualifications)]
+#![deny(
+    missing_debug_implementations, missing_copy_implementations, unused_import_braces,
+    unused_qualifications
+)]
 
 extern crate serde;
 #[macro_use]
@@ -19,16 +21,16 @@ mod boo;
 
 #[macro_use]
 mod tree;
-mod shadow;
-mod renderer;
-mod program;
 mod processor;
+mod program;
+mod renderer;
+mod shadow;
 
 pub mod dom;
 
 pub use hypertext::hypertext;
-pub use program::{program, programv, Subscription};
 pub use processor::process;
+pub use program::{program, Subscription};
 
 pub mod browser;
 pub mod memory;

@@ -36,6 +36,4 @@ pub enum Event {
     Click { id: Identifier },
     Input { id: Identifier, value: String },
     Keydown { id: Identifier, code: u32 },
-
-    Subscription { id: Identifier, value: json::Value },
 }

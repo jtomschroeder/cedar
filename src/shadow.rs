@@ -112,7 +112,7 @@ impl<S> Shadow<S>
     }
 
     /// Find the message associated with an event (by looking up node in DOM)
-    pub fn translate<R: Subscription<S>>(&self, event: Event, subscription: Option<&R>) -> Option<Boo<S>> {
+    pub fn translate(&self, event: Event) -> Option<Boo<S>> {
 
         // TODO: serialize ID as Path object to avoid parsing!
         // - in both Command and Event
@@ -136,10 +136,6 @@ impl<S> Shadow<S>
                         .and_then(|k| k(code))
                         .map(Boo::Owned)
                 })
-            }
-
-            Event::Subscription { id, value } => {
-                subscription.as_ref().map(|s| s.process(value)).map(Boo::Owned)
             }
         }
     }
