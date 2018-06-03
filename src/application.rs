@@ -46,12 +46,23 @@ where
     }
 }
 
+pub fn app<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
+    where
+        S: Send + PartialEq + 'static,
+        M: Send + 'static,
+{
+    Application::new(model, update, view).run()
+}
+
 struct Program<M, S> {
     model: Option<M>,
     update: Update<M, S>,
     view: View<M, S>,
     shadow: Shadow<S>,
 }
+
+const HTML: &str = include_str!("../lib/web-view/index.html");
+const CSS: &str = include_str!("../lib/web-view/style.scss");
 
 impl<M, S> Program<M, S>
 where
@@ -145,15 +156,4 @@ where
             (),
         );
     }
-}
-
-const HTML: &str = include_str!("../lib/web-view/index.html");
-const CSS: &str = include_str!("../lib/web-view/style.scss");
-
-pub fn app<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-where
-    S: Send + PartialEq + 'static,
-    M: Send + 'static,
-{
-    Application::new(model, update, view).run()
 }

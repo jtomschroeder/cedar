@@ -4,7 +4,5 @@ version = "0.1.0"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 
 [dependencies]
-#quicli = "0.2"
 structopt = { version = "0.2", default-features = false }
-#hammer = { git = "https://github.com/jtomschroeder/hammer.git" }
 sass-rs = "0.2"

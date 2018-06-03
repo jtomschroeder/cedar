@@ -4,7 +4,7 @@ use std::str;
 use boo::Boo;
 
 use dom;
-use program::View;
+use application::View;
 use renderer::{Command, Event, Update};
 use tree::{self, Vertex};
 
