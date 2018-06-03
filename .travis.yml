@@ -1,16 +1,12 @@
 
 sudo: true
 
+os:
+  - linux
+  - osx
+
 language: rust
 rust: nightly
-
-matrix:
-  include:
-    - os: osx
-
-branches:
-  except:
-  - wasm
 
 notifications:
   email:
