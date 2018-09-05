@@ -178,9 +178,7 @@ impl<'s> Parsee<'s> {
         let parsee = self;
 
         let (parsee, name, attrs) = parsee.open_tag()?;
-
         let (parsee, children) = parsee.spaces().elements()?;
-
         let (parsee, close) = parsee.close_tag()?;
 
         assert_eq!(name, close); // TODO: return Err()
@@ -200,8 +198,8 @@ impl<'s> Parsee<'s> {
     }
 }
 
-pub fn parse(input: &str) -> Result<Element> {
-    let (parsee, element) = Parsee(input).parse()?;
+pub fn parse(tokens: &str) -> Result<Element> {
+    let (parsee, element) = Parsee(tokens).parse()?;
 
     if !parsee.0.is_empty() {
         // only one root element allowed! (must parse all input)

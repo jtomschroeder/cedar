@@ -1,4 +1,3 @@
-
 extern crate proc_macro as pm;
 extern crate proc_macro2 as pm2;
 
@@ -8,10 +7,10 @@ extern crate quote;
 mod parser;
 
 #[proc_macro]
-pub fn hypertext(input: pm::TokenStream) -> pm::TokenStream {
-    let input = input.to_string();
+pub fn hypertext(tokens: pm::TokenStream) -> pm::TokenStream {
+    let tokens = tokens.to_string();
 
-    let dom = parser::parse(&input).unwrap();
+    let dom = parser::parse(&tokens).unwrap();
     dom.render().into()
 }
 
@@ -33,7 +32,7 @@ impl parser::Element {
             }
 
             parser::Element::Text(text) => {
-                quote! { ::cedar::dom::object(#text) }
+                quote! { ::cedar::dom::text(#text) }
             }
 
             parser::Element::Block(block) => {

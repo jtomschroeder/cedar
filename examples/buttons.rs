@@ -23,7 +23,7 @@ fn view(model: &Model) -> cedar::dom::Object<Message> {
     hypertext! {
         <div>
             <button click={Message::Increment}> + </button>
-            <div>{model}</div>
+            <div>{model.to_string()}</div>
             <button click={Message::Decrement}> - </button>
         </div>
     }

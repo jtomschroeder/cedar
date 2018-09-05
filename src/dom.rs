@@ -8,11 +8,9 @@ pub struct Attribute(String, String);
 
 impl Attribute {
     pub fn raw(&self) -> (String, String) {
-        let (name, value) = match self {
-            &Attribute(ref name, ref value) => (name.as_str(), value.as_str()),
-        };
-
-        (name.into(), value.into())
+        match self {
+            &Attribute(ref name, ref value) => (name.clone(), value.clone()),
+        }
     }
 }
 
@@ -83,6 +81,14 @@ impl<S> Object<S> {
     pub fn new(widget: &str) -> Self {
         Object {
             widget: Widget::new(widget.into()),
+            attributes: vec![],
+            children: vec![],
+        }
+    }
+
+    pub fn from_widget(widget: Widget<S>) -> Self {
+        Object {
+            widget,
             attributes: vec![],
             children: vec![],
         }
@@ -164,33 +170,29 @@ impl<S> Object<S> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct List<T>(Vec<T>);
-
-use std::iter::FromIterator;
-impl<T> FromIterator<T> for List<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        List(Vec::from_iter(iter))
-    }
-}
-
-pub trait Pushed<S> {
+pub trait Pushable<S> {
     fn pushed(self, object: &mut Object<S>);
 }
 
-impl<S> Pushed<S> for Object<S> {
+impl<S> Pushable<S> for Object<S> {
     fn pushed(self, object: &mut Object<S>) {
         object.children.push(self);
     }
 }
 
-impl<S> Pushed<S> for List<Object<S>> {
+impl<'s, S> Pushable<S> for Vec<Object<S>> {
     fn pushed(self, object: &mut Object<S>) {
-        object.children.extend(self.0);
+        object.children.extend(self);
     }
 }
 
-impl<S, T: ToString> Pushed<S> for T {
+impl<'s, S> Pushable<S> for &'s str {
+    fn pushed(self, object: &mut Object<S>) {
+        object.children.push(text(self));
+    }
+}
+
+impl<S> Pushable<S> for String {
     fn pushed(self, object: &mut Object<S>) {
         object.children.push(text(self));
     }
@@ -208,38 +210,13 @@ impl<S> Object<S> {
         self
     }
 
-    pub fn push<P: Pushed<S>>(mut self, pushed: P) -> Self {
+    pub fn push<P: Pushable<S>>(mut self, pushed: P) -> Self {
         pushed.pushed(&mut self);
         self
     }
 }
 
-fn text<S, T: ToString>(text: T) -> Object<S> {
+pub fn text<S, T: ToString>(text: T) -> Object<S> {
     let widget = Widget::new_with_value("text".into(), text.to_string());
-
-    Object {
-        widget,
-        attributes: vec![],
-        children: vec![],
-    }
-}
-
-pub trait ToObject<S> {
-    fn to_object(self) -> Object<S>;
-}
-
-impl<S> ToObject<S> for Object<S> {
-    fn to_object(self) -> Object<S> {
-        self
-    }
-}
-
-impl<S, T: ToString> ToObject<S> for T {
-    fn to_object(self) -> Object<S> {
-        text(self)
-    }
-}
-
-pub fn object<S, O: ToObject<S>>(obj: O) -> Object<S> {
-    obj.to_object()
+    Object::from_widget(widget)
 }

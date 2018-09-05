@@ -15,9 +15,6 @@ extern crate web_view;
 
 extern crate cedar_hypertext as hypertext;
 
-// TODO: hyperlink generate rust at build-time via build.rs (a la LALRPOP)
-// - (until proc-macro bug is fixed)
-
 mod boo;
 
 #[macro_use]

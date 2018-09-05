@@ -19,7 +19,7 @@ fn update(_: Model, message: &Message) -> Model {
 
 type Object = cedar::dom::Object<Message>;
 
-fn words(line: &str) -> cedar::dom::List<Object> {
+fn words(line: &str) -> Vec<Object> {
     line.split(' ')
         .filter(|s| !s.is_empty())
         .map(|w| hypertext! { <div>{w}</div> })
