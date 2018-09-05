@@ -1,4 +1,3 @@
-#![feature(proc_macro)]
 #![feature(proc_macro_non_items)]
 
 extern crate cedar;
@@ -18,22 +17,22 @@ fn update(_: Model, message: &Message) -> Model {
     }
 }
 
-type Widget = cedar::dom::Object<Message>;
+type Object = cedar::dom::Object<Message>;
 
-fn words(line: &str) -> cedar::dom::List<Widget> {
+fn words(line: &str) -> cedar::dom::List<Object> {
     line.split(' ')
         .filter(|s| !s.is_empty())
-        .map(|w| (hypertext! { |w| <div>{w}</div> })(w))
+        .map(|w| hypertext! { <div>{w}</div> })
         .collect()
 }
 
-fn view(model: &Model) -> Widget {
-    (hypertext! { |model|
+fn view(model: &Model) -> Object {
+    hypertext! {
         <div>
             <input placeholder={"Words!"} input={Message::NewContent}></input>
             <div>{words(model)}</div>
         </div>
-    })(model)
+    }
 }
 
 fn main() {

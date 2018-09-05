@@ -1,4 +1,3 @@
-#![feature(proc_macro)]
 
 #![deny(trivial_casts, trivial_numeric_casts)]
 #![deny(unused_import_braces, unused_qualifications)]

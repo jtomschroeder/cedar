@@ -1,4 +1,3 @@
-#![feature(proc_macro)]
 #![feature(proc_macro_non_items)]
 
 extern crate cedar;
@@ -21,13 +20,13 @@ fn update(model: Model, message: &Message) -> Model {
 }
 
 fn view(model: &Model) -> cedar::dom::Object<Message> {
-    (hypertext! { |model|
+    hypertext! {
         <div>
             <button click={Message::Increment}> + </button>
             <div>{model}</div>
             <button click={Message::Decrement}> - </button>
         </div>
-    })(model)
+    }
 }
 
 fn main() {

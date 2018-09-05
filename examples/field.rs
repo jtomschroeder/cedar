@@ -1,4 +1,3 @@
-#![feature(proc_macro)]
 #![feature(proc_macro_non_items)]
 
 extern crate cedar;
@@ -24,12 +23,12 @@ const STYLE: &'static str =
 fn view(model: &Model) -> cedar::dom::Object<Message> {
     let field: String = model.chars().rev().collect();
 
-    (hypertext! { |field|
+    hypertext! {
         <div>
             <input style={STYLE} input={Message::NewContent}></input>
             <div style={STYLE}>{field}</div>
         </div>
-    })(field)
+    }
 }
 
 fn main() {

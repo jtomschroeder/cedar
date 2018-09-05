@@ -123,7 +123,8 @@ impl<'s> Parsee<'s> {
     }
 
     fn close_tag(self) -> Result<(Self, &'s str)> {
-        let (parsee, name) = self.spaces()
+        let (parsee, name) = self
+            .spaces()
             .tag("<")?
             .spaces()
             .tag("/")?
