@@ -110,13 +110,11 @@ where
     fn run(model: M, update: Update<M, S>, view: View<M, S>, style: Option<String>) {
         let (mut program, mut commands) = Program::new(model, update, view);
 
-        let html = match style {
-            Some(style) => HTML.replace("/* styles */", &style),
-            _ => {
-                let css = sass::compile_string(CSS, sass::Options::default()).unwrap();
-                HTML.replace("/* styles */", &css)
-            }
-        };
+        // TODO: add style to CSS file and always assume sass?
+
+        let style =
+            style.unwrap_or_else(|| sass::compile_string(CSS, sass::Options::default()).unwrap());
+        let html = HTML.replace("/* {{ styles }} */", &style);
 
         web_view::builder()
             .title("cedar app")
@@ -126,8 +124,6 @@ where
             .debug(true)
             .user_data(())
             .invoke_handler(move |webview, message| {
-                println!("message: {:?}", message);
-
                 match message {
                     "$" => {
                         for cmd in commands.drain(..) {

@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <title>Title?</title>
-    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
-
     <style>
-        /* styles */
+        /* {{ styles }} */
     </style>
 </head>
 <body>
@@ -21,18 +19,18 @@
         const cedar = window.cedar = {
             nodes: {"": document.body},
 
-            click: id => () => invoke({"Click": {"id": id}}),
+            click: id => () => invoke({Click: {id}}),
 
             input: (id, element) => () => {
                 const value = element.value || '';
                 invoke({Input: {id, value}});
             },
 
-            keydown: id => e => invoke({Keydown: {id, code: (e.keyCode ? e.keyCode : e.which)}}),
+            keydown: id => e => invoke({Keydown: {id, code: e.keyCode || e.which}}),
 
             attributes: (node, attributes) => {
-                for (const attr in attributes) {
-                    let value = attributes[attr];
+                for (let [key, value] of Object.entries(attributes)) {
+                    let value = attributes[key];
 
                     // HACK: convert to Boolean
                     if (value === "true") {
@@ -43,7 +41,7 @@
                         // value is untouched
                     }
 
-                    node[attr] = value;
+                    node[key] = value;
                 }
             },
 
@@ -86,8 +84,8 @@
                 } else if (command.hasOwnProperty('Update')) {
                     const update = command.Update;
 
-                    var id = update.id;
-                    var value = update.value;
+                    const id = update.id;
+                    const value = update.value;
 
                     let node = cedar.nodes[id];
 

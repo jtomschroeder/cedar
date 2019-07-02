@@ -24,10 +24,13 @@ fn words(line: &str) -> Vec<Object> {
         .collect()
 }
 
+// TODO: input => onChange
+// TODO: click => onClick
+
 fn view(model: &Model) -> Object {
     hypertext! {
-        <div>
-            <input placeholder={"Words!"} input={Message::NewContent}></input>
+        <div class={"tc"}>
+            <input class={"mv3"} placeholder={"Words!"} input={Message::NewContent}></input>
             <div>{words(model)}</div>
         </div>
     }
