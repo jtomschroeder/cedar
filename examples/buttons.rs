@@ -1,5 +1,3 @@
-#![feature(proc_macro_non_items)]
-
 extern crate cedar;
 
 use cedar::hypertext;

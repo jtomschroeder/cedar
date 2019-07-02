@@ -1,6 +1,4 @@
-#![feature(proc_macro_non_items)]
-
-extern crate cedar;
+#![feature(proc_macro_hygiene)]
 
 use cedar::hypertext;
 

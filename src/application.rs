@@ -1,11 +1,11 @@
-use json;
+use crate::json;
 
-use sass;
+use crate::sass;
 use web_view;
 
-use dom;
-use renderer;
-use shadow::Shadow;
+use crate::dom;
+use crate::renderer;
+use crate::shadow::Shadow;
 
 pub type Update<M, S> = fn(M, &S) -> M;
 pub type View<M, S> = fn(&M) -> dom::Object<S>;
@@ -44,9 +44,9 @@ where
 }
 
 pub fn app<S, M>(model: M, update: Update<M, S>, view: View<M, S>)
-    where
-        S: Send + PartialEq + 'static,
-        M: Send + 'static,
+where
+    S: Send + PartialEq + 'static,
+    M: Send + 'static,
 {
     Application::new(model, update, view).run()
 }
@@ -118,37 +118,37 @@ where
             }
         };
 
-        let title = "cedar app";
+        web_view::builder()
+            .title("cedar app")
+            .content(web_view::Content::Html(html))
+            .size(800, 600)
+            .resizable(true)
+            .debug(true)
+            .user_data(())
+            .invoke_handler(move |webview, message| {
+                println!("message: {:?}", message);
 
-        let size = (800, 600);
-        let resizable = true;
-        let debug = true;
-
-        web_view::run(
-            title,
-            web_view::Content::Html(html),
-            Some(size),
-            resizable,
-            debug,
-            move |webview| {
-                webview.dispatch(move |webview, _| {
-                    webview.eval("setup()");
-
-                    for cmd in commands.drain(..) {
-                        let cmd = json::to_string(&cmd).unwrap();
-                        webview.eval(&format!("window.cedar.command('{}')", cmd));
+                match message {
+                    "$" => {
+                        for cmd in commands.drain(..) {
+                            let cmd = json::to_string(&cmd).unwrap();
+                            webview.eval(&format!("window.cedar.command('{}')", cmd))?;
+                        }
                     }
-                });
-            },
-            move |webview, message, _| {
-                let mut commands = program.process(message);
 
-                for cmd in commands.drain(..) {
-                    let cmd = json::to_string(&cmd).unwrap();
-                    webview.eval(&format!("window.cedar.command('{}')", cmd));
+                    _ => {
+                        let mut commands = program.process(message);
+
+                        for cmd in commands.drain(..) {
+                            let cmd = json::to_string(&cmd).unwrap();
+                            webview.eval(&format!("window.cedar.command('{}')", cmd))?;
+                        }
+                    }
                 }
-            },
-            (),
-        );
+
+                Ok(())
+            })
+            .run()
+            .unwrap()
     }
 }

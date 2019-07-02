@@ -1,112 +1,114 @@
 <!doctype html>
-<html>
-<body>
-<style>
-    /* styles */
-</style>
+<html lang="en">
+<head>
+    <title>Title?</title>
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
 
+    <style>
+        /* styles */
+    </style>
+</head>
+<body>
 <script type="text/javascript">
     "use strict";
 
     function setup() {
         console.log("Setting up cedar!");
 
-        let cedar = window.cedar = {};
+        const invokeRaw = msg => window.external.invoke(msg);
+        const invoke = msg => invokeRaw(JSON.stringify(msg));
 
-        cedar.nodes = {"": document.body};
+        const cedar = window.cedar = {
+            nodes: {"": document.body},
 
-        let post = window.post = (msg) => {
-            external.invoke(JSON.stringify(msg));
-        };
+            click: id => () => invoke({"Click": {"id": id}}),
 
-        cedar.click = (id) => () => {
-            post({"Click": {"id": id}});
-        };
+            input: (id, element) => () => {
+                const value = element.value || '';
+                invoke({Input: {id, value}});
+            },
 
-        cedar.input = (id, element) => () => {
-            const value = element.value || '';
-            post({Input: {id: id, value: value}});
-        };
+            keydown: id => e => invoke({Keydown: {id, code: (e.keyCode ? e.keyCode : e.which)}}),
 
-        cedar.keydown = (id) => (e) => {
-            post({Keydown: {id: id, code: (e.keyCode ? e.keyCode : e.which)}});
-        };
+            attributes: (node, attributes) => {
+                for (const attr in attributes) {
+                    let value = attributes[attr];
 
-        cedar.attributes = (node, attributes) => {
-            for (const attr in attributes) {
-                let value = attributes[attr];
+                    // HACK: convert to Boolean
+                    if (value === "true") {
+                        value = true;
+                    } else if (value === "false") {
+                        value = false;
+                    } else {
+                        // value is untouched
+                    }
 
-                // HACK: convert to Boolean
-                if (value === "true") {
-                    value = true;
-                } else if (value === "false") {
-                    value = false;
-                } else {
-                    // value is untouched
+                    node[attr] = value;
                 }
+            },
 
-                node[attr] = value;
-            }
-        };
+            command: (cmd) => {
+                const command = JSON.parse(cmd);
 
-        cedar.command = (cmd) => {
-            const cedar = window.cedar;
+                if (command.hasOwnProperty('Create')) {
+                    const create = command.Create;
 
-            const command = JSON.parse(cmd);
+                    const id = create.id;
+                    const kind = create.kind;
+                    const value = create.value;
 
-            if (command.hasOwnProperty('Create')) {
-                const create = command.Create;
+                    const attributes = create.attributes;
 
-                var id = create.id;
-                const kind = create.kind;
-                const value = create.value;
+                    let node =
+                        kind === 'text'
+                            ? document.createTextNode(value)
+                            : document.createElement(kind);
 
-                const attributes = create.attributes;
+                    // TODO: only register for nodes that need to?
+                    // TODO: handle 'duplicate' events?
 
-                let node = kind === 'text' ? document.createTextNode(value) : document.createElement(kind);
+                    node.addEventListener("click", cedar.click(id));
 
-                // TODO: only register for nodes that need to?
-                // TODO: handle 'duplicate' events?
+                    node.addEventListener("input", cedar.input(id, node));
+                    node.addEventListener("keydown", cedar.keydown(id));
 
-                node.addEventListener("click", cedar.click(id));
+                    // var input = cedar.input(id, node);
+                    // node.addEventListener("keypress", input);
+                    // node.addEventListener("input", input);
+                    // node.addEventListener("paste", input);
 
-                node.addEventListener("input", cedar.input(id, node));
-                node.addEventListener("keydown", cedar.keydown(id));
+                    cedar.attributes(node, attributes);
 
-                // var input = cedar.input(id, node);
-                // node.addEventListener("keypress", input);
-                // node.addEventListener("input", input);
-                // node.addEventListener("paste", input);
+                    let parent = cedar.nodes[create.parent];
+                    parent.appendChild(node);
 
-                cedar.attributes(node, attributes);
+                    cedar.nodes[id] = node;
+                } else if (command.hasOwnProperty('Update')) {
+                    const update = command.Update;
 
-                let parent = cedar.nodes[create.parent];
-                parent.appendChild(node);
+                    var id = update.id;
+                    var value = update.value;
 
-                cedar.nodes[id] = node;
-            } else if (command.hasOwnProperty('Update')) {
-                const update = command.Update;
+                    let node = cedar.nodes[id];
 
-                var id = update.id;
-                var value = update.value;
-
-                let node = cedar.nodes[id];
-
-                if (value.hasOwnProperty('Text')) {
-                    node.nodeValue = value.Text;
-                } else if (value.hasOwnProperty('Attributes')) {
-                    cedar.attributes(node, value.Attributes);
-                } else {
-                    // console.log("Unsupported value!");
+                    if (value.hasOwnProperty('Text')) {
+                        node.nodeValue = value.Text;
+                    } else if (value.hasOwnProperty('Attributes')) {
+                        cedar.attributes(node, value.Attributes);
+                    } else {
+                        // console.log("Unsupported value!");
+                    }
+                } else if (command.hasOwnProperty('Remove')) {
+                    const id = command.Remove.id;
+                    cedar.nodes[id].remove();
                 }
-            } else if (command.hasOwnProperty('Remove')) {
-                const remove = command.Remove;
-                const id = remove.id;
-
-                cedar.nodes[id].remove();
-            }
+            },
         };
+
+        invokeRaw("$"); // trigger setup!
     }
+
+    window.onload = () => setup();
 </script>
 </body>
 </html>

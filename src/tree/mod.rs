@@ -147,7 +147,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use tree;
+    use crate::tree;
 
     #[derive(PartialEq, Debug)]
     enum Kind {

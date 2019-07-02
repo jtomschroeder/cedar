@@ -1,5 +1,5 @@
 use std::fmt;
-use tree;
+use crate::tree;
 
 pub type Element = String;
 
@@ -20,8 +20,8 @@ pub struct Widget<S> {
 
     // Events
     pub click: Option<S>,
-    pub input: Option<Box<Fn(String) -> S>>,
-    pub keydown: Option<Box<Fn(u32) -> Option<S>>>,
+    pub input: Option<Box<dyn Fn(String) -> S>>,
+    pub keydown: Option<Box<dyn Fn(u32) -> Option<S>>>,
 }
 
 impl<S> PartialEq for Widget<S> {

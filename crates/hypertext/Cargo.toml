@@ -2,12 +2,14 @@
 name = "cedar-hypertext"
 version = "0.1.0"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
+edition = "2018"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-quote = "0.4"
-syn = "0.12"
-proc-macro2 = "0.2"
 failure = "0.1"
+quote = "0.6"
+syn = "0.15"
+proc-macro2 = "0.4"
+proc-macro-hack = "0.5"

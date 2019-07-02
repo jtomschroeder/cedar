@@ -3,6 +3,7 @@ name = "cedar"
 version = "0.1.1"
 authors = ["Tom Schroeder <j.tom.schroeder@gmail.com>"]
 description = "Reactive, functional library for creating UI applications"
+edition = "2018"
 
 documentation = "https://docs.rs/crate/cedar"
 homepage = "https://github.com/jtomschroeder/cedar"
@@ -17,7 +18,7 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 
-web-view = "0.2"
+web-view = "0.4"
 sass-rs = "0.2"
 
-cedar-hypertext = { path = "hypertext" }
+cedar-hypertext = { path = "crates/hypertext" }

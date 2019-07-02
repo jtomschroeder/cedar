@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::str;
 
-use boo::Boo;
+use crate::boo::Boo;
 
-use dom;
-use application::View;
-use renderer::{Command, Event, Update};
-use tree::{self, Vertex};
+use crate::dom;
+use crate::application::View;
+use crate::renderer::{Command, Event, Update};
+use crate::tree::{self, Vertex};
 
 /// Convert 'changeset' to list of commands to send to UI 'rendering' process
 fn commands<T>(

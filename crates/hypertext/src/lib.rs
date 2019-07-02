@@ -1,5 +1,10 @@
+#![recursion_limit = "128"]
+#![cfg_attr(can_show_location_of_runtime_parse_error, feature(proc_macro_span))]
+
 extern crate proc_macro as pm;
 extern crate proc_macro2 as pm2;
+
+use proc_macro_hack::proc_macro_hack;
 
 #[macro_use]
 extern crate quote;
@@ -9,13 +14,12 @@ mod parser;
 #[proc_macro]
 pub fn hypertext(tokens: pm::TokenStream) -> pm::TokenStream {
     let tokens = tokens.to_string();
-
     let dom = parser::parse(&tokens).unwrap();
     dom.render().into()
 }
 
 impl parser::Element {
-    fn render(self) -> quote::Tokens {
+    fn render(self) -> pm2::TokenStream {
         match self {
             parser::Element::Element {
                 name,
@@ -40,11 +44,12 @@ impl parser::Element {
                 quote! { #block }
             }
         }
+        .into()
     }
 }
 
 impl parser::Attribute {
-    fn render(self) -> quote::Tokens {
+    fn render(self) -> pm2::TokenStream {
         let name: pm2::TokenStream = self.name.parse().unwrap();
         let block: pm2::TokenStream = self.block.parse().unwrap();
 

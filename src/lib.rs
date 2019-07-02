@@ -1,4 +1,3 @@
-
 #![deny(trivial_casts, trivial_numeric_casts)]
 #![deny(unused_import_braces, unused_qualifications)]
 // #![deny(missing_docs)]
@@ -10,10 +9,8 @@ extern crate serde;
 extern crate serde_derive;
 pub extern crate serde_json as json;
 
+pub extern crate cedar_hypertext as hypertext;
 extern crate sass_rs as sass;
-extern crate web_view;
-
-extern crate cedar_hypertext as hypertext;
 
 mod boo;
 
@@ -26,8 +23,8 @@ mod shadow;
 
 pub mod dom;
 
-pub use application::{app, Application};
-pub use hypertext::hypertext;
+pub use crate::application::{app, Application};
+pub use crate::hypertext::hypertext;
 
 // TODO: move into own module or crate
 /// build.rs helper

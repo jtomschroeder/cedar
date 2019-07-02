@@ -29,7 +29,7 @@ impl<'s> Parsee<'s> {
     }
 
     fn spaces(self) -> Self {
-        Parsee(self.0.trim_left())
+        Parsee(self.0.trim_start())
     }
 
     fn tag(self, text: &str) -> Result<Self> {
