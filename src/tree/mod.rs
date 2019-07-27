@@ -3,8 +3,8 @@ mod zipper;
 
 use std::collections::VecDeque;
 
-use self::zipper::{zip, Pair};
 pub use self::path::Path;
+use self::zipper::{zip, Pair};
 
 pub trait Vertex {
     fn children(&self) -> &[Self]
@@ -26,9 +26,11 @@ pub trait Vertex {
 
                 1 if i == path[0] => return Some(node),
 
-                _ if i == path[0] => for (n, child) in node.children().iter().enumerate() {
-                    queue.push_back((&path[1..], n, child));
-                },
+                _ if i == path[0] => {
+                    for (n, child) in node.children().iter().enumerate() {
+                        queue.push_back((&path[1..], n, child));
+                    }
+                }
 
                 _ => {}
             }

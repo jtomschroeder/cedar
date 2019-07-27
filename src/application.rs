@@ -111,6 +111,7 @@ where
         let (mut program, mut commands) = Program::new(model, update, view);
 
         // TODO: add style to CSS file and always assume sass?
+        // TODO: use mustache (or other template engine) for HTML and CSS
 
         let style =
             style.unwrap_or_else(|| sass::compile_string(CSS, sass::Options::default()).unwrap());

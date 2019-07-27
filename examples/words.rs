@@ -1,6 +1,3 @@
-//#![feature(proc_macro_hygiene)]
-
-use cedar::hypertext;
 use cedar::sml;
 
 type Model = String;

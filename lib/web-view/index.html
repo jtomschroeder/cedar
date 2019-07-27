@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <title>Title?</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Fira+Sans&display=swap" rel="stylesheet">
+
     <style>
         /* {{ styles }} */
     </style>
@@ -39,6 +43,10 @@
                         value = false;
                     } else {
                         // value is untouched
+                    }
+
+                    if (key === "class") {
+                        key = "className";
                     }
 
                     node[key] = value;
@@ -106,7 +114,7 @@
         invokeRaw("$"); // trigger setup!
     }
 
-    window.onload = () => setup();
+    window.addEventListener("load", setup);
 </script>
 </body>
 </html>

@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::str;
 
-use crate::boo::Boo;
-
 use crate::application::View;
+use crate::boo::Boo;
 use crate::dom;
 use crate::dom::Attribute;
 use crate::renderer::{Command, Event, Update};

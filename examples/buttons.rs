@@ -1,6 +1,4 @@
-extern crate cedar;
-
-use cedar::hypertext;
+use cedar::sml;
 
 type Model = i32;
 
@@ -18,12 +16,12 @@ fn update(model: Model, message: &Message) -> Model {
 }
 
 fn view(model: &Model) -> cedar::dom::Object<Message> {
-    hypertext! {
-        <div>
-            <button click={Message::Increment}> + </button>
-            <div>{model.to_string()}</div>
-            <button click={Message::Decrement}> - </button>
-        </div>
+    sml! {
+        (div
+            (button (@ (click Message::Increment)) {"+"})
+            (div { model.to_string() })
+            (button (@ (click Message::Decrement)) {"-"})
+        )
     }
 }
 
