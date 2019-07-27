@@ -13,7 +13,7 @@ pub extern crate cedar_hypertext as hypertext;
 extern crate sass_rs as sass;
 
 mod boo;
-mod sxml;
+mod sml;
 
 #[macro_use]
 mod tree;

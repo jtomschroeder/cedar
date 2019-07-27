@@ -40,6 +40,8 @@ impl<S> PartialEq for Attribute<S> {
     }
 }
 
+// TODO: make `attributes` a hash-map instead of vector
+
 pub struct Object<S> {
     pub element: Element,
     pub value: Option<String>,
