@@ -32,7 +32,7 @@ fn view(model: &Model) -> Object {
     sml! {
         (div (@ (class "tc"))
             (input (@ (class "mv3") (placeholder "Words!") (input Message::NewContent)))
-            (div {words(model)})
+            (div { words(model) })
         )
     }
 }

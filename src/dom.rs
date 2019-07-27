@@ -92,9 +92,9 @@ impl<S> Widget<S> {
         self.element.clone()
     }
 
-    pub fn set_value(&mut self, value: impl ToString) {
-        self.value = Some(value.to_string());
-    }
+    // pub fn set_value(&mut self, value: impl ToString) {
+    //     self.value = Some(value.to_string());
+    // }
 }
 
 impl<S> fmt::Debug for Widget<S> {
@@ -263,10 +263,10 @@ impl<S> Object<S> {
         self
     }
 
-    pub fn value(mut self, value: impl ToString) -> Self {
-        self.widget.set_value(value);
-        self
-    }
+    // pub fn value(mut self, value: impl ToString) -> Self {
+    //     self.widget.set_value(value);
+    //     self
+    // }
 }
 
 pub fn text<S, T: ToString>(text: T) -> Object<S> {

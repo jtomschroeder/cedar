@@ -31,7 +31,7 @@ macro_rules! sml {
         $crate::dom::Object::new(stringify!($name))
             $( $( .new_attr( $crate::sml_attr!($attr_name $attr_value) ) )* )?
             $( .push( sml!(( $child $($tail)* )) ) )*
-            $( .value( $value )  )?
+            $( .push( $value )  )?
     };
 }
 
