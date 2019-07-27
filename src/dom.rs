@@ -1,56 +1,53 @@
 use crate::tree;
 use std::fmt;
+use serde::export::PhantomData;
 
 pub type Element = String;
 
-pub enum NewAttribute<S> {
+pub enum Attribute<S> {
     String { name: String, value: String },
     Click(S),
     Input(Box<dyn Fn(String) -> S>),
     Keydown(Box<dyn Fn(u32) -> Option<S>>),
 }
 
-impl<S> NewAttribute<S> {
-    pub fn input(input: impl  Fn(String) -> S + 'static) -> Self {
-        NewAttribute::Input(Box::new(input))
+impl<S> Attribute<S> {
+    pub fn input(input: impl Fn(String) -> S + 'static) -> Self {
+        Attribute::Input(Box::new(input))
     }
-}
 
-impl<S> fmt::Debug for NewAttribute<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "attr?",)
-    }
-}
-
-impl<S> PartialEq for NewAttribute<S> {
-    fn eq(&self, other: &Self) -> bool {
-        unimplemented!()
-    }
-}
-
-#[derive(PartialEq, Debug)]
-pub struct Attribute(String, String);
-
-impl Attribute {
-    pub fn raw(&self) -> (String, String) {
+    pub fn raw(&self) -> Option<(String, String)> {
         match self {
-            &Attribute(ref name, ref value) => (name.clone(), value.clone()),
+            Attribute::String { ref name, ref value } => Some((name.clone(), value.clone())),
+            _ => None,
         }
     }
 }
 
-//trait IntoAttribute {
-//
-//}
+impl<S> fmt::Debug for Attribute<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "attr?",) // TODO!
+    }
+}
+
+impl<S> PartialEq for Attribute<S> {
+    fn eq(&self, other: &Self) -> bool {
+        // TODO: implement this!!
+
+        false
+    }
+}
 
 pub struct Widget<S> {
     element: Element,
     pub value: Option<String>,
 
-    // Events
-    pub click: Option<S>,
-    pub input: Option<Box<dyn Fn(String) -> S>>,
-    pub keydown: Option<Box<dyn Fn(u32) -> Option<S>>>,
+    phantom: PhantomData<S>,
+
+    // Events (TODO: remove)
+    // pub click: Option<S>,
+    // pub input: Option<Box<dyn Fn(String) -> S>>,
+    // pub keydown: Option<Box<dyn Fn(u32) -> Option<S>>>,
 }
 
 impl<S> PartialEq for Widget<S> {
@@ -63,24 +60,16 @@ impl<S> Widget<S> {
     pub fn new(element: Element) -> Self {
         Widget {
             element,
-
             value: None,
-
-            click: None,
-            input: None,
-            keydown: None,
+            phantom: PhantomData,
         }
     }
 
     pub fn new_with_value(element: Element, value: String) -> Self {
         Widget {
             element,
-
             value: Some(value),
-
-            click: None,
-            input: None,
-            keydown: None,
+            phantom: PhantomData,
         }
     }
 
@@ -91,10 +80,6 @@ impl<S> Widget<S> {
     pub fn element(&self) -> String {
         self.element.clone()
     }
-
-    // pub fn set_value(&mut self, value: impl ToString) {
-    //     self.value = Some(value.to_string());
-    // }
 }
 
 impl<S> fmt::Debug for Widget<S> {
@@ -110,8 +95,8 @@ impl<S> fmt::Debug for Widget<S> {
 
 pub struct Object<S> {
     pub widget: Widget<S>,
-    pub attributes: Vec<Attribute>,
-    pub new_attributes: Vec<NewAttribute<S>>,
+    // pub attributes: Vec<Attribute>,
+    pub attributes: Vec<Attribute<S>>,
     pub children: Vec<Object<S>>,
 }
 
@@ -121,7 +106,6 @@ impl<S> Object<S> {
         Object {
             widget: Widget::new(widget.into()),
             attributes: vec![],
-            new_attributes: vec![],
             children: vec![],
         }
     }
@@ -130,7 +114,6 @@ impl<S> Object<S> {
         Object {
             widget,
             attributes: vec![],
-            new_attributes: vec![],
             children: vec![],
         }
     }
@@ -141,7 +124,7 @@ impl<S> fmt::Debug for Object<S> {
         f.debug_struct("Object")
             .field("widget", &self.widget)
             .field("attributes", &self.attributes)
-            .field("new_attributes", &self.new_attributes)
+            .field("attributes", &self.attributes)
             .field("children", &self.children)
             .finish()
     }
@@ -172,48 +155,34 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
     tree::diff(old, new)
 }
 
-/// Object: Actions
-impl<S> Object<S> {
-    pub fn click(mut self, action: S) -> Self {
-        self.widget.click = Some(action);
-        self
-    }
-
-    pub fn input<F>(mut self, input: F) -> Self
-    where
-        F: Fn(String) -> S + 'static,
-    {
-        self.widget.input = Some(Box::new(input));
-        self
-    }
-
-    pub fn keydown<F>(mut self, keydown: F) -> Self
-    where
-        F: Fn(u32) -> Option<S> + 'static,
-    {
-        self.widget.keydown = Some(Box::new(keydown));
-        self
-    }
-}
+///// Object: Actions
+//impl<S> Object<S> {
+//    pub fn click(mut self, action: S) -> Self {
+//        self.widget.click = Some(action);
+//        self
+//    }
+//
+//    pub fn input<F>(mut self, input: F) -> Self
+//    where
+//        F: Fn(String) -> S + 'static,
+//    {
+//        self.widget.input = Some(Box::new(input));
+//        self
+//    }
+//
+//    pub fn keydown<F>(mut self, keydown: F) -> Self
+//    where
+//        F: Fn(u32) -> Option<S> + 'static,
+//    {
+//        self.widget.keydown = Some(Box::new(keydown));
+//        self
+//    }
+//}
 
 /// Object: Attributes
 impl<S> Object<S> {
-    pub fn attr<V: ToString>(self, name: &str, value: V) -> Self {
-        let name = match name {
-            "class" => "className",
-            _ => name,
-        };
-
-        self.attribute(Attribute(name.into(), value.to_string()))
-    }
-
-    fn attribute(mut self, attr: Attribute) -> Self {
+    pub fn attr(mut self, attr: Attribute<S>) -> Self {
         self.attributes.push(attr);
-        self
-    }
-
-    pub fn new_attr(mut self, attr: NewAttribute<S>) -> Self {
-        self.new_attributes.push(attr);
         self
     }
 }

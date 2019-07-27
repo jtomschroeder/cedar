@@ -3,8 +3,9 @@ use std::str;
 
 use crate::boo::Boo;
 
-use crate::dom;
 use crate::application::View;
+use crate::dom;
+use crate::dom::Attribute;
 use crate::renderer::{Command, Event, Update};
 use crate::tree::{self, Vertex};
 
@@ -23,7 +24,7 @@ fn commands<T>(
             let kind = node.widget.element();
             let value = node.widget.value.clone();
 
-            let attributes = node.attributes.iter().map(|attr| attr.raw()).collect();
+            let attributes = node.attributes.iter().flat_map(|attr| attr.raw()).collect();
 
             let parent = path.parent().to_string();
             commands.push(Command::Create {
@@ -56,11 +57,11 @@ fn commands<T>(
                     })
                 } else {
                     let mut attrs: HashMap<_, _> =
-                        node.attributes.iter().map(|attr| attr.raw()).collect();
+                        node.attributes.iter().flat_map(|attr| attr.raw()).collect();
 
                     // Clear out any attributes that are no longer used.
                     if let Some(old) = old {
-                        for (key, _) in old.attributes.iter().map(|attr| attr.raw()) {
+                        for (key, _) in old.attributes.iter().flat_map(|attr| attr.raw()) {
                             if !attrs.contains_key(&key) {
                                 attrs.insert(key, "".into());
                             }
@@ -115,18 +116,37 @@ where
         // - in both Command and Event
 
         match event {
-            Event::Click { id } => self.find(&id)
-                .and_then(|node| node.widget.click.as_ref().map(Boo::Borrowed)),
+            Event::Click { id } => self.find(&id).and_then(|node| {
+                for attr in node.attributes.iter() {
+                    match attr {
+                        Attribute::Click(value) => return Some(Boo::Borrowed(value)),
+                        _ => {}
+                    }
+                }
 
-            Event::Input { id, value } => self.find(&id)
-                .and_then(|node| node.widget.input.as_ref().map(|i| i(value)).map(Boo::Owned)),
+                None
+            }),
+
+            Event::Input { id, value } => self.find(&id).and_then(|node| {
+                for attr in node.attributes.iter() {
+                    match attr {
+                        Attribute::Input(input) => return Some(Boo::Owned(input(value))),
+                        _ => {}
+                    }
+                }
+
+                None
+            }),
 
             Event::Keydown { id, code } => self.find(&id).and_then(|node| {
-                node.widget
-                    .keydown
-                    .as_ref()
-                    .and_then(|k| k(code))
-                    .map(Boo::Owned)
+                for attr in node.attributes.iter() {
+                    match attr {
+                        Attribute::Keydown(keydown) => return keydown(code).map(Boo::Owned),
+                        _ => {}
+                    }
+                }
+
+                None
             }),
         }
     }

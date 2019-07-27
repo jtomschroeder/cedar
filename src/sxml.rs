@@ -1,19 +1,19 @@
 #[macro_export]
 macro_rules! sml_attr {
     (click $value:expr) => {
-        $crate::dom::NewAttribute::Click($value)
+        $crate::dom::Attribute::Click($value)
     };
 
     (input $value:expr) => {
-        $crate::dom::NewAttribute::input($value)
+        $crate::dom::Attribute::input($value)
     };
 
     (keydown $value:expr) => {
-        $crate::dom::NewAttribute::Keydown($value)
+        $crate::dom::Attribute::Keydown($value)
     };
 
     ($name:ident $value:expr) => {
-        $crate::dom::NewAttribute::String {
+        $crate::dom::Attribute::String {
             name: stringify!($name).to_string(),
             value: $value.to_string(),
         }
@@ -29,7 +29,7 @@ macro_rules! sml {
         $( $value:block )?
     )) => {
         $crate::dom::Object::new(stringify!($name))
-            $( $( .new_attr( $crate::sml_attr!($attr_name $attr_value) ) )* )?
+            $( $( .attr( $crate::sml_attr!($attr_name $attr_value) ) )* )?
             $( .push( sml!(( $child $($tail)* )) ) )*
             $( .push( $value )  )?
     };
