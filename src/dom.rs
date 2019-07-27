@@ -1,6 +1,5 @@
 use crate::tree;
 use std::fmt;
-use serde::export::PhantomData;
 
 pub type Element = String;
 
@@ -18,7 +17,10 @@ impl<S> Attribute<S> {
 
     pub fn raw(&self) -> Option<(String, String)> {
         match self {
-            Attribute::String { ref name, ref value } => Some((name.clone(), value.clone())),
+            Attribute::String {
+                ref name,
+                ref value,
+            } => Some((name.clone(), value.clone())),
             _ => None,
         }
     }
@@ -38,30 +40,17 @@ impl<S> PartialEq for Attribute<S> {
     }
 }
 
-pub struct Widget<S> {
+#[derive(PartialEq, Debug)]
+pub struct Widget {
     element: Element,
     pub value: Option<String>,
-
-    phantom: PhantomData<S>,
-
-    // Events (TODO: remove)
-    // pub click: Option<S>,
-    // pub input: Option<Box<dyn Fn(String) -> S>>,
-    // pub keydown: Option<Box<dyn Fn(u32) -> Option<S>>>,
 }
 
-impl<S> PartialEq for Widget<S> {
-    fn eq(&self, other: &Self) -> bool {
-        self.element == other.element && self.value == other.value
-    }
-}
-
-impl<S> Widget<S> {
+impl Widget {
     pub fn new(element: Element) -> Self {
         Widget {
             element,
             value: None,
-            phantom: PhantomData,
         }
     }
 
@@ -69,7 +58,6 @@ impl<S> Widget<S> {
         Widget {
             element,
             value: Some(value),
-            phantom: PhantomData,
         }
     }
 
@@ -82,20 +70,8 @@ impl<S> Widget<S> {
     }
 }
 
-impl<S> fmt::Debug for Widget<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}({})",
-            self.element,
-            self.value.clone().unwrap_or("".to_string())
-        )
-    }
-}
-
 pub struct Object<S> {
-    pub widget: Widget<S>,
-    // pub attributes: Vec<Attribute>,
+    pub widget: Widget,
     pub attributes: Vec<Attribute<S>>,
     pub children: Vec<Object<S>>,
 }
@@ -110,7 +86,7 @@ impl<S> Object<S> {
         }
     }
 
-    pub fn from_widget(widget: Widget<S>) -> Self {
+    pub fn from_widget(widget: Widget) -> Self {
         Object {
             widget,
             attributes: vec![],
