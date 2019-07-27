@@ -1,6 +1,7 @@
-#![feature(proc_macro_hygiene)]
+//#![feature(proc_macro_hygiene)]
 
 use cedar::hypertext;
+use cedar::sml;
 
 type Model = String;
 
@@ -20,7 +21,7 @@ type Object = cedar::dom::Object<Message>;
 fn words(line: &str) -> Vec<Object> {
     line.split(' ')
         .filter(|s| !s.is_empty())
-        .map(|w| hypertext! { <div>{w}</div> })
+        .map(|w| sml! { (div {w}) })
         .collect()
 }
 
@@ -28,11 +29,11 @@ fn words(line: &str) -> Vec<Object> {
 // TODO: click => onClick
 
 fn view(model: &Model) -> Object {
-    hypertext! {
-        <div class={"tc"}>
-            <input class={"mv3"} placeholder={"Words!"} input={Message::NewContent}></input>
-            <div>{words(model)}</div>
-        </div>
+    sml! {
+        (div (@ (class "tc"))
+            (input (@ (class "mv3") (placeholder "Words!") (input Message::NewContent)))
+//            (div {words(model)})
+        )
     }
 }
 

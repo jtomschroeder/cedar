@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::tree;
+use std::fmt;
 
 pub type Element = String;
 
@@ -62,11 +62,20 @@ impl<S> Widget<S> {
     pub fn element(&self) -> String {
         self.element.clone()
     }
+
+    pub fn set_value(&mut self, value: impl ToString) {
+        self.value = Some(value.to_string());
+    }
 }
 
 impl<S> fmt::Debug for Widget<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.element)
+        write!(
+            f,
+            "{}({})",
+            self.element,
+            self.value.clone().unwrap_or("".to_string())
+        )
     }
 }
 
@@ -99,6 +108,7 @@ impl<S> fmt::Debug for Object<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Object")
             .field("widget", &self.widget)
+            .field("attributes", &self.attributes)
             .field("children", &self.children)
             .finish()
     }
@@ -210,8 +220,13 @@ impl<S> Object<S> {
         self
     }
 
-    pub fn push<P: Pushable<S>>(mut self, pushed: P) -> Self {
+    pub fn push(mut self, pushed: impl Pushable<S>) -> Self {
         pushed.pushed(&mut self);
+        self
+    }
+
+    pub fn value(mut self, value: impl ToString) -> Self {
+        self.widget.set_value(value);
         self
     }
 }
