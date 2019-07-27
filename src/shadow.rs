@@ -21,8 +21,8 @@ fn commands<T>(
         node.traverse(root, |path, node| {
             let id = path.to_string();
 
-            let kind = node.widget.element();
-            let value = node.widget.value.clone();
+            let kind = node.element();
+            let value = node.value.clone();
 
             let attributes = node.attributes.iter().flat_map(|attr| attr.raw()).collect();
 
@@ -49,8 +49,8 @@ fn commands<T>(
                 // TODO: are we missing an update to 'Text' attributes?
 
                 let node = node();
-                if node.widget.is_text() {
-                    let value = node.widget.value.clone().unwrap();
+                if node.is_text() {
+                    let value = node.value.clone().unwrap();
                     commands.push(Command::Update {
                         id: id(),
                         value: Update::Text(value),
