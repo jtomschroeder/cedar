@@ -3,6 +3,31 @@ use std::fmt;
 
 pub type Element = String;
 
+pub enum NewAttribute<S> {
+    String { name: String, value: String },
+    Click(S),
+    Input(Box<dyn Fn(String) -> S>),
+    Keydown(Box<dyn Fn(u32) -> Option<S>>),
+}
+
+impl<S> NewAttribute<S> {
+    pub fn input(input: impl  Fn(String) -> S + 'static) -> Self {
+        NewAttribute::Input(Box::new(input))
+    }
+}
+
+impl<S> fmt::Debug for NewAttribute<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "attr?",)
+    }
+}
+
+impl<S> PartialEq for NewAttribute<S> {
+    fn eq(&self, other: &Self) -> bool {
+        unimplemented!()
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub struct Attribute(String, String);
 
@@ -13,6 +38,10 @@ impl Attribute {
         }
     }
 }
+
+//trait IntoAttribute {
+//
+//}
 
 pub struct Widget<S> {
     element: Element,
@@ -82,6 +111,7 @@ impl<S> fmt::Debug for Widget<S> {
 pub struct Object<S> {
     pub widget: Widget<S>,
     pub attributes: Vec<Attribute>,
+    pub new_attributes: Vec<NewAttribute<S>>,
     pub children: Vec<Object<S>>,
 }
 
@@ -91,6 +121,7 @@ impl<S> Object<S> {
         Object {
             widget: Widget::new(widget.into()),
             attributes: vec![],
+            new_attributes: vec![],
             children: vec![],
         }
     }
@@ -99,6 +130,7 @@ impl<S> Object<S> {
         Object {
             widget,
             attributes: vec![],
+            new_attributes: vec![],
             children: vec![],
         }
     }
@@ -109,6 +141,7 @@ impl<S> fmt::Debug for Object<S> {
         f.debug_struct("Object")
             .field("widget", &self.widget)
             .field("attributes", &self.attributes)
+            .field("new_attributes", &self.new_attributes)
             .field("children", &self.children)
             .finish()
     }
@@ -176,6 +209,11 @@ impl<S> Object<S> {
 
     fn attribute(mut self, attr: Attribute) -> Self {
         self.attributes.push(attr);
+        self
+    }
+
+    pub fn new_attr(mut self, attr: NewAttribute<S>) -> Self {
+        self.new_attributes.push(attr);
         self
     }
 }
