@@ -1,6 +1,3 @@
-use crate::json;
-
-use crate::sass;
 use web_view;
 
 use crate::dom;
@@ -81,7 +78,7 @@ where
     }
 
     fn process(&mut self, event: &str) -> Vec<renderer::Command> {
-        let event: renderer::Event = json::from_str(event).unwrap();
+        let event: renderer::Event = serde_json::from_str(event).unwrap();
 
         // TODO: get new subscriptions
         // - Do a 'difference' on the old and new
@@ -113,8 +110,8 @@ where
         // TODO: add style to CSS file and always assume sass?
         // TODO: use mustache (or other template engine) for HTML and CSS
 
-        let style =
-            style.unwrap_or_else(|| sass::compile_string(CSS, sass::Options::default()).unwrap());
+        let style = style
+            .unwrap_or_else(|| sass_rs::compile_string(CSS, sass_rs::Options::default()).unwrap());
         let html = HTML.replace("/* {{ styles }} */", &style);
 
         web_view::builder()
@@ -128,7 +125,7 @@ where
                 match message {
                     "$" => {
                         for cmd in commands.drain(..) {
-                            let cmd = json::to_string(&cmd).unwrap();
+                            let cmd = serde_json::to_string(&cmd).unwrap();
                             webview.eval(&format!("window.cedar.command('{}')", cmd))?;
                         }
                     }
@@ -137,7 +134,7 @@ where
                         let mut commands = program.process(message);
 
                         for cmd in commands.drain(..) {
-                            let cmd = json::to_string(&cmd).unwrap();
+                            let cmd = serde_json::to_string(&cmd).unwrap();
                             webview.eval(&format!("window.cedar.command('{}')", cmd))?;
                         }
                     }

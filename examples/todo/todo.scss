@@ -1,4 +1,7 @@
-@import "mixins";
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 html, body {
   margin: 0;
@@ -228,7 +231,7 @@ label[for='toggle-all'] {
   }
 
   li .destroy:after {
-    content: 'x'; // '×';
+    content: 'x'; // TODO: '×';
   }
 
   li:hover .destroy {

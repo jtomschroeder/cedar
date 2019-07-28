@@ -15,6 +15,10 @@ impl<S> Attribute<S> {
         Attribute::Input(Box::new(input))
     }
 
+    pub fn keydown(keydown: impl Fn(u32) -> Option<S> + 'static) -> Self {
+        Attribute::Keydown(Box::new(keydown))
+    }
+
     pub fn raw(&self) -> Option<(String, String)> {
         match self {
             Attribute::String {

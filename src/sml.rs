@@ -9,7 +9,7 @@ macro_rules! sml_attr {
     };
 
     (keydown $value:expr) => {
-        $crate::dom::Attribute::Keydown($value)
+        $crate::dom::Attribute::keydown($value)
     };
 
     ($name:ident $value:expr) => {
