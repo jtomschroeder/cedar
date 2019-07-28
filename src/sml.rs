@@ -22,6 +22,7 @@ macro_rules! sml_attr {
 
 #[macro_export]
 macro_rules! sml {
+
     (@inc $object:expr => ) => { $object };
 
     (

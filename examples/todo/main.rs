@@ -163,7 +163,7 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
 
 fn view_entry(entry: &Entry) -> Widget {
     let &Entry {
-        description,
+        ref description,
         completed,
         id,
     } = entry;
@@ -177,12 +177,12 @@ fn view_entry(entry: &Entry) -> Widget {
                     (checked { if completed { "true" } else { "false" } })
                     (click Message::Check(id, !completed))
                 ))
-                (label {description})
+                (label {description.clone()})
             )
             (button (@ (class "destroy") (click Message::Delete(id))))
             (input (@
                 (class "edit")
-                (value description)
+                (value description.clone())
                 (name "title")
                 (id format!("todo-{}", id))
                 (input { move |s| Message::UpdateEntry(id.clone(), s) })

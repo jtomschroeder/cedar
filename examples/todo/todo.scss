@@ -22,10 +22,7 @@ button {
   font-family: inherit;
   font-weight: inherit;
   color: inherit;
-  -webkit-appearance: none;
   appearance: none;
-
-  @include font-smoothing(antialiased);
 }
 
 body {
@@ -37,8 +34,6 @@ body {
   max-width: 550px;
   margin: 0 auto;
   font-weight: 300;
-
-  @include font-smoothing(antialiased);
 }
 
 button,
@@ -101,8 +96,6 @@ input[type="checkbox"] {
   border: 1px solid #999;
   box-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-
-  @include font-smoothing(antialiased);
 }
 
 .new-todo {
