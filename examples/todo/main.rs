@@ -96,12 +96,15 @@ type Widget = cedar::dom::Object<Message>;
 
 fn view(model: &Model) -> Widget {
     sml! {
-        (div (@ (class "todomvc-wrapper") (style "visibility: hidden"))
-            (section (@ (class "todoapp"))
+        (div
+            (h1 { "todos" })
+
+            (section (@ (class "todo-app bg-white shadow-5"))
                 {view_input(&model.field)}
                 {view_entries(&model.visibility, &model.entries)}
                 {view_controls(&model.visibility, &model.entries)}
             )
+
             {info_footer()}
         )
     }
@@ -110,7 +113,6 @@ fn view(model: &Model) -> Widget {
 fn view_input(task: &str) -> Widget {
     sml! {
         (header (@ (class "header"))
-            (h1 { "todos" })
             (input
                 (@
                     (class "new-todo")
@@ -156,6 +158,7 @@ fn view_entries(visibility: &str, entries: &[Entry]) -> Widget {
                 (checked { if all_completed { "true" } else { "false" } })
                 (click Message::CheckAll(!all_completed))
             ))
+
             (ul (@ (class "todo-list")) {todos})
         )
     }
@@ -252,7 +255,7 @@ fn view_controls_clear(num_completed: usize) -> Widget {
 
 fn info_footer() -> Widget {
     sml! {
-        (footer (@ (class "info"))
+        (footer (@ (class "info tc pt5 f7 grey"))
             (p {"Written by Tom Schroeder using cedar!"})
         )
     }

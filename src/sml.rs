@@ -63,6 +63,7 @@ macro_rules! sml {
     };
 }
 
+// TODO: special syntax for components => maybe (& Thing)
 #[cfg(test)]
 mod tests {
     use crate::dom::Object;

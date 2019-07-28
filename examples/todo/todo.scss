@@ -1,15 +1,14 @@
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* unset: tachyons */
+  box-sizing: unset !important;
 }
 
 html, body {
   margin: 0;
   padding: 0;
-}
-
-.todomvc-wrapper {
-  visibility: visible !important;
 }
 
 button {
@@ -45,36 +44,15 @@ input[type="checkbox"] {
   display: none;
 }
 
-.todoapp {
-  background: #fff;
-  margin: 130px 0 40px 0;
-  position: relative;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2),
-  0 25px 50px 0 rgba(0, 0, 0, 0.1);
+.todo-app {
+  input::placeholder {
+    font-style: italic;
+    font-weight: 300;
+    color: #e6e6e6;
+  }
 }
 
-.todoapp input::-webkit-input-placeholder {
-  font-style: italic;
-  font-weight: 300;
-  color: #e6e6e6;
-}
-
-.todoapp input::-moz-placeholder {
-  font-style: italic;
-  font-weight: 300;
-  color: #e6e6e6;
-}
-
-.todoapp input::input-placeholder {
-  font-style: italic;
-  font-weight: 300;
-  color: #e6e6e6;
-}
-
-.todoapp h1 {
-  position: absolute;
-  top: -155px;
-  width: 100%;
+h1 {
   font-size: 100px;
   font-weight: 100;
   text-align: center;
@@ -82,7 +60,8 @@ input[type="checkbox"] {
   text-rendering: optimizeLegibility;
 }
 
-.new-todo, .edit {
+.new-todo,
+.edit {
   position: relative;
   margin: 0;
   width: 100%;
@@ -312,28 +291,6 @@ label[for='toggle-all'] {
 
 .clear-completed:hover {
   text-decoration: underline;
-}
-
-.info {
-  margin: 65px auto 0;
-  color: #bfbfbf;
-  font-size: 10px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  text-align: center;
-
-  p {
-    line-height: 1;
-  }
-
-  a {
-    color: inherit;
-    text-decoration: none;
-    font-weight: 400;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
 }
 
 // Hack to remove background from Mobile Safari.
