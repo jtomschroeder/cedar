@@ -32,7 +32,19 @@ impl<S> Attribute<S> {
 
 impl<S> fmt::Debug for Attribute<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "attr?",) // TODO!
+        write!(
+            f,
+            "{}",
+            match self {
+                Attribute::String {
+                    ref name,
+                    ref value,
+                } => format!("{}:{}", name, value),
+                Attribute::Click(_) => "click".to_string(),
+                Attribute::Input(_) => "input".to_string(),
+                Attribute::Keydown(_) => "keydown".to_string(),
+            }
+        )
     }
 }
 
