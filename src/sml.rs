@@ -1,4 +1,5 @@
 use crate::dom;
+
 #[macro_export]
 macro_rules! sml_attr {
     (click $value:expr) => {
@@ -19,6 +20,49 @@ macro_rules! sml_attr {
             value: $value.to_string(),
         }
     };
+}
+
+#[macro_export]
+macro_rules! sml_component {
+    ($component:expr =>) => { $component.render((), vec![]) };
+    ($component:expr; $attrs:expr =>) => { $component.render($attrs, vec![]) };
+    ($component:expr; $attrs:expr; $children:expr =>) => { $component.render($attrs, $children) };
+
+    (
+        $component:expr =>
+        (@ $(( $attr_name:ident $attr_value:expr ))+ )
+        $($body:tt)*
+    ) => {
+        $crate::sml_component!( $component; () => $($body)*)
+    };
+
+    (
+        $component:expr =>
+        ( $child:ident $($tail:tt)* )
+        $($body:tt)*
+    ) => {{
+        let attrs = ();
+        let children = vec![sml!(( $child $($tail)* ))];
+        $crate::sml_component!( $component; attrs; children => $($body)*)
+    }};
+
+    (
+        $component:expr; $attrs:expr =>
+        ( $child:ident $($tail:tt)* )
+        $($body:tt)*
+    ) => {
+        $crate::sml_component!( $component; $attrs; vec![sml!(( $child $($tail)* ))] => $($body)*)
+    };
+
+    (
+        $component:expr; $attrs:expr; $children:expr =>
+        ( $child:ident $($tail:tt)* )
+        $($body:tt)*
+    ) => {{
+        let mut children = $children;
+        children.push( sml!(( $child $($tail)* )) );
+        $crate::sml_component!( $component; $attrs; children => $($body)*)
+    }};
 }
 
 #[macro_export]
@@ -62,7 +106,7 @@ macro_rules! sml {
         (& $component:ident $($tail:tt)* )
         $($body:tt)*
     ) => {{
-        let obj = $object .push( $component.render(()) );
+        let obj = $object .push( $crate::sml_component!($component => $($tail)*) );
         sml!(@inc obj => $($body)* )
     }};
 
@@ -78,7 +122,16 @@ macro_rules! sml {
 // TODO: special syntax for list of components => maybe (* ...)
 
 pub trait Component<S> {
-    fn render(&self, props: ()) -> dom::Object<S>;
+    fn render(&self, attrs: (), children: Vec<dom::Object<S>>) -> dom::Object<S>;
+}
+
+impl<S, F> Component<S> for F
+where
+    F: Fn((), Vec<dom::Object<S>>) -> dom::Object<S>,
+{
+    fn render(&self, attrs: (), children: Vec<dom::Object<S>>) -> dom::Object<S> {
+        self(attrs, children)
+    }
 }
 
 #[cfg(test)]
@@ -134,7 +187,7 @@ mod tests {
 
         struct Custom;
         impl Component<()> for Custom {
-            fn render(&self, props: ()) -> Object<()> {
+            fn render(&self, attrs: (), children: Vec<Object<()>>) -> Object<()> {
                 sml! { (div { "Hello" }) }
             }
         }
@@ -143,7 +196,17 @@ mod tests {
             (tag (@ (id "tag"))
                 (nested { "Text node" })
 
+                (& Custom)
                 (& Custom (@ (id "custom")))
+                (& Custom (@ (id "custom")) (child))
+                (& Custom (@ (id "custom"))
+                    (foo)
+                    (bar (@ (id "tag") (class "some-class")))
+                )
+                (& Custom
+                    (foo)
+                    (bar)
+                )
 
                 (end)
             )

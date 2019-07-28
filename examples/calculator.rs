@@ -1,4 +1,4 @@
-use cedar::sml;
+use cedar::prelude::*;
 
 type Model = ();
 
@@ -15,20 +15,18 @@ type Object = cedar::dom::Object<Message>;
 // TODO: click => onClick
 
 fn view(model: &Model) -> Object {
-    let row = |content| sml! { (div (@ (class "flex h-15 items-center")) { content }) };
+    let row = |attrs, children| sml! { (div (@ (class "flex h-15 items-center")) { children }) };
 
     sml! {
         (div (@ (class "tc vh-100"))
             (div (@ (class "w-100 tr")) { "0" })
 
-            {
-                row(sml! { (*
-                    (div (@ (class "w-25")) { "C" })
-                    (div (@ (class "w-25")) { "+/-" })
-                    (div (@ (class "w-25")) { "%" })
-                    (div (@ (class "w-25")) { "÷" })
-                )})
-            }
+            (& row
+                (div (@ (class "w-25")) { "C" })
+                (div (@ (class "w-25")) { "+/-" })
+                (div (@ (class "w-25")) { "%" })
+                (div (@ (class "w-25")) { "÷" })
+            )
 
             (div (@ (class "flex h-15 items-center"))
                 (div (@ (class "w-25")) { "7" })

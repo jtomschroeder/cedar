@@ -18,6 +18,11 @@ pub mod dom;
 
 pub use crate::application::{app, Application};
 
+pub mod prelude {
+    pub use crate::sml;
+    pub use crate::sml::Component;
+}
+
 pub mod sass {
     pub fn compile(style: &str) -> String {
         sass_rs::compile_string(style, sass_rs::Options::default()).unwrap()
