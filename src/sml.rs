@@ -1,3 +1,4 @@
+use crate::dom;
 #[macro_export]
 macro_rules! sml_attr {
     (click $value:expr) => {
@@ -55,6 +56,16 @@ macro_rules! sml {
         sml!(@inc obj => $($body)* )
     }};
 
+    (
+        @inc
+        $object:expr =>
+        (& $component:ident $($tail:tt)* )
+        $($body:tt)*
+    ) => {{
+        let obj = $object .push( $component.render(()) );
+        sml!(@inc obj => $($body)* )
+    }};
+
     ((
         $name:ident
         $($body:tt)*
@@ -64,9 +75,16 @@ macro_rules! sml {
 }
 
 // TODO: special syntax for components => maybe (& Thing)
+// TODO: special syntax for list of components => maybe (* ...)
+
+pub trait Component<S> {
+    fn render(&self, props: ()) -> dom::Object<S>;
+}
+
 #[cfg(test)]
 mod tests {
     use crate::dom::Object;
+    use crate::sml::Component;
 
     fn dbg(object: Object<()>) {
         dbg!(object);
@@ -110,6 +128,23 @@ mod tests {
                 {"hello"}
                 (nested { "Text node" })
                 {"hello"}
+                (end)
+            )
+        });
+
+        struct Custom;
+        impl Component<()> for Custom {
+            fn render(&self, props: ()) -> Object<()> {
+                sml! { (div { "Hello" }) }
+            }
+        }
+
+        dbg(sml! {
+            (tag (@ (id "tag"))
+                (nested { "Text node" })
+
+                (& Custom (@ (id "custom")))
+
                 (end)
             )
         });
