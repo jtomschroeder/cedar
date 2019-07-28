@@ -23,29 +23,15 @@ macro_rules! sml_attr {
 #[macro_export]
 macro_rules! sml {
 
-//    (
-//        @inc
-//        $object:expr =>
-//        ((@ $(( $attr_name:ident $attr_value:expr ))+ ))
-//        ($($body:tt)*)
-//    ) => {
-//        $object
-//    };
+    (@inc $object:expr => ) => { $object };
 
     (
-
         @inc
-        $object:expr
-        =>
-
-        // (@ $(( $attr_name:ident $attr_value:expr ))+ )
-
+        $object:expr =>
+        (@ $(( $attr_name:ident $attr_value:expr ))+ )
         $($body:tt)*
-
     ) => {
-
-        $object
-
+        $object $( .attr( $crate::sml_attr!($attr_name $attr_value) ) )*
     };
 
     ((
@@ -83,9 +69,9 @@ mod tests {
             (tag)
         });
 
-//        dbg(sml! {
-//            (tag (@ (id "tag") (class "some-class")))
-//        });
+        dbg(sml! {
+            (tag (@ (id "tag") (class "some-class")))
+        });
 
         // <tag attr1="value1"
         //      attr2="value2">
