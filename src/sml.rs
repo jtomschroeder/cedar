@@ -22,16 +22,48 @@ macro_rules! sml_attr {
 
 #[macro_export]
 macro_rules! sml {
+
+//    (
+//        @inc
+//        $object:expr =>
+//        ((@ $(( $attr_name:ident $attr_value:expr ))+ ))
+//        ($($body:tt)*)
+//    ) => {
+//        $object
+//    };
+
+    (
+
+        @inc
+        $object:expr
+        =>
+
+        // (@ $(( $attr_name:ident $attr_value:expr ))+ )
+
+        $($body:tt)*
+
+    ) => {
+
+        $object
+
+    };
+
     ((
         $name:ident
-        $((@ $(( $attr_name:ident $attr_value:expr ))+ ))?
-        $(( $child:ident $($tail:tt)* ))*
-        $( $value:block )?
+        // $((@ $(( $attr_name:ident $attr_value:expr ))+ ))?
+
+        $($body:tt)*
+
+        // $( $(( $child:ident $($tail:tt)* ))? $($value:block)? )*
+
     )) => {
-        $crate::dom::Object::new(stringify!($name))
-            $( $( .attr( $crate::sml_attr!($attr_name $attr_value) ) )* )?
-            $( .push( sml!(( $child $($tail)* )) ) )*
-            $( .push( $value )  )?
+//        $crate::dom::Object::new(stringify!($name))
+
+        sml!(@inc $crate::dom::Object::new(stringify!($name)) => $($body)* )
+
+//            $( $( .attr( $crate::sml_attr!($attr_name $attr_value) ) )* )?
+//            $( .push( sml!(( $child $($tail)* )) ) )*
+//            $( .push( $value )  )?
     };
 }
 
@@ -51,9 +83,9 @@ mod tests {
             (tag)
         });
 
-        dbg(sml! {
-            (tag (@ (id "tag") (class "some-class")))
-        });
+//        dbg(sml! {
+//            (tag (@ (id "tag") (class "some-class")))
+//        });
 
         // <tag attr1="value1"
         //      attr2="value2">
@@ -61,12 +93,29 @@ mod tests {
         //   <empty/>
         // </tag>
 
-        dbg(sml! {
-            (tag (@ (id "tag"))
-                (nested { "Text node" })
-                (end)
-            )
-        });
+//        dbg(sml! {
+//            (tag (@ (id "tag"))
+//                (nested { "Text node" })
+//                (end)
+//            )
+//        });
+//
+//        dbg(sml! {
+//            (tag (@ (id "tag"))
+//                (nested { "Text node" })
+//                {"hello"}
+//            )
+//        });
+//
+//        dbg(sml! {
+//            (tag (@ (id "tag"))
+//                (nested { "Text node" })
+//                {"hello"}
+//                (nested { "Text node" })
+//                {"hello"}
+//                (end)
+//            )
+//        });
 
         assert_eq!(1, 1);
     }
