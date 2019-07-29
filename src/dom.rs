@@ -58,6 +58,20 @@ impl<S> PartialEq for Attribute<S> {
 
 // TODO: make `attributes` a hash-map instead of vector
 
+pub struct Properties<S> {
+    pub attributes: Vec<Attribute<S>>,
+    pub children: Vec<Object<S>>,
+}
+
+impl<S> Default for Properties<S> {
+    fn default() -> Self {
+        Properties {
+            attributes: vec![],
+            children: vec![],
+        }
+    }
+}
+
 pub struct Object<S> {
     pub element: Element,
     pub value: Option<String>,

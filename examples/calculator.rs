@@ -1,4 +1,5 @@
 use cedar::prelude::*;
+use cedar::dom::Attribute;
 
 type Model = ();
 
@@ -14,13 +15,13 @@ type Object = cedar::dom::Object<Message>;
 // TODO: input => onChange
 // TODO: click => onClick
 
-fn row(_attrs: (), children: Vec<Object>) -> Object {
+fn row(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
     sml! {
         (div (@ (class "flex h-15 items-center")) { children })
     }
 }
 
-fn button(_attrs: (), children: Vec<Object>) -> Object {
+fn button(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
     sml! {
         (div (@ (class "w-25")) { children })
     }
