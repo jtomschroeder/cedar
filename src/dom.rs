@@ -76,6 +76,15 @@ impl<S> Object<S> {
         }
     }
 
+    pub fn create(element: &str, attributes: Vec<Attribute<S>>, children: Vec<Object<S>>) -> Self {
+        Object {
+            element: element.into(),
+            value: None,
+            attributes,
+            children,
+        }
+    }
+
     pub fn text(text: impl ToString) -> Self {
         Object {
             element: "text".into(),
@@ -108,7 +117,7 @@ impl<S> Object<S> {
     }
 
     pub fn push(mut self, pushed: impl Pushable<S>) -> Self {
-        pushed.pushed(&mut self);
+        pushed.pushed(&mut self.children);
         self
     }
 }
@@ -150,30 +159,30 @@ pub fn diff<S: PartialEq>(old: &Object<S>, new: &Object<S>) -> Changeset {
 }
 
 pub trait Pushable<S> {
-    fn pushed(self, object: &mut Object<S>);
+    fn pushed(self, objects: &mut Vec<Object<S>>);
 }
 
 impl<S> Pushable<S> for Object<S> {
-    fn pushed(self, object: &mut Object<S>) {
-        object.children.push(self);
+    fn pushed(self, objects: &mut Vec<Object<S>>) {
+        objects.push(self);
     }
 }
 
 impl<'s, S> Pushable<S> for Vec<Object<S>> {
-    fn pushed(self, object: &mut Object<S>) {
-        object.children.extend(self);
+    fn pushed(self, objects: &mut Vec<Object<S>>) {
+        objects.extend(self);
     }
 }
 
 impl<'s, S> Pushable<S> for &'s str {
-    fn pushed(self, object: &mut Object<S>) {
-        object.children.push(text(self));
+    fn pushed(self, objects: &mut Vec<Object<S>>) {
+        objects.push(text(self));
     }
 }
 
 impl<S> Pushable<S> for String {
-    fn pushed(self, object: &mut Object<S>) {
-        object.children.push(text(self));
+    fn pushed(self, objects: &mut Vec<Object<S>>) {
+        objects.push(text(self));
     }
 }
 

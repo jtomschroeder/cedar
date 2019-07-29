@@ -14,46 +14,56 @@ type Object = cedar::dom::Object<Message>;
 // TODO: input => onChange
 // TODO: click => onClick
 
-fn view(model: &Model) -> Object {
-    let row = |attrs, children| sml! { (div (@ (class "flex h-15 items-center")) { children }) };
+fn row(_attrs: (), children: Vec<Object>) -> Object {
+    sml! {
+        (div (@ (class "flex h-15 items-center")) { children })
+    }
+}
 
+fn button(_attrs: (), children: Vec<Object>) -> Object {
+    sml! {
+        (div (@ (class "w-25")) { children })
+    }
+}
+
+fn view(_: &Model) -> Object {
     sml! {
         (div (@ (class "tc vh-100"))
             (div (@ (class "w-100 tr")) { "0" })
 
             (& row
-                (div (@ (class "w-25")) { "C" })
-                (div (@ (class "w-25")) { "+/-" })
-                (div (@ (class "w-25")) { "%" })
-                (div (@ (class "w-25")) { "÷" })
+                (& button { "C" })
+                (& button { "+/-" })
+                (& button { "%" })
+                (& button { "÷" })
             )
 
-            (div (@ (class "flex h-15 items-center"))
-                (div (@ (class "w-25")) { "7" })
-                (div (@ (class "w-25")) { "8" })
-                (div (@ (class "w-25")) { "9" })
-                (div (@ (class "w-25")) { "X" })
+            (& row
+                (& button { "7" })
+                (& button { "8" })
+                (& button { "9" })
+                (& button { "X" })
             )
 
-            (div (@ (class "flex h-15 items-center"))
-                (div (@ (class "w-25")) { "4" })
-                (div (@ (class "w-25")) { "5" })
-                (div (@ (class "w-25")) { "6" })
-                (div (@ (class "w-25")) { "-" })
+            (& row
+                (& button { "4" })
+                (& button { "5" })
+                (& button { "6" })
+                (& button { "-" })
             )
 
-            (div (@ (class "flex h-15 items-center"))
-                (div (@ (class "w-25")) { "1" })
-                (div (@ (class "w-25")) { "2" })
-                (div (@ (class "w-25")) { "3" })
-                (div (@ (class "w-25")) { "+" })
+            (& row
+                (& button { "1" })
+                (& button { "2" })
+                (& button { "3" })
+                (& button { "+" })
             )
 
-            (div (@ (class "flex h-15 items-center"))
-                (div (@ (class "w-25")) { "0" })
-                (div (@ (class "w-25")))
-                (div (@ (class "w-25")) { "." })
-                (div (@ (class "w-25")) { "=" })
+            (& row
+                (& button { "0" })
+                (& button)
+                (& button { "." })
+                (& button { "=" })
             )
         )
     }

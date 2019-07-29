@@ -22,6 +22,8 @@ macro_rules! sml_attr {
     };
 }
 
+// TODO: figure out `attrs` for custom component
+
 #[macro_export]
 macro_rules! sml_component {
     ($component:expr =>) => { $component.render((), vec![]) };
@@ -65,57 +67,75 @@ macro_rules! sml_component {
     }};
 }
 
-#[macro_export]
-macro_rules! sml {
+//struct Properties;
 
-    (@inc $object:expr => ) => { $object };
+#[derive(Default)]
+struct Properties<S> {
+    attributes: Vec<dom::Attribute<S>>,
+    children: Vec<dom::Object<S>>,
+}
+
+#[macro_export]
+macro_rules! sml_properties {
+
+    ($properties:expr => ) => { $properties };
 
     (
-        @inc
-        $object:expr =>
+        $properties:expr =>
         (@ $(( $attr_name:ident $attr_value:expr ))+ )
         $($body:tt)*
     ) => {{
-        let obj = $object $( .attr( $crate::sml_attr!($attr_name $attr_value) ) )*;
-        sml!(@inc obj => $($body)* )
+        let mut props = $properties;
+        $( props.attributes.push($crate::sml_attr!($attr_name $attr_value)); )*
+        $crate::sml_properties!(props => $($body)*)
     }};
 
     (
-        @inc
-        $object:expr =>
+        $properties:expr =>
         ( $child:ident $($tail:tt)* )
         $($body:tt)*
     ) => {{
-        let obj = $object .push( sml!(( $child $($tail)* )) );
-        sml!(@inc obj => $($body)* )
+        let mut props = $properties;
+        props.children.push($crate::sml!(( $child $($tail)* )));
+        props
     }};
 
     (
-        @inc
-        $object:expr =>
+        $properties:expr =>
         $value:block
         $($body:tt)*
     ) => {{
-        let obj = $object .push( $value );
-        sml!(@inc obj => $($body)* )
+        use $crate::dom::Pushable;
+
+        let mut props = $properties;
+        $value.pushed(&mut props.children);
+        props
     }};
 
     (
-        @inc
-        $object:expr =>
+        $properties:expr =>
         (& $component:ident $($tail:tt)* )
         $($body:tt)*
     ) => {{
-        let obj = $object .push( $crate::sml_component!($component => $($tail)*) );
-        sml!(@inc obj => $($body)* )
+        let mut props = $properties;
+        props.children.push($crate::sml_component!($component => $($tail)*));
+        props
     }};
+}
 
+#[macro_export]
+macro_rules! sml {
     ((
         $name:ident
         $($body:tt)*
-    )) => {
-        sml!(@inc $crate::dom::Object::new(stringify!($name)) => $($body)* )
-    };
+    )) => {{
+        let name = stringify!($name);
+
+        let mut properties = $crate::sml::Properties::<()>::default();
+        let props = $crate::sml_properties!( properties => $($body)* );
+
+        $crate::dom::Object::create(name, props.attributes, props.children)
+    }};
 }
 
 // TODO: special syntax for components => maybe (& Thing)
@@ -207,6 +227,7 @@ mod tests {
                     (foo)
                     (bar)
                 )
+                // (& Custom { "content" })
 
                 (end)
             )
