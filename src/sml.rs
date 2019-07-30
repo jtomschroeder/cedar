@@ -46,7 +46,6 @@ macro_rules! sml_properties {
     ) => {{
         let mut props = $properties;
         props.children.push($crate::sml!(( $child $($tail)* )));
-
         $crate::sml_properties!(props => $($body)*)
     }};
 
@@ -68,14 +67,9 @@ macro_rules! sml_properties {
         (& $component:ident $($tail:tt)* )
         $($body:tt)*
     ) => {{
-        let mut props = $crate::dom::Properties::default();
-        let mut props = $crate::sml_properties!( props => $($tail)* );
-
-        let component = $component.render(props.attributes, props.children);
-
-        $properties.children.push(component);
-
-        $crate::sml_properties!($properties => $($body)*)
+        let mut props = $properties;
+        props.children.push($crate::sml!((& $component $($tail)* )));
+        $crate::sml_properties!(props => $($body)*)
     }};
 }
 
@@ -88,9 +82,19 @@ macro_rules! sml {
         let name = stringify!($name);
 
         let props = $crate::dom::Properties::default();
-        let props = $crate::sml_properties!( props => $($body)* );
+        let props = $crate::sml_properties!(props => $($body)*);
 
         $crate::dom::Object::create(name, props.attributes, props.children)
+    }};
+
+    ((&
+        $component:ident
+        $($body:tt)*
+    )) => {{
+        let props = $crate::dom::Properties::default();
+        let props = $crate::sml_properties!(props => $($body)*);
+
+        $component.render(props.attributes, props.children)
     }};
 }
 
