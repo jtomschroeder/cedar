@@ -17,20 +17,26 @@ type Object = cedar::dom::Object<Message>;
 
 fn row(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
     sml! {
-        (div (@ (class "flex h-15 items-center")) { children })
+        (div (@ (class "component-button-panel"))
+            (div { children })
+        )
     }
 }
 
 fn button(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
     sml! {
-        (div (@ (class "w-25")) { children })
+        (div (@ (class "component-button"))
+            (button { children })
+        )
     }
 }
 
 fn view(_: &Model) -> Object {
     sml! {
-        (div (@ (class "tc vh-100"))
-            (div (@ (class "w-100 tr")) { "0" })
+        (div (@ (class "flex flex-wrap flex-column vh-100"))
+            (div (@ (class "bg-gray white tr w-100"))
+                (div (@ (class "pa2 f2")) { "0" })
+            )
 
             (& row
                 (& button { "C" })

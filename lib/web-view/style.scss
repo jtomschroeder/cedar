@@ -1,15 +1,89 @@
-
 @import url('https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css');
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 
 * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 
-    font-family: 'Roboto Slab', serif;
+  font-family: 'Roboto Slab', serif;
 }
+
+// ---
+
+//#root {
+//  height: 100vh;
+//}
+
+//.component-app {
+//  display: flex;
+//  flex-direction: column;
+//  flex-wrap: wrap;
+//
+//  // height: 100%;
+//  height: 100vh;
+//}
+
+.component-button-panel {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex: 1 0 auto;
+
+  background-color: #858694;
+}
+
+.component-button-panel > div {
+  display: flex;
+  flex: 1 0 auto;
+
+  width: 100%;
+  margin-bottom: 1px;
+}
+
+.component-button {
+  display: inline-flex;
+  flex: 1 0 auto;
+  width: 25%;
+
+  &.wide {
+    width: 50%;
+  }
+
+  & button {
+    background-color: #e0e0e0;
+    border: 0;
+    font-size: 1.5rem;
+    margin: 0 1px 0 0;
+    flex: 1 0 auto;
+    padding: 0;
+  }
+
+  &:last-child button {
+    margin-right: 0;
+  }
+
+  &.orange button {
+    background-color: #f5923e;
+    color: white;
+  }
+}
+
+//.component-display {
+//  flex: 0 0 auto;
+//
+//  background-color: #858694;
+//  color: white;
+//  text-align: right;
+//  font-weight: 200;
+//  width: 100%;
+//
+//  // & > div {
+//  //   font-size: 2.5rem;
+//  //   padding: 0.2rem 0.7rem 0.1rem 0.5rem;
+//  // }
+//}
