@@ -71,6 +71,45 @@ macro_rules! sml_properties {
         props.children.push($crate::sml!((& $component $($tail)* )));
         $crate::sml_properties!(props => $($body)*)
     }};
+
+}
+
+#[macro_export]
+macro_rules! sml_cc_properties {
+//    ($component:expr => ) => { $component };
+
+    (
+        $component:tt =>
+        (@ $(( $attr_name:ident $attr_value:expr ))+ )
+        $( $($body:tt)+ )?
+    ) => {{
+
+        $component {
+            $( $attr_name : $attr_value .into() ),*,
+
+            $(children: {
+                let props = $crate::dom::Properties::default();
+                let props = $crate::sml_properties!(props => $($body)*);
+                props.children
+            })?
+        }
+
+    }};
+
+    (
+        $component:tt =>
+        $( $($body:tt)+ )?
+    ) => {{
+
+        $component {
+            $(children: {
+                let props = $crate::dom::Properties::default();
+                let props = $crate::sml_properties!(props => $($body)*);
+                props.children
+            })?
+        }
+    }};
+
 }
 
 #[macro_export]
@@ -91,10 +130,13 @@ macro_rules! sml {
         $component:ident
         $($body:tt)*
     )) => {{
-        let props = $crate::dom::Properties::default();
-        let props = $crate::sml_properties!(props => $($body)*);
+        // let props = $crate::dom::Properties::default();
 
-        $component.render(props.attributes, props.children)
+        let component = $crate::sml_cc_properties!($component => $($body)*);
+
+        // $component.render(props.attributes, props.children)
+
+        unimplemented!()
     }};
 }
 
@@ -173,29 +215,46 @@ mod tests {
             )
         });
 
-        struct Custom;
-        impl Component<()> for Custom {
-            fn render(&self, attrs: Vec<Attribute<()>>, children: Vec<Object<()>>) -> Object<()> {
-                sml! { (div { "Hello" }) }
-            }
+        struct Empty;
+
+        struct Custom {
+            id: String,
         }
+
+        struct Parent {
+            id: String,
+            children: Vec<Object<()>>
+        }
+
+        struct ParentNoAttrs {
+            children: Vec<Object<()>>
+        }
+
+        // impl Component<()> for Custom {
+        //     fn render(&self, attrs: Vec<Attribute<()>>, children: Vec<Object<()>>) -> Object<()> {
+        //         sml! { (div { "Hello" }) }
+        //     }
+        // }
 
         dbg(sml! {
             (tag (@ (id "tag"))
                 (nested { "Text node" })
 
-                (& Custom)
+                (& Empty)
+
                 (& Custom (@ (id "custom")))
-                (& Custom (@ (id "custom")) (child))
-                (& Custom (@ (id "custom"))
+
+                (& Parent (@ (id "parent")) (child))
+                (& Parent (@ (id "custom"))
                     (foo)
                     (bar (@ (id "tag") (class "some-class")))
                 )
-                (& Custom
-                    (foo)
-                    (bar)
-                )
-                // (& Custom { "content" })
+
+                // (& ParentNoAttrs
+                //     (foo)
+                //     (bar)
+                // )
+                // (& ParentNoAttrs { "content" })
 
                 (end)
             )
