@@ -56,7 +56,7 @@ impl<S> PartialEq for Attribute<S> {
     }
 }
 
-// TODO: make `attributes` a hash-map instead of vector
+// TODO: make `attributes` a HashMap instead of vector
 
 pub struct Properties<S> {
     pub attributes: Vec<Attribute<S>>,

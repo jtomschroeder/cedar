@@ -1,12 +1,16 @@
 use cedar::dom::Attribute;
 use cedar::prelude::*;
 
-type Model = ();
+type Model = String; // TODO: f64?
 
-#[derive(PartialEq)]
-enum Message {}
+#[derive(PartialEq, Debug)]
+enum Message {
+    Click(String)
+}
 
-fn update(model: Model, _message: &Message) -> Model {
+fn update(model: Model, message: &Message) -> Model {
+    println!("message: {:?}", message);
+
     model
 }
 
@@ -37,17 +41,19 @@ impl<'s> Component<Message> for Button<'s> {
     fn render(self) -> Object {
         sml! {
             (div (@ (class "inline-flex flex-grow w-25"))
-                (button (@ (class "flex-grow")) { self.value })
+                (button
+                    (@ (class "flex-grow") (click Message::Click(self.value.into())))
+                    { self.value })
             )
         }
     }
 }
 
-fn view(_: &Model) -> Object {
+fn view(model: &Model) -> Object {
     sml! {
         (div (@ (class "flex flex-column flex-wrap vh-100"))
             (div (@ (class "flex-none bg-gray white tr w-100"))
-                (div (@ (class "f2 pa3")) { "0" })
+                (div (@ (class "f2 pa3")) { model.as_str() })
             )
 
             (& Row
@@ -88,5 +94,5 @@ fn view(_: &Model) -> Object {
 }
 
 fn main() {
-    cedar::app((), update, view)
+    cedar::app(Model::from("0"), update, view)
 }
