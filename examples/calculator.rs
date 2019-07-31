@@ -29,15 +29,15 @@ impl CustomComponent<Message> for Row {
     }
 }
 
-struct Button {
-    children: Vec<Object>,
+struct Button<'s> {
+    value: &'s str,
 }
 
-impl CustomComponent<Message> for Button {
+impl<'s> CustomComponent<Message> for Button<'s> {
     fn render(self) -> Object {
         sml! {
             (div (@ (class "component-button"))
-                (button { self.children })
+                (button { self.value })
             )
         }
     }
@@ -51,37 +51,37 @@ fn view(_: &Model) -> Object {
             )
 
             (& Row
-                (& Button { "C" })
-                (& Button { "+/-" })
-                (& Button { "%" })
-                (& Button { "÷" })
+                (& Button (@ (value "C")))
+                (& Button (@ (value "+/-")))
+                (& Button (@ (value "%")))
+                (& Button (@ (value "÷")))
 
             (& Row
-                (& Button { "7" })
-                (& Button { "8" })
-                (& Button { "9" })
-                (& Button { "X" })
+                (& Button (@ (value "7")))
+                (& Button (@ (value "8")))
+                (& Button (@ (value "9")))
+                (& Button (@ (value "X")))
             )
             )
 
             (& Row
-                (& Button { "4" })
-                (& Button { "5" })
-                (& Button { "6" })
-                (& Button { "-" })
+                (& Button (@ (value "4")))
+                (& Button (@ (value "5")))
+                (& Button (@ (value "6")))
+                (& Button (@ (value "-")))
             )
 
             (& Row
-                (& Button { "1" })
-                (& Button { "2" })
-                (& Button { "3" })
-                (& Button { "+" })
+                (& Button (@ (value "1")))
+                (& Button (@ (value "2")))
+                (& Button (@ (value "3")))
+                (& Button (@ (value "+")))
             )
 
             (& Row
-                (& Button { "0" })
-                (& Button { "." })
-                (& Button { "=" })
+                (& Button (@ (value "0")))
+                (& Button (@ (value ".")))
+                (& Button (@ (value "=")))
             )
         )
     }

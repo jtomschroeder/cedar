@@ -144,27 +144,6 @@ pub trait CustomComponent<S> {
     fn render(self) -> dom::Object<S>;
 }
 
-//pub trait Component<S> {
-//    fn render(
-//        &self,
-//        attrs: Vec<dom::Attribute<S>>,
-//        children: Vec<dom::Object<S>>,
-//    ) -> dom::Object<S>;
-//}
-//
-//impl<S, F> Component<S> for F
-//where
-//    F: Fn(Vec<dom::Attribute<S>>, Vec<dom::Object<S>>) -> dom::Object<S>,
-//{
-//    fn render(
-//        &self,
-//        attrs: Vec<dom::Attribute<S>>,
-//        children: Vec<dom::Object<S>>,
-//    ) -> dom::Object<S> {
-//        self(attrs, children)
-//    }
-//}
-
 #[cfg(test)]
 mod tests {
     use crate::dom::{Attribute, Object};
