@@ -1,5 +1,5 @@
-use cedar::prelude::*;
 use cedar::dom::Attribute;
+use cedar::prelude::*;
 
 type Model = ();
 
@@ -15,19 +15,31 @@ type Object = cedar::dom::Object<Message>;
 // TODO: input => onChange
 // TODO: click => onClick
 
-fn row(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
-    sml! {
-        (div (@ (class "component-button-panel"))
-            (div { children })
-        )
+struct Row {
+    children: Vec<Object>,
+}
+
+impl CustomComponent<Message> for Row {
+    fn render(self) -> Object {
+        sml! {
+            (div (@ (class "component-button-panel"))
+                (div { self.children })
+            )
+        }
     }
 }
 
-fn button(_attrs: Vec<Attribute<Message>>, children: Vec<Object>) -> Object {
-    sml! {
-        (div (@ (class "component-button"))
-            (button { children })
-        )
+struct Button {
+    children: Vec<Object>,
+}
+
+impl CustomComponent<Message> for Button {
+    fn render(self) -> Object {
+        sml! {
+            (div (@ (class "component-button"))
+                (button { self.children })
+            )
+        }
     }
 }
 
@@ -38,39 +50,38 @@ fn view(_: &Model) -> Object {
                 (div (@ (class "pa2 f2")) { "0" })
             )
 
-            (& row
-                (& button { "C" })
-                (& button { "+/-" })
-                (& button { "%" })
-                (& button { "÷" })
+            (& Row
+                (& Button { "C" })
+                (& Button { "+/-" })
+                (& Button { "%" })
+                (& Button { "÷" })
+
+            (& Row
+                (& Button { "7" })
+                (& Button { "8" })
+                (& Button { "9" })
+                (& Button { "X" })
+            )
             )
 
-            (& row
-                (& button { "7" })
-                (& button { "8" })
-                (& button { "9" })
-                (& button { "X" })
+            (& Row
+                (& Button { "4" })
+                (& Button { "5" })
+                (& Button { "6" })
+                (& Button { "-" })
             )
 
-            (& row
-                (& button { "4" })
-                (& button { "5" })
-                (& button { "6" })
-                (& button { "-" })
+            (& Row
+                (& Button { "1" })
+                (& Button { "2" })
+                (& Button { "3" })
+                (& Button { "+" })
             )
 
-            (& row
-                (& button { "1" })
-                (& button { "2" })
-                (& button { "3" })
-                (& button { "+" })
-            )
-
-            (& row
-                (& button { "0" })
-                (& button)
-                (& button { "." })
-                (& button { "=" })
+            (& Row
+                (& Button { "0" })
+                (& Button { "." })
+                (& Button { "=" })
             )
         )
     }

@@ -133,41 +133,42 @@ macro_rules! sml {
         // let props = $crate::dom::Properties::default();
 
         let component = $crate::sml_cc_properties!($component => $($body)*);
-
-        // $component.render(props.attributes, props.children)
-
-        unimplemented!()
+        component.render()
     }};
 }
 
 // TODO: special syntax for components => maybe (& Thing)
 // TODO: special syntax for list of components => maybe (* ...)
 
-pub trait Component<S> {
-    fn render(
-        &self,
-        attrs: Vec<dom::Attribute<S>>,
-        children: Vec<dom::Object<S>>,
-    ) -> dom::Object<S>;
+pub trait CustomComponent<S> {
+    fn render(self) -> dom::Object<S>;
 }
 
-impl<S, F> Component<S> for F
-where
-    F: Fn(Vec<dom::Attribute<S>>, Vec<dom::Object<S>>) -> dom::Object<S>,
-{
-    fn render(
-        &self,
-        attrs: Vec<dom::Attribute<S>>,
-        children: Vec<dom::Object<S>>,
-    ) -> dom::Object<S> {
-        self(attrs, children)
-    }
-}
+//pub trait Component<S> {
+//    fn render(
+//        &self,
+//        attrs: Vec<dom::Attribute<S>>,
+//        children: Vec<dom::Object<S>>,
+//    ) -> dom::Object<S>;
+//}
+//
+//impl<S, F> Component<S> for F
+//where
+//    F: Fn(Vec<dom::Attribute<S>>, Vec<dom::Object<S>>) -> dom::Object<S>,
+//{
+//    fn render(
+//        &self,
+//        attrs: Vec<dom::Attribute<S>>,
+//        children: Vec<dom::Object<S>>,
+//    ) -> dom::Object<S> {
+//        self(attrs, children)
+//    }
+//}
 
 #[cfg(test)]
 mod tests {
     use crate::dom::{Attribute, Object};
-    use crate::sml::Component;
+    use crate::sml::{Component, CustomComponent};
 
     fn dbg(object: Object<()>) {
         dbg!(object);
@@ -216,25 +217,39 @@ mod tests {
         });
 
         struct Empty;
+        impl CustomComponent<()> for Empty {
+            fn render(self) -> Object<()> {
+                sml! { (tag) }
+            }
+        }
 
         struct Custom {
             id: String,
         }
+        impl CustomComponent<()> for Custom {
+            fn render(self) -> Object<()> {
+                sml! { (tag) }
+            }
+        }
 
         struct Parent {
             id: String,
-            children: Vec<Object<()>>
+            children: Vec<Object<()>>,
+        }
+        impl CustomComponent<()> for Parent {
+            fn render(self) -> Object<()> {
+                sml! { (tag { self.children }) }
+            }
         }
 
         struct ParentNoAttrs {
-            children: Vec<Object<()>>
+            children: Vec<Object<()>>,
         }
-
-        // impl Component<()> for Custom {
-        //     fn render(&self, attrs: Vec<Attribute<()>>, children: Vec<Object<()>>) -> Object<()> {
-        //         sml! { (div { "Hello" }) }
-        //     }
-        // }
+        impl CustomComponent<()> for ParentNoAttrs {
+            fn render(self) -> Object<()> {
+                sml! { (tag { self.children }) }
+            }
+        }
 
         dbg(sml! {
             (tag (@ (id "tag"))
@@ -250,11 +265,11 @@ mod tests {
                     (bar (@ (id "tag") (class "some-class")))
                 )
 
-                // (& ParentNoAttrs
-                //     (foo)
-                //     (bar)
-                // )
-                // (& ParentNoAttrs { "content" })
+                (& ParentNoAttrs
+                    (foo)
+                    (bar)
+                )
+                (& ParentNoAttrs { "content" })
 
                 (end)
             )
