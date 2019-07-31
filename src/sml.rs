@@ -15,14 +15,9 @@ macro_rules! sml_attr {
     };
 
     ($name:ident $value:expr) => {
-        $crate::dom::Attribute::String {
-            name: stringify!($name).to_string(),
-            value: $value.to_string(),
-        }
+        $crate::dom::Attribute::Value($value.to_string())
     };
 }
-
-// TODO: figure out `attrs` for custom component
 
 #[macro_export]
 macro_rules! sml_properties {

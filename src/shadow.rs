@@ -23,12 +23,7 @@ fn commands<T>(
             let kind = node.element();
             let value = node.value();
 
-            let attributes = node
-                .props
-                .attributes
-                .values()
-                .flat_map(|attr| attr.raw())
-                .collect();
+            let attributes = node.attributes().collect();
 
             let parent = path.parent().to_string();
             commands.push(Command::Create {
@@ -60,16 +55,11 @@ fn commands<T>(
                         value: Update::Text(value),
                     })
                 } else {
-                    let mut attrs: HashMap<_, _> = node
-                        .props
-                        .attributes
-                        .values()
-                        .flat_map(|attr| attr.raw())
-                        .collect();
+                    let mut attrs: HashMap<_, _> = node.attributes().collect();
 
                     // Clear out any attributes that are no longer used.
                     if let Some(old) = old {
-                        for (key, _) in old.props.attributes.values().flat_map(|attr| attr.raw()) {
+                        for (key, _) in old.attributes() {
                             if !attrs.contains_key(&key) {
                                 attrs.insert(key, "".into());
                             }

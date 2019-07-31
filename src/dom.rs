@@ -1,11 +1,11 @@
 use crate::tree;
-use std::fmt;
 use std::collections::HashMap;
+use std::fmt;
 
 pub type Element = String;
 
 pub enum Attribute<S> {
-    String { name: String, value: String },
+    Value(String),
     Click(S),
     Input(Box<dyn Fn(String) -> S>),
     Keydown(Box<dyn Fn(u32) -> Option<S>>),
@@ -19,16 +19,6 @@ impl<S> Attribute<S> {
     pub fn keydown(keydown: impl Fn(u32) -> Option<S> + 'static) -> Self {
         Attribute::Keydown(Box::new(keydown))
     }
-
-    pub fn raw(&self) -> Option<(String, String)> {
-        match self {
-            Attribute::String {
-                ref name,
-                ref value,
-            } => Some((name.clone(), value.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl<S> fmt::Debug for Attribute<S> {
@@ -37,10 +27,7 @@ impl<S> fmt::Debug for Attribute<S> {
             f,
             "{}",
             match self {
-                Attribute::String {
-                    ref name,
-                    ref value,
-                } => format!("{}:{}", name, value),
+                Attribute::Value(value) => format!("{}", value),
                 Attribute::Click(_) => "click".to_string(),
                 Attribute::Input(_) => "input".to_string(),
                 Attribute::Keydown(_) => "keydown".to_string(),
@@ -116,6 +103,16 @@ impl<S> Object<S> {
     pub fn push(mut self, pushed: impl Pushable<S>) -> Self {
         pushed.pushed(&mut self.props.children);
         self
+    }
+
+    pub fn attributes<'s>(&'s self) -> impl Iterator<Item = (String, String)> + 's {
+        self.props
+            .attributes
+            .iter()
+            .flat_map(|(name, attr)| match attr {
+                Attribute::Value(value) => Some((name.clone(), value.clone())),
+                _ => None,
+            })
     }
 }
 
