@@ -35,7 +35,12 @@ macro_rules! sml_properties {
         $($body:tt)*
     ) => {{
         let mut props = $properties;
-        $( props.attributes.push($crate::sml_attr!($attr_name $attr_value)); )*
+
+        $( props.attributes.insert(
+                stringify!( $attr_name ).into(),
+                $crate::sml_attr!($attr_name $attr_value)
+        ); )*
+
         $crate::sml_properties!(props => $($body)*)
     }};
 

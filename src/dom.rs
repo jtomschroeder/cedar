@@ -1,5 +1,6 @@
 use crate::tree;
 use std::fmt;
+use std::collections::HashMap;
 
 pub type Element = String;
 
@@ -56,18 +57,16 @@ impl<S> PartialEq for Attribute<S> {
     }
 }
 
-// TODO: make `attributes` a HashMap instead of vector
-
 pub struct Properties<S> {
-    pub attributes: Vec<Attribute<S>>,
+    pub attributes: HashMap<String, Attribute<S>>,
     pub children: Vec<Object<S>>,
 }
 
 impl<S> Default for Properties<S> {
     fn default() -> Self {
         Properties {
-            attributes: vec![],
-            children: vec![],
+            attributes: Default::default(),
+            children: Default::default(),
         }
     }
 }
@@ -78,7 +77,6 @@ pub struct Object<S> {
     pub props: Properties<S>,
 }
 
-/// Object: Actions
 impl<S> Object<S> {
     pub fn new(element: &str) -> Self {
         Object {
@@ -113,11 +111,6 @@ impl<S> Object<S> {
     }
     pub fn value(&self) -> Option<String> {
         self.value.clone()
-    }
-
-    pub fn attr(mut self, attr: Attribute<S>) -> Self {
-        self.props.attributes.push(attr);
-        self
     }
 
     pub fn push(mut self, pushed: impl Pushable<S>) -> Self {

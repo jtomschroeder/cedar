@@ -23,7 +23,12 @@ fn commands<T>(
             let kind = node.element();
             let value = node.value();
 
-            let attributes = node.props.attributes.iter().flat_map(|attr| attr.raw()).collect();
+            let attributes = node
+                .props
+                .attributes
+                .values()
+                .flat_map(|attr| attr.raw())
+                .collect();
 
             let parent = path.parent().to_string();
             commands.push(Command::Create {
@@ -55,12 +60,16 @@ fn commands<T>(
                         value: Update::Text(value),
                     })
                 } else {
-                    let mut attrs: HashMap<_, _> =
-                        node.props.attributes.iter().flat_map(|attr| attr.raw()).collect();
+                    let mut attrs: HashMap<_, _> = node
+                        .props
+                        .attributes
+                        .values()
+                        .flat_map(|attr| attr.raw())
+                        .collect();
 
                     // Clear out any attributes that are no longer used.
                     if let Some(old) = old {
-                        for (key, _) in old.props.attributes.iter().flat_map(|attr| attr.raw()) {
+                        for (key, _) in old.props.attributes.values().flat_map(|attr| attr.raw()) {
                             if !attrs.contains_key(&key) {
                                 attrs.insert(key, "".into());
                             }
@@ -116,33 +125,24 @@ where
 
         match event {
             Event::Click { id } => self.find(&id).and_then(|node| {
-                for attr in node.props.attributes.iter() {
-                    match attr {
-                        Attribute::Click(value) => return Some(Boo::Borrowed(value)),
-                        _ => {}
-                    }
+                if let Some(Attribute::Click(value)) = node.props.attributes.get("click") {
+                    return Some(Boo::Borrowed(value));
                 }
 
                 None
             }),
 
             Event::Input { id, value } => self.find(&id).and_then(|node| {
-                for attr in node.props.attributes.iter() {
-                    match attr {
-                        Attribute::Input(input) => return Some(Boo::Owned(input(value))),
-                        _ => {}
-                    }
+                if let Some(Attribute::Input(input)) = node.props.attributes.get("input") {
+                    return Some(Boo::Owned(input(value)));
                 }
 
                 None
             }),
 
             Event::Keydown { id, code } => self.find(&id).and_then(|node| {
-                for attr in node.props.attributes.iter() {
-                    match attr {
-                        Attribute::Keydown(keydown) => return keydown(code).map(Boo::Owned),
-                        _ => {}
-                    }
+                if let Some(Attribute::Keydown(keydown)) = node.props.attributes.get("keydown") {
+                    return keydown(code).map(Boo::Owned);
                 }
 
                 None
