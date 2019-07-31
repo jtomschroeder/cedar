@@ -1,4 +1,3 @@
-use cedar::dom::Attribute;
 use cedar::prelude::*;
 
 type Model = String; // TODO: f64?

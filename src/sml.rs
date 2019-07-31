@@ -76,8 +76,6 @@ macro_rules! sml_properties {
 
 #[macro_export]
 macro_rules! sml_cc_properties {
-//    ($component:expr => ) => { $component };
-
     (
         $component:tt =>
         (@ $(( $attr_name:ident $attr_value:expr ))+ )
@@ -123,15 +121,13 @@ macro_rules! sml {
         let props = $crate::dom::Properties::default();
         let props = $crate::sml_properties!(props => $($body)*);
 
-        $crate::dom::Object::create(name, props.attributes, props.children)
+        $crate::dom::Object::create(name, props)
     }};
 
     ((&
         $component:ident
         $($body:tt)*
     )) => {{
-        // let props = $crate::dom::Properties::default();
-
         let component = $crate::sml_cc_properties!($component => $($body)*);
         component.render()
     }};

@@ -73,10 +73,9 @@ impl<S> Default for Properties<S> {
 }
 
 pub struct Object<S> {
-    pub element: Element,
-    pub value: Option<String>,
-    pub attributes: Vec<Attribute<S>>,
-    pub children: Vec<Object<S>>,
+    element: Element,
+    value: Option<String>,
+    pub props: Properties<S>,
 }
 
 /// Object: Actions
@@ -85,17 +84,15 @@ impl<S> Object<S> {
         Object {
             element: element.into(),
             value: None,
-            attributes: vec![],
-            children: vec![],
+            props: Properties::default(),
         }
     }
 
-    pub fn create(element: &str, attributes: Vec<Attribute<S>>, children: Vec<Object<S>>) -> Self {
+    pub fn create(element: &str, props: Properties<S>) -> Self {
         Object {
             element: element.into(),
             value: None,
-            attributes,
-            children,
+            props,
         }
     }
 
@@ -103,10 +100,10 @@ impl<S> Object<S> {
         Object {
             element: "text".into(),
             value: Some(text.to_string()),
-            attributes: vec![],
-            children: vec![],
+            props: Properties::default(),
         }
     }
+
     pub fn is_text(&self) -> bool {
         self.element == "text"
     }
@@ -114,24 +111,17 @@ impl<S> Object<S> {
     pub fn element(&self) -> Element {
         self.element.clone()
     }
+    pub fn value(&self) -> Option<String> {
+        self.value.clone()
+    }
 
     pub fn attr(mut self, attr: Attribute<S>) -> Self {
-        self.attributes.push(attr);
-        self
-    }
-
-    pub fn add(mut self, child: Object<S>) -> Self {
-        self.children.push(child);
-        self
-    }
-
-    pub fn children(mut self, children: Vec<Object<S>>) -> Self {
-        self.children.extend(children.into_iter());
+        self.props.attributes.push(attr);
         self
     }
 
     pub fn push(mut self, pushed: impl Pushable<S>) -> Self {
-        pushed.pushed(&mut self.children);
+        pushed.pushed(&mut self.props.children);
         self
     }
 }
@@ -141,15 +131,15 @@ impl<S> fmt::Debug for Object<S> {
         f.debug_struct("Object")
             .field("element", &self.element)
             .field("value", &self.value)
-            .field("attributes", &self.attributes)
-            .field("children", &self.children)
+            .field("attributes", &self.props.attributes)
+            .field("children", &self.props.children)
             .finish()
     }
 }
 
 impl<T> tree::Vertex for Object<T> {
     fn children(&self) -> &[Self] {
-        &self.children
+        &self.props.children
     }
 }
 
@@ -157,7 +147,7 @@ impl<T: PartialEq> tree::Comparable for Object<T> {
     fn compare(&self, other: &Self) -> Option<tree::Difference> {
         if self.element != other.element {
             Some(tree::Difference::Kind)
-        } else if self.value != other.value || self.attributes != other.attributes {
+        } else if self.value != other.value || self.props.attributes != other.props.attributes {
             Some(tree::Difference::Value)
         } else {
             None
