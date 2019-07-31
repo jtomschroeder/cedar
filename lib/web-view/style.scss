@@ -19,14 +19,14 @@ body {
 //  height: 100vh;
 //}
 
-//.component-app {
-//  display: flex;
-//  flex-direction: column;
-//  flex-wrap: wrap;
-//
-//  // height: 100%;
-//  height: 100vh;
-//}
+.component-app {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+
+  // height: 100%;
+  height: 100vh;
+}
 
 .component-button-panel {
   display: flex;
@@ -35,14 +35,18 @@ body {
   flex: 1 0 auto;
 
   background-color: #858694;
+
+  & > div {
+    display: flex;
+    flex: 1 0 auto;
+
+    width: 100%;
+    margin-bottom: 1px;
+  }
 }
 
-.component-button-panel > div {
-  display: flex;
+.flex-grow {
   flex: 1 0 auto;
-
-  width: 100%;
-  margin-bottom: 1px;
 }
 
 .component-button {
@@ -73,17 +77,17 @@ body {
   }
 }
 
-//.component-display {
-//  flex: 0 0 auto;
-//
-//  background-color: #858694;
-//  color: white;
-//  text-align: right;
-//  font-weight: 200;
-//  width: 100%;
-//
-//  // & > div {
-//  //   font-size: 2.5rem;
-//  //   padding: 0.2rem 0.7rem 0.1rem 0.5rem;
-//  // }
-//}
+.component-display {
+  flex: 0 0 auto;
+
+  background-color: #858694;
+  color: white;
+  text-align: right;
+  font-weight: 200;
+  width: 100%;
+
+  & > div {
+    font-size: 2.5rem;
+    padding: 0.2rem 0.7rem 0.1rem 0.5rem;
+  }
+}

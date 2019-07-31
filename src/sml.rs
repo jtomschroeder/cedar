@@ -140,14 +140,14 @@ macro_rules! sml {
 // TODO: special syntax for components => maybe (& Thing)
 // TODO: special syntax for list of components => maybe (* ...)
 
-pub trait CustomComponent<S> {
+pub trait Component<S> {
     fn render(self) -> dom::Object<S>;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::dom::{Attribute, Object};
-    use crate::sml::{Component, CustomComponent};
+    use crate::sml::Component;
 
     fn dbg(object: Object<()>) {
         dbg!(object);
@@ -196,7 +196,7 @@ mod tests {
         });
 
         struct Empty;
-        impl CustomComponent<()> for Empty {
+        impl Component<()> for Empty {
             fn render(self) -> Object<()> {
                 sml! { (tag) }
             }
@@ -205,7 +205,7 @@ mod tests {
         struct Custom {
             id: String,
         }
-        impl CustomComponent<()> for Custom {
+        impl Component<()> for Custom {
             fn render(self) -> Object<()> {
                 sml! { (tag) }
             }
@@ -215,7 +215,7 @@ mod tests {
             id: String,
             children: Vec<Object<()>>,
         }
-        impl CustomComponent<()> for Parent {
+        impl Component<()> for Parent {
             fn render(self) -> Object<()> {
                 sml! { (tag { self.children }) }
             }
@@ -224,7 +224,7 @@ mod tests {
         struct ParentNoAttrs {
             children: Vec<Object<()>>,
         }
-        impl CustomComponent<()> for ParentNoAttrs {
+        impl Component<()> for ParentNoAttrs {
             fn render(self) -> Object<()> {
                 sml! { (tag { self.children }) }
             }

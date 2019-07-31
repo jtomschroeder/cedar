@@ -21,7 +21,7 @@ pub use crate::application::{app, Application};
 pub mod prelude {
     pub use crate::sml;
     // pub use crate::sml::Component;
-    pub use crate::sml::CustomComponent;
+    pub use crate::sml::Component;
 }
 
 pub mod sass {

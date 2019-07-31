@@ -19,7 +19,7 @@ struct Row {
     children: Vec<Object>,
 }
 
-impl CustomComponent<Message> for Row {
+impl Component<Message> for Row {
     fn render(self) -> Object {
         sml! {
             (div (@ (class "component-button-panel"))
@@ -33,7 +33,7 @@ struct Button<'s> {
     value: &'s str,
 }
 
-impl<'s> CustomComponent<Message> for Button<'s> {
+impl<'s> Component<Message> for Button<'s> {
     fn render(self) -> Object {
         sml! {
             (div (@ (class "component-button"))
@@ -45,9 +45,9 @@ impl<'s> CustomComponent<Message> for Button<'s> {
 
 fn view(_: &Model) -> Object {
     sml! {
-        (div (@ (class "flex flex-wrap flex-column vh-100"))
-            (div (@ (class "bg-gray white tr w-100"))
-                (div (@ (class "pa2 f2")) { "0" })
+        (div (@ (class "component-app"))
+            (div (@ (class "component-display"))
+                (div { "0" })
             )
 
             (& Row
@@ -55,13 +55,13 @@ fn view(_: &Model) -> Object {
                 (& Button (@ (value "+/-")))
                 (& Button (@ (value "%")))
                 (& Button (@ (value "÷")))
+            )
 
             (& Row
                 (& Button (@ (value "7")))
                 (& Button (@ (value "8")))
                 (& Button (@ (value "9")))
                 (& Button (@ (value "X")))
-            )
             )
 
             (& Row
