@@ -22,8 +22,8 @@ struct Row {
 impl Component<Message> for Row {
     fn render(self) -> Object {
         sml! {
-            (div (@ (class "component-button-panel"))
-                (div { self.children })
+            (div (@ (class "flex flex-row flex-wrap flex-grow"))
+                (div (@ (class "flex flex-grow w-100")) { self.children })
             )
         }
     }
@@ -36,8 +36,8 @@ struct Button<'s> {
 impl<'s> Component<Message> for Button<'s> {
     fn render(self) -> Object {
         sml! {
-            (div (@ (class "component-button"))
-                (button { self.value })
+            (div (@ (class "inline-flex flex-grow w-25"))
+                (button (@ (class "flex-grow")) { self.value })
             )
         }
     }
@@ -45,13 +45,13 @@ impl<'s> Component<Message> for Button<'s> {
 
 fn view(_: &Model) -> Object {
     sml! {
-        (div (@ (class "component-app"))
-            (div (@ (class "component-display"))
-                (div { "0" })
+        (div (@ (class "flex flex-column flex-wrap vh-100"))
+            (div (@ (class "flex-none bg-gray white tr w-100"))
+                (div (@ (class "f2 pa3")) { "0" })
             )
 
             (& Row
-                (& Button (@ (value "C")))
+                (& Button (@ (value "AC")))
                 (& Button (@ (value "+/-")))
                 (& Button (@ (value "%")))
                 (& Button (@ (value "÷")))

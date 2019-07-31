@@ -28,6 +28,21 @@ body {
   height: 100vh;
 }
 
+.component-display {
+  flex: 0 0 auto;
+
+  background-color: #858694;
+  color: white;
+  text-align: right;
+  font-weight: 200;
+  width: 100%;
+
+  & > div {
+    font-size: 2.5rem;
+    padding: 0.2rem 0.7rem 0.1rem 0.5rem;
+  }
+}
+
 .component-button-panel {
   display: flex;
   flex-direction: row;
@@ -41,7 +56,7 @@ body {
     flex: 1 0 auto;
 
     width: 100%;
-    margin-bottom: 1px;
+    margin-bottom: 1px; // +++
   }
 }
 
@@ -74,20 +89,5 @@ body {
   &.orange button {
     background-color: #f5923e;
     color: white;
-  }
-}
-
-.component-display {
-  flex: 0 0 auto;
-
-  background-color: #858694;
-  color: white;
-  text-align: right;
-  font-weight: 200;
-  width: 100%;
-
-  & > div {
-    font-size: 2.5rem;
-    padding: 0.2rem 0.7rem 0.1rem 0.5rem;
   }
 }
