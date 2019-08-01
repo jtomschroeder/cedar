@@ -1,5 +1,5 @@
 @import url('https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css');
-@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans|Roboto&display=swap');
 
 * {
   -webkit-font-smoothing: antialiased;
@@ -10,7 +10,7 @@ body {
   margin: 0;
   padding: 0;
 
-  font-family: 'Roboto Slab', serif;
+  font-family: 'Roboto', serif;
 }
 
 .flex-grow {

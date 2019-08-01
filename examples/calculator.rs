@@ -4,7 +4,7 @@ type Model = String; // TODO: f64?
 
 #[derive(PartialEq, Debug)]
 enum Message {
-    Click(String)
+    Click(String),
 }
 
 fn update(model: Model, message: &Message) -> Model {
