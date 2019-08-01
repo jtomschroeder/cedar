@@ -81,7 +81,6 @@ macro_rules! sml_cc_properties {
         (@ $(( $attr_name:ident $attr_value:expr ))+ )
         $( $($body:tt)+ )?
     ) => {{
-
         $component {
             $( $attr_name : $attr_value .into() ),*,
 
@@ -90,8 +89,9 @@ macro_rules! sml_cc_properties {
                 let props = $crate::sml_properties!(props => $($body)*);
                 props.children
             })?
-        }
 
+            // TODO: some way to have ..Default::default() for optional fields
+        }
     }};
 
     (

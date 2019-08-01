@@ -10,6 +10,8 @@ enum Message {
 fn update(model: Model, message: &Message) -> Model {
     println!("message: {:?}", message);
 
+    // TODO!
+
     model
 }
 
@@ -32,16 +34,26 @@ impl Component<Message> for Row {
     }
 }
 
+#[derive(Default)]
 struct Button<'s> {
     value: &'s str,
+    wide: bool,
+    color: &'s str,
 }
 
 impl<'s> Component<Message> for Button<'s> {
     fn render(self) -> Object {
+        let container_class = format!(
+            "inline-flex flex-grow {}",
+            if self.wide { "w-50" } else { "w-25" },
+        );
+
+        let button_class = format!("flex-grow bg-{}", self.color);
+
         sml! {
-            (div (@ (class "inline-flex flex-grow w-25"))
+            (div (@ (class container_class))
                 (button
-                    (@ (class "flex-grow") (click Message::Click(self.value.into())))
+                    (@ (class button_class) (click Message::Click(self.value.into())))
                     { self.value })
             )
         }
@@ -56,37 +68,37 @@ fn view(model: &Model) -> Object {
             )
 
             (& Row
-                (& Button (@ (value "AC")))
-                (& Button (@ (value "+/-")))
-                (& Button (@ (value "%")))
-                (& Button (@ (value "÷")))
+                (& Button (@ (value "AC") (wide false) (color "lightgray")))
+                (& Button (@ (value "+/-") (wide false) (color "lightgray")))
+                (& Button (@ (value "%") (wide false) (color "lightgray")))
+                (& Button (@ (value "÷") (wide false) (color "orange")))
             )
 
             (& Row
-                (& Button (@ (value "7")))
-                (& Button (@ (value "8")))
-                (& Button (@ (value "9")))
-                (& Button (@ (value "X")))
+                (& Button (@ (value "7") (wide false) (color "lightgray")))
+                (& Button (@ (value "8") (wide false) (color "lightgray")))
+                (& Button (@ (value "9") (wide false) (color "lightgray")))
+                (& Button (@ (value "X") (wide false) (color "orange")))
             )
 
             (& Row
-                (& Button (@ (value "4")))
-                (& Button (@ (value "5")))
-                (& Button (@ (value "6")))
-                (& Button (@ (value "-")))
+                (& Button (@ (value "4") (wide false) (color "lightgray")))
+                (& Button (@ (value "5") (wide false) (color "lightgray")))
+                (& Button (@ (value "6") (wide false) (color "lightgray")))
+                (& Button (@ (value "-") (wide false) (color "orange")))
             )
 
             (& Row
-                (& Button (@ (value "1")))
-                (& Button (@ (value "2")))
-                (& Button (@ (value "3")))
-                (& Button (@ (value "+")))
+                (& Button (@ (value "1") (wide false) (color "lightgray")))
+                (& Button (@ (value "2") (wide false) (color "lightgray")))
+                (& Button (@ (value "3") (wide false) (color "lightgray")))
+                (& Button (@ (value "+") (wide false) (color "orange")))
             )
 
             (& Row
-                (& Button (@ (value "0")))
-                (& Button (@ (value ".")))
-                (& Button (@ (value "=")))
+                (& Button (@ (value "0") (wide true) (color "lightgray")))
+                (& Button (@ (value ".") (wide false) (color "lightgray")))
+                (& Button (@ (value "=") (wide false) (color "orange")))
             )
         )
     }
